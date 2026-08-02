@@ -15,7 +15,7 @@ MonoBehaviour:
   data:
     gravity: 1500
     bounciness: 0.08
-    sizeScale: 1.3
+    sizeScale: 1.3000001
     rotationAmount: 0.2
     mergeGrowTime: 0.85
     comboDelay: 0.5
