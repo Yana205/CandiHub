@@ -1,0 +1,122 @@
+# CandiHub — cross-platform Git rules (macOS <-> Windows)
+#
+# The single most important line is the default below. Without it, a file
+# saved on Windows (CRLF endings) and a file saved on macOS (LF endings)
+# look 100% different to Git, so every diff is unreadable and every merge
+# conflicts on every line.
+
+# ------------------------------------------------------------------
+# Default: detect text files, store them with LF in the repository,
+# and check them out with each platform's native endings.
+# ------------------------------------------------------------------
+* text=auto
+
+# ------------------------------------------------------------------
+# Unity YAML. Unity always writes LF, on every platform. Pin these to LF
+# in the working tree too, so the editor never rewrites a whole file just
+# because it was checked out on Windows.
+#
+# merge=unityyamlmerge routes conflicts through Unity's semantic YAML
+# merge tool instead of Git's line-based merge, which mangles scenes and
+# prefabs. Each developer enables it once per machine — see README.
+# ------------------------------------------------------------------
+*.unity          text eol=lf merge=unityyamlmerge diff
+*.prefab         text eol=lf merge=unityyamlmerge diff
+*.asset          text eol=lf merge=unityyamlmerge diff
+*.meta           text eol=lf merge=unityyamlmerge diff
+*.mat            text eol=lf merge=unityyamlmerge diff
+*.anim           text eol=lf merge=unityyamlmerge diff
+*.controller     text eol=lf merge=unityyamlmerge diff
+*.overrideController text eol=lf merge=unityyamlmerge diff
+*.physicMaterial text eol=lf merge=unityyamlmerge diff
+*.physicsMaterial2D text eol=lf merge=unityyamlmerge diff
+*.playable       text eol=lf merge=unityyamlmerge diff
+*.mask           text eol=lf merge=unityyamlmerge diff
+*.brush          text eol=lf merge=unityyamlmerge diff
+*.flare          text eol=lf merge=unityyamlmerge diff
+*.fontsettings   text eol=lf merge=unityyamlmerge diff
+*.guiskin        text eol=lf merge=unityyamlmerge diff
+*.giparams       text eol=lf merge=unityyamlmerge diff
+*.renderTexture  text eol=lf merge=unityyamlmerge diff
+*.spriteatlas    text eol=lf merge=unityyamlmerge diff
+*.terrainlayer   text eol=lf merge=unityyamlmerge diff
+*.mixer          text eol=lf merge=unityyamlmerge diff
+*.shadervariants text eol=lf merge=unityyamlmerge diff
+*.preset         text eol=lf merge=unityyamlmerge diff
+*.scenetemplate  text eol=lf merge=unityyamlmerge diff
+
+# ------------------------------------------------------------------
+# Source and config: LF everywhere. Visual Studio, Rider and VS Code all
+# handle LF correctly on Windows.
+# ------------------------------------------------------------------
+*.cs             text eol=lf diff=csharp
+*.shader         text eol=lf
+*.shadergraph    text eol=lf
+*.compute        text eol=lf
+*.cginc          text eol=lf
+*.hlsl           text eol=lf
+*.uss            text eol=lf
+*.uxml           text eol=lf
+*.json           text eol=lf
+*.inputactions   text eol=lf
+*.asmdef         text eol=lf
+*.asmref         text eol=lf
+*.xml            text eol=lf
+*.yml            text eol=lf
+*.yaml           text eol=lf
+*.md             text eol=lf
+*.txt            text eol=lf
+*.sh             text eol=lf
+
+# Windows batch files break if they are checked out with LF endings.
+*.bat            text eol=crlf
+*.cmd            text eol=crlf
+*.ps1            text eol=crlf
+
+# ------------------------------------------------------------------
+# Binary. Marked explicitly so Git never attempts line-ending conversion
+# on them — a "normalized" PNG or FBX is a corrupted PNG or FBX.
+#
+# NOTE: these are NOT in Git LFS yet. Install git-lfs before adding real
+# art or audio to the project — see README.
+# ------------------------------------------------------------------
+*.png            binary
+*.jpg            binary
+*.jpeg           binary
+*.gif            binary
+*.bmp            binary
+*.tga            binary
+*.tif            binary
+*.tiff           binary
+*.psd            binary
+*.exr            binary
+*.hdr            binary
+*.ico            binary
+*.svg            binary
+*.fbx            binary
+*.obj            binary
+*.blend          binary
+*.dae            binary
+*.3ds            binary
+*.mb             binary
+*.ma             binary
+*.mp3            binary
+*.ogg            binary
+*.wav            binary
+*.aif            binary
+*.aiff           binary
+*.mp4            binary
+*.mov            binary
+*.webm           binary
+*.ttf            binary
+*.otf            binary
+*.dll            binary
+*.so             binary
+*.dylib          binary
+*.pdb            binary
+*.a              binary
+*.zip            binary
+*.unitypackage   binary
+*.aar            binary
+*.bundle         binary
+*.cubemap        binary

@@ -104,3 +104,37 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# ==================================================================
+# Cross-platform additions (macOS <-> Windows)
+# ==================================================================
+
+# macOS Finder / filesystem clutter
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+Icon?
+
+# Windows Explorer / filesystem clutter
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.stackdump
+*.lnk
+
+# Editor / IDE local state (differs per machine and per OS)
+.idea/
+.vscode/
+*.code-workspace
+.fleet/
