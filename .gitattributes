@@ -74,49 +74,73 @@
 *.ps1            text eol=crlf
 
 # ------------------------------------------------------------------
-# Binary. Marked explicitly so Git never attempts line-ending conversion
-# on them — a "normalized" PNG or FBX is a corrupted PNG or FBX.
+# Git LFS — binary assets.
 #
-# NOTE: these are NOT in Git LFS yet. Install git-lfs before adding real
-# art or audio to the project — see README.
+# Git stores a full copy of every version of every file forever. A 20 MB
+# texture edited ten times is 200 MB in the repo, permanently, for everyone
+# who clones. LFS instead commits a ~130-byte pointer and keeps the real
+# bytes on GitHub's LFS server, fetched only for the commit you check out.
+#
+# "filter=lfs" routes content through LFS on add/checkout.
+# "diff=lfs merge=lfs" stops Git trying to diff or merge binary content.
+# "-text" disables line-ending conversion — a "normalized" PNG is a
+# corrupted PNG.
+#
+# EVERY machine that clones this repo must have git-lfs installed BEFORE
+# cloning, or these files arrive as unusable pointer text. See README.
 # ------------------------------------------------------------------
-*.png            binary
-*.jpg            binary
-*.jpeg           binary
-*.gif            binary
-*.bmp            binary
-*.tga            binary
-*.tif            binary
-*.tiff           binary
-*.psd            binary
-*.exr            binary
-*.hdr            binary
-*.ico            binary
-*.svg            binary
-*.fbx            binary
-*.obj            binary
-*.blend          binary
-*.dae            binary
-*.3ds            binary
-*.mb             binary
-*.ma             binary
-*.mp3            binary
-*.ogg            binary
-*.wav            binary
-*.aif            binary
-*.aiff           binary
-*.mp4            binary
-*.mov            binary
-*.webm           binary
-*.ttf            binary
-*.otf            binary
-*.dll            binary
-*.so             binary
-*.dylib          binary
-*.pdb            binary
-*.a              binary
-*.zip            binary
-*.unitypackage   binary
-*.aar            binary
-*.bundle         binary
-*.cubemap        binary
+
+# Images and textures
+*.png            filter=lfs diff=lfs merge=lfs -text
+*.jpg            filter=lfs diff=lfs merge=lfs -text
+*.jpeg           filter=lfs diff=lfs merge=lfs -text
+*.gif            filter=lfs diff=lfs merge=lfs -text
+*.bmp            filter=lfs diff=lfs merge=lfs -text
+*.tga            filter=lfs diff=lfs merge=lfs -text
+*.tif            filter=lfs diff=lfs merge=lfs -text
+*.tiff           filter=lfs diff=lfs merge=lfs -text
+*.psd            filter=lfs diff=lfs merge=lfs -text
+*.exr            filter=lfs diff=lfs merge=lfs -text
+*.hdr            filter=lfs diff=lfs merge=lfs -text
+*.ico            filter=lfs diff=lfs merge=lfs -text
+*.cubemap        filter=lfs diff=lfs merge=lfs -text
+
+# Audio
+*.mp3            filter=lfs diff=lfs merge=lfs -text
+*.ogg            filter=lfs diff=lfs merge=lfs -text
+*.wav            filter=lfs diff=lfs merge=lfs -text
+*.aif            filter=lfs diff=lfs merge=lfs -text
+*.aiff           filter=lfs diff=lfs merge=lfs -text
+
+# Video
+*.mp4            filter=lfs diff=lfs merge=lfs -text
+*.mov            filter=lfs diff=lfs merge=lfs -text
+*.webm           filter=lfs diff=lfs merge=lfs -text
+
+# 3D models
+*.fbx            filter=lfs diff=lfs merge=lfs -text
+*.obj            filter=lfs diff=lfs merge=lfs -text
+*.blend          filter=lfs diff=lfs merge=lfs -text
+*.dae            filter=lfs diff=lfs merge=lfs -text
+*.3ds            filter=lfs diff=lfs merge=lfs -text
+*.mb             filter=lfs diff=lfs merge=lfs -text
+*.ma             filter=lfs diff=lfs merge=lfs -text
+
+# Fonts
+*.ttf            filter=lfs diff=lfs merge=lfs -text
+*.otf            filter=lfs diff=lfs merge=lfs -text
+
+# Native plugins and archives
+*.dll            filter=lfs diff=lfs merge=lfs -text
+*.so             filter=lfs diff=lfs merge=lfs -text
+*.dylib          filter=lfs diff=lfs merge=lfs -text
+*.a              filter=lfs diff=lfs merge=lfs -text
+*.aar            filter=lfs diff=lfs merge=lfs -text
+*.bundle         filter=lfs diff=lfs merge=lfs -text
+*.zip            filter=lfs diff=lfs merge=lfs -text
+*.unitypackage   filter=lfs diff=lfs merge=lfs -text
+
+# ------------------------------------------------------------------
+# SVG is XML, not a binary image — keep it as diffable text.
+# ------------------------------------------------------------------
+*.svg            text eol=lf
