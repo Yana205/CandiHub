@@ -138,3 +138,6 @@ $RECYCLE.BIN/
 .vscode/
 *.code-workspace
 .fleet/
+
+# Node tooling for Docs/tools sprite baker
+node_modules/

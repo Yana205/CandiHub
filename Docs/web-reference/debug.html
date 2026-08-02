@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pan Dulce Merge · Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/debug.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="panel" id="panel"></aside>
+  <div class="stagewrap">
+    <div class="fit" id="fit">
+      <div id="stageRoot"></div>
+    </div>
+  </div>
+</div>
+
+<button class="toggle" id="toggle">⟨ Hide</button>
+<div class="notice" id="notice"></div>
+
+<script src="js/config.js"></script>
+<script src="js/art.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/game.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/debug.js"></script>
+<script>
+  Config.load();
+  const fit = document.getElementById('fit');
+  const shell = new Shell(document.getElementById('stageRoot'), { fitEl: fit });
+  const panel = new DebugPanel(document.getElementById('panel'), shell);
+  window.shell = shell;
+  window.panel = panel;
+
+  const aside = document.getElementById('panel');
+  const toggle = document.getElementById('toggle');
+  toggle.addEventListener('click', () => {
+    const hidden = aside.classList.toggle('collapsed');
+    toggle.classList.toggle('out', hidden);
+    toggle.textContent = hidden ? '⟩ Settings' : '⟨ Hide';
+    setTimeout(() => shell.fit(), 270);
+  });
+</script>
+</body>
+</html>

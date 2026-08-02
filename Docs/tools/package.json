@@ -1,0 +1,12 @@
+{
+  "name": "pandulce-sprite-baker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bakes placeholder pastry/customer sprites out of the mock's own canvas code.",
+  "scripts": {
+    "bake": "node bake-sprites.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.80"
+  }
+}
