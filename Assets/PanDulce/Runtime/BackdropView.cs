@@ -22,8 +22,16 @@ namespace PanDulce.Runtime
             ViewFactory.Rect(t, "ShopWall", Shapes.White,
                              -BleedX, 56f - BleedY, 430f + BleedX * 2f, 340f + BleedY,
                              Palette.WallFill, "Background", 0);
+
+            var seams = ViewFactory.Rect(t, "WallSeams", Shapes.VerticalStripes(46, 2),
+                                         -BleedX, 56f - BleedY, 430f + BleedX * 2f, 340f + BleedY,
+                                         new Color(0.55f, 0.38f, 0.21f, 0.16f), "Background", 1);
+            seams.drawMode = SpriteDrawMode.Tiled;
+            seams.tileMode = SpriteTileMode.Continuous;
+            seams.size = new Vector2((430f + BleedX * 2f) * StageCoords.PX, (340f + BleedY) * StageCoords.PX);
+
             ViewFactory.Rect(t, "WallShade", Shapes.White, -BleedX, 336f, 430f + BleedX * 2f, 60f,
-                             new Color(0.63f, 0.43f, 0.24f, 0.13f), "Background", 1);
+                             new Color(0.63f, 0.43f, 0.24f, 0.13f), "Background", 2);
 
             BuildWindow(ViewFactory.Node(t, "Window").transform);
 
@@ -54,54 +62,18 @@ namespace PanDulce.Runtime
 
         void BuildWindow(Transform w)
         {
-            // frame + sky
+            // frame — 7px border effect: wood panel behind, scene inset on top
             ViewFactory.Panel(w, "Frame", 26f, 72f, 378f, 206f, 8, Palette.Wood, "Background", 10);
-            ViewFactory.Rect(w, "Sky", Shapes.VerticalGradient(64, 1f, 0.93f),
-                             33f, 79f, 364f, 192f, Palette.Hex("#dfe7e0"), "Background", 11);
+            ViewFactory.Rect(w, "FrameShadow", Shapes.White, 26f, 278f, 378f, 5f,
+                             Palette.Crust, "Background", 10);
 
-            // skyline — five striped buildings sitting on the street
-            float baseY = 79f + 192f - 44f;
-            (float x, float wd, float h, string fill)[] blocks =
-            {
-                (-6f, 80f, 88f, "#c3b39c"),
-                (66f, 64f, 124f, "#b4a389"),
-                (126f, 88f, 74f, "#ccbca4"),
-                (208f, 72f, 112f, "#bcab92"),
-                (274f, 98f, 86f, "#c8b8a0"),
-            };
-            foreach (var b in blocks)
-            {
-                float x = 33f + Mathf.Max(0f, b.x);
-                float wd = Mathf.Min(b.wd, 33f + 364f - x);
-                if (wd <= 0f) continue;
-                ViewFactory.Rect(w, "Building", Shapes.White, x, baseY - b.h, wd, b.h,
-                                 Palette.Hex(b.fill), "Background", 12);
-            }
-
-            // clouds
-            ViewFactory.Panel(w, "Cloud0", 67f, 99f, 58f, 14f, 7, new Color(1f, 1f, 1f, 0.85f), "Background", 13);
-            ViewFactory.Panel(w, "Cloud1", 87f, 90f, 30f, 14f, 7, new Color(1f, 1f, 1f, 0.85f), "Background", 13);
-            ViewFactory.Panel(w, "Cloud2", 305f, 111f, 46f, 12f, 6, new Color(1f, 1f, 1f, 0.7f), "Background", 13);
-
-            // lamppost
-            ViewFactory.Rect(w, "LamppostPole", Shapes.White, 133f, baseY - 112f, 4f, 112f,
-                             Palette.Hex("#8a7a66"), "Background", 14);
-            ViewFactory.Panel(w, "LamppostHead", 123f, baseY - 118f, 24f, 15f, 6,
-                              Palette.Hex("#f0d79b"), "Background", 15);
-
-            // street
-            ViewFactory.Rect(w, "Street", Shapes.White, 33f, baseY, 364f, 44f,
-                             Palette.Hex("#cbbca6"), "Background", 16);
-            ViewFactory.Rect(w, "StreetEdge", Shapes.White, 33f, baseY, 364f, 4f,
-                             Palette.Hex("#b8a68d"), "Background", 17);
-            ViewFactory.Rect(w, "StreetDashes", Shapes.Dashes(18, 18, 3), 33f, baseY + 24f, 364f, 3f,
-                             new Color(1f, 1f, 1f, 0.8f), "Background", 18);
-
-            // mullions
-            ViewFactory.Rect(w, "MullionL", Shapes.White, 145f, 79f, 5f, 192f,
-                             Palette.Hex("#b5854f"), "Background", 19);
-            ViewFactory.Rect(w, "MullionR", Shapes.White, 280f, 79f, 5f, 192f,
-                             Palette.Hex("#b5854f"), "Background", 19);
+            var scene = ViewFactory.Rect(w, "Scene", database != null ? database.WindowScene : null,
+                                         33f, 79f, 364f, 192f, Color.white, "Background", 11);
+            // The PNG is 756×412 px at PPU 100 → 756×412 stage px in Simple mode. The inset is
+            // 364×192, and 756/412 == 378/206 == the same aspect, so one uniform factor fits it.
+            scene.drawMode = SpriteDrawMode.Simple;
+            scene.transform.localScale = Vector3.one * (364f / 756f);
+            scene.transform.localPosition = StageCoords.Stage(33f + 182f, 79f + 96f);
         }
     }
 }

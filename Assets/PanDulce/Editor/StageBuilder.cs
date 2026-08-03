@@ -72,7 +72,8 @@ namespace PanDulce.Editor
 
             // 21 · BACKDROP
             var backdrop = Folder(stage.transform, "[ 21 · BACKDROP ]");
-            backdrop.AddComponent<BackdropView>();
+            var backdropView = backdrop.AddComponent<BackdropView>();
+            backdropView.EditorAssign(db);
 
             // 22 · CUSTOMER
             var customerFolder = Folder(stage.transform, "[ 22 · CUSTOMER ]");

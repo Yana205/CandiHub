@@ -129,6 +129,24 @@ namespace PanDulce.Runtime
             return Store(key, tx);
         }
 
+        /// <summary>Vertical plank seams: a `line`-px stripe at the left of each `period`-px cell.</summary>
+        public static Sprite VerticalStripes(int period, int line)
+        {
+            string key = $"vs:{period}:{line}";
+            if (cache.TryGetValue(key, out var cached) && cached != null) return cached;
+
+            int w = Mathf.Max(2, period);
+            var tex = NewTexture(w, 4);
+            var px = new Color32[w * 4];
+            for (int y = 0; y < 4; y++)
+            for (int x = 0; x < w; x++)
+                px[y * w + x] = new Color32(255, 255, 255, (byte)(x < line ? 255 : 0));
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            tex.wrapModeU = TextureWrapMode.Repeat;
+            return Store(key, tex);
+        }
+
         static Texture2D NewTexture(int w, int h)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false, false)
