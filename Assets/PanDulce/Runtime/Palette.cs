@@ -34,6 +34,14 @@ namespace PanDulce.Runtime
             Hex("#cf6b5c"), Hex("#6a7fb0"), Hex("#7fa864"), Hex("#d9a441")
         };
 
+        /// <summary>Each tier's dominant fill (§8.1) — tints the merge burst.</summary>
+        public static readonly Color[] TierFill =
+        {
+            Hex("#f4d9a8"), Hex("#d95f43"), Hex("#e88fa2"), Hex("#f2d9ae"),
+            Hex("#e8a24b"), Hex("#efb96b"), Hex("#e0a055"), Hex("#efb3bd"),
+            Hex("#b5793f"), Hex("#f2c464"), Hex("#eec27a"),
+        };
+
         public static Color Hex(string s)
             => ColorUtility.TryParseHtmlString(s, out var c) ? c : Color.magenta;
 

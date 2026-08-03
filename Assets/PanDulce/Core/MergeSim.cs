@@ -19,15 +19,13 @@ namespace PanDulce.Core
     {
         // --- events: Core raises, views subscribe. Views never poll the sim. ---
         public event Action<int, Vector2, int> Merged;      // tier, position, comboN
-        public event Action<int> TierDiscovered;
+        public event Action<int, Vector2> TierDiscovered;   // tier, sim position (for effects)
         public event Action Shaken;
 
         public readonly List<Body> Bodies = new List<Body>(64);
-        public readonly List<Particle> Particles = new List<Particle>(160);
         public readonly List<FloatText> Floats = new List<FloatText>(16);
 
         readonly Stack<Body> bodyPool = new Stack<Body>(64);
-        readonly Stack<Particle> particlePool = new Stack<Particle>(160);
         readonly Stack<FloatText> floatPool = new Stack<FloatText>(16);
         readonly List<(Body a, Body c)> mergeBuffer = new List<(Body, Body)>(16);
 
@@ -176,10 +174,9 @@ namespace PanDulce.Core
                 }
             }
 
-            // 4 — apply merges, drop dead bodies, age particles and text
+            // 4 — apply merges, drop dead bodies, age floating text
             for (int i = 0; i < mergeBuffer.Count; i++) ApplyMerge(mergeBuffer[i].a, mergeBuffer[i].c);
             CompactDead();
-            AgeParticles(dt);
             AgeFloats(dt);
         }
 
@@ -191,27 +188,6 @@ namespace PanDulce.Core
                 Recycle(Bodies[i]);
                 Bodies[i] = Bodies[Bodies.Count - 1];
                 Bodies.RemoveAt(Bodies.Count - 1);
-            }
-        }
-
-        void AgeParticles(float dt)
-        {
-            for (int i = Particles.Count - 1; i >= 0; i--)
-            {
-                Particle p = Particles[i];
-                p.t += dt;
-                if (p.t >= p.life)
-                {
-                    particlePool.Push(p);
-                    Particles[i] = Particles[Particles.Count - 1];
-                    Particles.RemoveAt(Particles.Count - 1);
-                    continue;
-                }
-                p.vx *= 0.96f;
-                p.vy *= 0.96f;
-                p.vy -= (p.star ? 20f : 60f) * dt;   // lift
-                p.x += p.vx * dt;
-                p.y += p.vy * dt;
             }
         }
 
@@ -243,8 +219,6 @@ namespace PanDulce.Core
             nb.vy = cfg.MergePopVy;
             nb.vx = (a.vx + c.vx) * 0.3f;
 
-            Burst(x, y, TierTable.BaseRadius[t2]);
-
             ComboN = (Now - lastMergeT < cfg.ComboWindow) ? ComboN + 1 : 1;
             lastMergeT = Now;
             if (ComboN >= 2) AddFloat(x, y - TierTable.BaseRadius[t2] - 8f, $"Combo {ComboN}!");
@@ -256,7 +230,7 @@ namespace PanDulce.Core
                 discovered[t2] = true;
                 if (t2 > HighestDiscovered) HighestDiscovered = t2;
                 AddFloat(x, y - TierTable.BaseRadius[t2] - 26f, "New in the case!");
-                TierDiscovered?.Invoke(t2);
+                TierDiscovered?.Invoke(t2, new Vector2(x, y));
             }
         }
 
@@ -322,46 +296,11 @@ namespace PanDulce.Core
 
         public void RemoveForServe(Body b)
         {
-            Burst(b.x, b.y, TierTable.BaseRadius[b.tier]);
             b.dead = true;
             CompactDead();
         }
 
         // ---------------------------------------------------------------- fx
-
-        /// <summary>9 puffs + 6 sparks, per merge and per serve (§7.5).</summary>
-        public void Burst(float x, float y, float r)
-        {
-            float k = cfg.ParticleScale;
-            int nA = Mathf.RoundToInt(9f * k), nB = Mathf.RoundToInt(6f * k);
-
-            for (int i = 0; i < nA; i++)
-            {
-                float a = Rand01() * 6.28f, s = 60f + Rand01() * 110f;
-                Particle p = NewParticle();
-                p.x = x + Mathf.Cos(a) * r * 0.5f;
-                p.y = y + Mathf.Sin(a) * r * 0.5f;
-                p.vx = Mathf.Cos(a) * s; p.vy = Mathf.Sin(a) * s;
-                p.t = 0f; p.life = 0.5f + Rand01() * 0.25f;
-                p.r = 4f + Rand01() * 5f; p.star = false;
-            }
-            for (int i = 0; i < nB; i++)
-            {
-                float a = Rand01() * 6.28f, s = 90f + Rand01() * 130f;
-                Particle p = NewParticle();
-                p.x = x; p.y = y;
-                p.vx = Mathf.Cos(a) * s; p.vy = Mathf.Sin(a) * s;
-                p.t = 0f; p.life = 0.6f;
-                p.r = 3f + Rand01() * 3f; p.star = true;
-            }
-        }
-
-        Particle NewParticle()
-        {
-            Particle p = particlePool.Count > 0 ? particlePool.Pop() : new Particle();
-            Particles.Add(p);
-            return p;
-        }
 
         public void AddFloat(float x, float y, string text)
         {
@@ -409,8 +348,6 @@ namespace PanDulce.Core
         {
             for (int i = 0; i < Bodies.Count; i++) bodyPool.Push(Bodies[i]);
             Bodies.Clear();
-            for (int i = 0; i < Particles.Count; i++) particlePool.Push(Particles[i]);
-            Particles.Clear();
             for (int i = 0; i < Floats.Count; i++) floatPool.Push(Floats[i]);
             Floats.Clear();
 
@@ -442,7 +379,7 @@ namespace PanDulce.Core
             if (tier < 0 || tier >= TierTable.Count || discovered[tier]) return;
             discovered[tier] = true;
             if (tier > HighestDiscovered) HighestDiscovered = tier;
-            TierDiscovered?.Invoke(tier);
+            TierDiscovered?.Invoke(tier, new Vector2(SimField.CX, 200f));
         }
 
         public void RelockCase()

@@ -29,7 +29,6 @@ namespace PanDulce.Runtime
         [SerializeField] ClothShaker clothShakeRoot;
         [SerializeField] ClothView cloth;
         [SerializeField] PastryViewPool bodies;
-        [SerializeField] ParticleViewPool particles;
         [SerializeField] FloatingTextPool floats;
         [SerializeField] AimGuideView aim;
         [SerializeField] DangerLineView dangerLine;
@@ -42,6 +41,7 @@ namespace PanDulce.Runtime
         [SerializeField] CustomerView customer;
         [SerializeField] ServeFlightView serveFlight;
         [SerializeField] GameOverCard gameOverCard;
+        [SerializeField] EffectsView effects;
         [SerializeField] NextPlaqueView nextPlaque;
         [SerializeField] PointerInput pointer;
         [SerializeField] SfxPlayer sfx;
@@ -150,7 +150,6 @@ namespace PanDulce.Runtime
             if (cloth != null) cloth.ClothColor = CurrentClothColor;
 
             if (bodies != null) bodies.Sync(Sim, tuning.SizeScale, Shop.OrderTier, hovered);
-            if (particles != null) particles.Sync(Sim);
             if (floats != null) floats.Sync(Sim);
 
             bool canDrop = Day.CanDrop && Sim.CanDropNow && !GameOver;
@@ -223,6 +222,7 @@ namespace PanDulce.Runtime
         {
             flyingTier = b.tier;
             Vector2 stage = StageCoords.SimToStage(new Vector2(b.x, b.y));
+            if (effects != null) effects.ServeBurst(new Vector2(b.x, b.y), b.tier, tuning.ParticleScale);
             Sim.RemoveForServe(b);
             Shop.ServeInFlight = true;
 
@@ -230,7 +230,10 @@ namespace PanDulce.Runtime
             serveTimeout = tuning.FlySec + 0.6f;
 
             if (serveFlight != null)
+            {
                 serveFlight.Launch(flyingTier, stage, tuning.FlySec, CompleteServe);
+                if (effects != null) effects.FollowFlyer(serveFlight.FlyerTransform);
+            }
             else
                 CompleteServe();
         }
@@ -239,6 +242,7 @@ namespace PanDulce.Runtime
         {
             if (!Shop.ServeInFlight) return;
             serveTimeout = -1f;
+            if (effects != null) effects.StopFollow();
             int orderTier = Mathf.Max(0, Shop.OrderTier);
             Shop.CompleteServe(Sim.Now, tuning);
             Score.AddServe(orderTier);
@@ -285,6 +289,7 @@ namespace PanDulce.Runtime
             if (bubble != null) bubble.Hide();
             if (customer != null) customer.Leave();
             if (serveFlight != null) serveFlight.Cancel();
+            if (effects != null) effects.StopFollow();
         }
 
         // ---------------------------------------------------------------- events
@@ -293,17 +298,20 @@ namespace PanDulce.Runtime
         {
             Boost.AddMerge(tuning.ChargePerMerge);
             Score.AddMerge(tier, comboN);
+            if (effects != null) effects.MergeBurst(pos, tier, TierTable.BaseRadius[tier], tuning.ParticleScale);
             if (sfx != null) sfx.Play("merge", tier);
         }
 
-        void OnTierDiscovered(int tier)
+        void OnTierDiscovered(int tier, Vector2 pos)
         {
             Score.AddDiscovery();
+            if (effects != null) effects.Discovery(pos, tuning.ParticleScale);
             if (sfx != null) sfx.Play("disco");
         }
 
         void OnShaken()
         {
+            if (effects != null) effects.ShakeDust(tuning.ShakeDuration, tuning.ParticleScale);
             if (sfx != null) sfx.Play("shake");
         }
 
@@ -325,20 +333,20 @@ namespace PanDulce.Runtime
 
         public void EditorWire(TuningConfig cfg, PastryDatabase db, Camera camera, Transform play,
                                ClothShaker shaker, ClothView clothView, PastryViewPool pastryPool,
-                               ParticleViewPool particlePool, FloatingTextPool textPool,
+                               FloatingTextPool textPool,
                                AimGuideView aimGuide, DangerLineView danger, FoldView foldView,
                                TopBarView top, BoostBarView boost, OrderBubbleView orderBubble,
                                SignView signView, DisplayCaseView caseView, CustomerView customerView,
                                ServeFlightView flight, GameOverCard card, NextPlaqueView plaque,
-                               PointerInput input, SfxPlayer audio)
+                               EffectsView effectsView, PointerInput input, SfxPlayer audio)
         {
             tuning = cfg; database = db; cam = camera; playRoot = play;
             clothShakeRoot = shaker; cloth = clothView; bodies = pastryPool;
-            particles = particlePool; floats = textPool; aim = aimGuide;
+            floats = textPool; aim = aimGuide;
             dangerLine = danger; fold = foldView; topBar = top; boostBar = boost;
             bubble = orderBubble; sign = signView; displayCase = caseView;
             customer = customerView; serveFlight = flight; gameOverCard = card;
-            nextPlaque = plaque; pointer = input; sfx = audio;
+            nextPlaque = plaque; effects = effectsView; pointer = input; sfx = audio;
         }
 
         public PastryDatabase Database => database;

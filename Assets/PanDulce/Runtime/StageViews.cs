@@ -176,6 +176,9 @@ namespace PanDulce.Runtime
 
         public bool Flying => startTime >= 0f;
 
+        /// <summary>The active flyer sprite's transform — the serve trail follows it.</summary>
+        public Transform FlyerTransform => sprite != null ? sprite.transform : null;
+
         protected override void Build()
         {
             startTime = -1f;

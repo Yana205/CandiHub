@@ -116,8 +116,10 @@ namespace PanDulce.Editor
             var bodiesGo = Child(shakeRootGo.transform, "Bodies");
             var bodies = bodiesGo.AddComponent<PastryViewPool>();
 
-            var particlesGo = Child(shakeRootGo.transform, "Particles");
-            var particles = particlesGo.AddComponent<ParticleViewPool>();
+            var fx = EnsureEffectAssets();
+            var effectsGo = Child(shakeRootGo.transform, "Effects");
+            var effects = effectsGo.AddComponent<EffectsView>();
+            effects.EditorAssign(fx.merge, fx.sparkle, fx.serve, fx.dust);
 
             var floatsGo = Child(shakeRootGo.transform, "FloatingText");
             var floats = floatsGo.AddComponent<FloatingTextPool>();
@@ -161,9 +163,9 @@ namespace PanDulce.Editor
             pointer.Init(cam, play.transform);
 
             gameRoot.EditorWire(tuning, db, cam, play.transform, shaker, cloth, bodies,
-                                particles, floats, aim, danger, fold, topBar, boostBar,
+                                floats, aim, danger, fold, topBar, boostBar,
                                 bubble, sign, displayCase, customer, flight, card, plaque,
-                                pointer, sfx);
+                                effects, pointer, sfx);
 
             // Strip generated content, save a clean scene, then put the preview back.
             var views = Object.FindObjectsByType<GeneratedView>(FindObjectsInactive.Include);
@@ -178,6 +180,119 @@ namespace PanDulce.Editor
 
             var info = new FileInfo(ScenePath);
             Debug.Log($"[PanDulce] stage rebuilt, saved to {ScenePath} ({info.Length / 1024f:F1} KB)");
+        }
+
+        // ---------------------------------------------------------------- effect assets
+
+        const string EffectsArtDir = "Assets/PanDulce/Art/Effects";
+        const string EffectsPrefabDir = "Assets/PanDulce/Prefabs/Effects";
+
+        /// <summary>
+        /// Creates the effect materials and prefabs only when missing — the prefabs are the
+        /// designer-editable surface, so an existing asset always wins over the defaults here.
+        /// </summary>
+        static (GameObject merge, GameObject sparkle, GameObject serve, GameObject dust) EnsureEffectAssets()
+        {
+            Directory.CreateDirectory(EffectsPrefabDir);
+
+            Material puffMat = EnsureEffectMaterial("Puff", EffectsArtDir + "/soft_disc.png");
+            Material sparkMat = EnsureEffectMaterial("Spark", EffectsArtDir + "/spark.png");
+
+            var merge = EnsureEffectPrefab("MergeBurst", puffMat, ps =>
+            {
+                var main = ps.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.75f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 1.7f);   // 60–170 px/s
+                main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.18f);
+                main.startColor = Palette.Cream;
+                main.gravityModifier = -0.06f;                                   // gentle lift
+                var shape = ps.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Circle;
+                shape.radius = 0.12f;
+            });
+            var sparkle = EnsureEffectPrefab("Sparkle", sparkMat, ps =>
+            {
+                var main = ps.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 0.9f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.9f, 2.2f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.14f);
+                main.startColor = Palette.Amber;
+                main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+                main.gravityModifier = -0.02f;
+                var shape = ps.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Circle;
+                shape.radius = 0.05f;
+            });
+            var serve = EnsureEffectPrefab("ServePoof", puffMat, ps =>
+            {
+                var main = ps.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.6f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.4f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
+                main.startColor = Palette.Cream;
+                var em = ps.emission;                                            // trail while following
+                em.rateOverTime = 0f;
+                em.rateOverDistance = 8f;
+            });
+            var dust = EnsureEffectPrefab("ShakeDust", puffMat, ps =>
+            {
+                var main = ps.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.8f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 0.9f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.16f);
+                main.startColor = new Color(232f/255f, 213f/255f, 181f/255f, 0.7f);
+                main.gravityModifier = 0.05f;
+                var shape = ps.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.SingleSidedEdge;      // a line along the floor
+                shape.radius = 1.7f;                                            // half the cloth width in units
+            });
+            return (merge, sparkle, serve, dust);
+        }
+
+        static Material EnsureEffectMaterial(string name, string texPath)
+        {
+            string path = $"{EffectsArtDir}/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat != null) return mat;
+            mat = new Material(Shader.Find("Sprites/Default"));                  // unlit — no Light2D exists
+            mat.mainTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+            AssetDatabase.CreateAsset(mat, path);
+            return mat;
+        }
+
+        static GameObject EnsureEffectPrefab(string name, Material mat, System.Action<ParticleSystem> configure)
+        {
+            string path = $"{EffectsPrefabDir}/{name}.prefab";
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (existing != null) return existing;                               // designer edits win
+
+            var go = new GameObject(name);
+            var ps = go.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;          // inherits the cloth shake
+            main.maxParticles = 256;
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;                                          // Emit()-driven
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            var grad = new Gradient();
+            grad.SetKeys(
+                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.4f), new GradientAlphaKey(0f, 1f) });
+            col.color = grad;
+            configure(ps);
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = mat;
+            r.sortingLayerName = "PlayArea";
+            r.sortingOrder = 40;
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
+            Object.DestroyImmediate(go);
+            return prefab;
         }
 
         // ---------------------------------------------------------------- assets

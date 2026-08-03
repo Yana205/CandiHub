@@ -31,14 +31,6 @@ namespace PanDulce.Core
         }
     }
 
-    /// <summary>A merge/serve puff or spark. The sim owns particle motion, not Unity.</summary>
-    public sealed class Particle
-    {
-        public float x, y, vx, vy;
-        public float t, life, r;
-        public bool star;   // sparks draw as a '+', puffs as a disc
-    }
-
     /// <summary>A rising label: "Combo 3!", "New in the case!", "Shake!".</summary>
     public sealed class FloatText
     {
