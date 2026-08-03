@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;overflow:hidden;background:#cfa06b;}
+a{color:#8a5a33;}a:hover{color:#6f4a2c;}
+@keyframes bubblePop{0%{transform:scale(0);opacity:0;}70%{transform:scale(1.08);opacity:1;}100%{transform:scale(1);opacity:1;}}
+@keyframes thanksPop{0%{transform:scale(0) rotate(-8deg);opacity:0;}60%{transform:scale(1.15) rotate(3deg);opacity:1;}100%{transform:scale(1) rotate(-2deg);opacity:1;}}
+@keyframes happyBounce{0%,100%{transform:translateY(0);}30%{transform:translateY(-14px) scale(1.02,0.98);}60%{transform:translateY(0) scale(0.99,1.01);}}
+@keyframes custWalkIn{0%{transform:translateX(-200px) translateY(0);opacity:0;}12%{opacity:1;}30%{transform:translateX(-128px) translateY(-9px);}50%{transform:translateX(-74px) translateY(0);}70%{transform:translateX(-30px) translateY(-7px);}88%{transform:translateX(4px) translateY(0);}100%{transform:translateX(0) translateY(0);opacity:1;}}
+@keyframes custHop{0%{transform:translateY(130px) scale(0.92,1.06);opacity:0;}30%{opacity:1;}48%{transform:translateY(-20px) scale(1.06,0.94);}72%{transform:translateY(6px) scale(0.97,1.03);}100%{transform:translateY(0) scale(1,1);opacity:1;}}
+@keyframes custPop{0%{transform:scale(0.18) rotate(-12deg);opacity:0;}55%{transform:scale(1.14) rotate(5deg);opacity:1;}78%{transform:scale(0.96) rotate(-2deg);}100%{transform:scale(1) rotate(0);opacity:1;}}
+@keyframes custSlide{0%{transform:translateY(96px);opacity:0;}60%{opacity:1;}100%{transform:translateY(0);opacity:1;}}
+@keyframes boostPulse{0%,100%{transform:translateY(0) scale(1);box-shadow:0 3px 0 #6f4a2c,0 0 0 0 rgba(255,243,221,0.6);}50%{transform:translateY(-2px) scale(1.035);box-shadow:0 5px 0 #6f4a2c,0 0 0 7px rgba(255,243,221,0);}}
+@keyframes signSwing{0%,100%{transform:rotate(-1.2deg);}50%{transform:rotate(1.2deg);}}
+</style>
+</helmet>
+<div style="width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%, #e5bc8c 0%, #cfa06b 70%, #c2905c 100%);font-family:'Baloo 2',sans-serif;">
+  <div data-screen-label="Merge Mock" style="width:430px;height:880px;position:relative;flex:none;overflow:hidden;transform:scale({{ scale }});">
+
+    <div style="position:absolute;left:0;top:0;width:430px;height:56px;background:linear-gradient(180deg,#a97448,#96633c);border-bottom:4px solid #7c5231;display:flex;align-items:center;justify-content:space-between;padding:0 10px;box-sizing:border-box;z-index:6;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="background:#7c5231;border:2px solid #6f4a2c;border-radius:10px;padding:2px 10px;color:#fff3dd;font-weight:700;font-size:14px;white-space:nowrap;flex:none;">Customers: {{ served }}</div>
+      </div>
+      <div style="font-size:22px;font-weight:800;color:#fff3dd;letter-spacing:0.5px;text-shadow:0 2px 0 #6f4a2c;">Sweet Bakery</div>
+      <div style="display:flex;align-items:center;gap:5px;background:#7c5231;border:2px solid #6f4a2c;border-radius:10px;padding:2px 8px 2px 10px;">
+        <div style="font-size:13px;font-weight:800;color:#fff3dd;">Next</div>
+        <canvas width="72" height="72" style="width:36px;height:36px;display:block;" ref="{{ setNextCanvas }}"></canvas>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:0;top:56px;width:430px;height:340px;background-color:#e6c194;background-image:repeating-linear-gradient(90deg,rgba(140,96,54,0.16) 0 2px,rgba(0,0,0,0) 2px 46px);overflow:hidden;">
+      <div style="position:absolute;left:26px;top:16px;width:378px;height:206px;box-sizing:border-box;border:7px solid #a97448;border-radius:8px;box-shadow:0 5px 0 #8a5a33, inset 0 0 0 3px #c08a55;overflow:hidden;background:linear-gradient(180deg,#d9e9f1 0%,#e9e1cd 60%,#efe2ce 100%);">
+        <div style="position:absolute;left:34px;top:20px;width:58px;height:14px;border-radius:7px;background:rgba(255,255,255,0.85);"></div>
+        <div style="position:absolute;left:54px;top:11px;width:30px;height:14px;border-radius:7px;background:rgba(255,255,255,0.85);"></div>
+        <div style="position:absolute;right:46px;top:32px;width:46px;height:12px;border-radius:6px;background:rgba(255,255,255,0.7);"></div>
+        <div style="position:absolute;left:-6px;bottom:44px;width:80px;height:88px;background:#c3b39c;background-image:repeating-linear-gradient(180deg,rgba(255,255,255,0.3) 0 5px,rgba(0,0,0,0) 5px 19px);border-top:3px solid #ab9880;"></div>
+        <div style="position:absolute;left:66px;bottom:44px;width:64px;height:124px;background:#b4a389;background-image:repeating-linear-gradient(180deg,rgba(255,255,255,0.26) 0 5px,rgba(0,0,0,0) 5px 21px);border-top:3px solid #9c8b72;"></div>
+        <div style="position:absolute;left:126px;bottom:44px;width:88px;height:74px;background:#ccbca4;background-image:repeating-linear-gradient(180deg,rgba(255,255,255,0.3) 0 5px,rgba(0,0,0,0) 5px 18px);border-top:3px solid #b4a48c;"></div>
+        <div style="position:absolute;left:208px;bottom:44px;width:72px;height:112px;background:#bcab92;background-image:repeating-linear-gradient(180deg,rgba(255,255,255,0.26) 0 5px,rgba(0,0,0,0) 5px 20px);border-top:3px solid #a4947b;"></div>
+        <div style="position:absolute;left:274px;bottom:44px;width:98px;height:86px;background:#c8b8a0;background-image:repeating-linear-gradient(180deg,rgba(255,255,255,0.3) 0 5px,rgba(0,0,0,0) 5px 19px);border-top:3px solid #b0a088;"></div>
+        <div style="position:absolute;left:100px;bottom:44px;width:4px;height:112px;background:#8a7a66;"></div>
+        <div style="position:absolute;left:90px;bottom:150px;width:24px;height:15px;box-sizing:border-box;border-radius:8px 8px 3px 3px;background:#f0d79b;border:2px solid #8a7a66;"></div>
+        <div style="position:absolute;left:0;bottom:0;width:100%;height:44px;background:#cbbca6;border-top:4px solid #b8a68d;"></div>
+        <div style="position:absolute;left:0;bottom:20px;width:100%;height:3px;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.8) 0 18px,rgba(0,0,0,0) 18px 36px);"></div>
+        <div style="position:absolute;left:112px;top:0;width:5px;height:100%;background:#b5854f;"></div>
+        <div style="position:absolute;right:112px;top:0;width:5px;height:100%;background:#b5854f;"></div>
+      </div>
+      <div style="position:absolute;left:0;bottom:0;width:430px;height:60px;background:rgba(160,110,60,0.13);"></div>
+    </div>
+
+    <div style="position:absolute;left:8px;top:56px;width:118px;height:100px;z-index:4;animation:signSwing 3.6s ease-in-out infinite;transform-origin:59px 0;">
+      <div style="position:absolute;left:24px;top:0;width:3px;height:24px;background:#7c5231;transform:rotate(16deg);"></div>
+      <div style="position:absolute;right:24px;top:0;width:3px;height:24px;background:#7c5231;transform:rotate(-16deg);"></div>
+      <div style="position:absolute;left:0;top:20px;width:118px;height:76px;box-sizing:border-box;background:linear-gradient(180deg,#fffaf0,#f2e3c8);border:3px solid #a97448;border-radius:10px;box-shadow:0 4px 0 #8a5a33;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;">
+        <div style="font-family:Quicksand,sans-serif;font-size:10px;font-weight:700;color:#a58358;text-align:center;line-height:1.15;">{{ signTop }}</div>
+        <div style="font-size:34px;font-weight:800;line-height:1;color:#8a5a33;">{{ signBig }}</div>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:105px;top:172px;width:210px;height:170px;z-index:3;transform-origin:50% 100%;animation:{{ custAnim }};">
+      <sc-if value="{{ customerVisible }}" hint-placeholder-val="{{ false }}">
+        <canvas width="420" height="340" style="width:210px;height:170px;display:block;" ref="{{ setCustCanvas }}"></canvas>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ bubbleVisible }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:132px;top:136px;z-index:6;animation:bubblePop 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.5s both;">
+        <div style="background:#fffaf0;border:3px solid #e0cba6;border-radius:18px;padding:8px 14px 8px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 0 rgba(122,84,49,0.25);">
+          <canvas width="88" height="88" style="width:44px;height:44px;display:block;" ref="{{ setOrderIcon }}"></canvas>
+          <div style="white-space:nowrap;"><div style="font-weight:700;font-size:17px;color:#6b4a2e;">{{ orderName }}, please!</div><div style="font-family:Quicksand,sans-serif;font-size:10px;font-weight:600;color:#a58358;">tap it in the cloth to hand it over</div></div>
+        </div>
+        <div style="width:18px;height:18px;background:#fffaf0;border-right:3px solid #e0cba6;border-bottom:3px solid #e0cba6;transform:rotate(45deg);margin:-11px 0 0 40px;"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ thanksVisible }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:0;top:150px;width:430px;text-align:center;z-index:7;pointer-events:none;animation:thanksPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;font-size:38px;font-weight:800;color:#fff3dd;text-shadow:0 4px 0 #b26a3c,-2px 0 0 #b26a3c,2px 0 0 #b26a3c,0 -2px 0 #b26a3c;">Thank you!</div>
+    </sc-if>
+
+    <div style="position:absolute;left:9px;top:300px;width:412px;height:96px;z-index:5;">
+      <div style="position:absolute;left:191px;top:-11px;width:30px;height:11px;border-radius:6px 6px 0 0;background:#e0c079;border:2px solid #b18f4c;border-bottom:none;box-sizing:border-box;"></div>
+      <div style="position:absolute;left:0;top:0;width:412px;height:96px;box-sizing:border-box;border:3px solid rgba(255,255,255,0.92);border-radius:14px 14px 5px 5px;background:linear-gradient(158deg,rgba(255,255,255,0.5) 0%,rgba(255,255,255,0.1) 38%,rgba(255,255,255,0.06) 62%,rgba(255,255,255,0.3) 100%);box-shadow:inset 0 -8px 14px rgba(255,255,255,0.35), 0 4px 0 rgba(120,84,48,0.18);overflow:hidden;">
+        <div style="position:absolute;left:0;top:15px;width:412px;height:2px;background:rgba(255,255,255,0.75);"></div>
+        <div style="position:absolute;left:-40px;top:-30px;width:44px;height:190px;background:rgba(255,255,255,0.4);transform:rotate(20deg);"></div>
+        <div style="position:absolute;left:22px;top:-30px;width:16px;height:190px;background:rgba(255,255,255,0.3);transform:rotate(20deg);"></div>
+        <div style="position:absolute;left:0;bottom:0;width:412px;height:74px;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;">
+          <sc-for list="{{ caseItems }}" as="d" hint-placeholder-count="5">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+              <canvas width="96" height="96" style="width:48px;height:48px;display:block;" ref="{{ d.setIcon }}"></canvas>
+              <div style="width:52px;height:5px;border-radius:3px;background:#d8c6ac;box-shadow:0 2px 0 #b99f7c;"></div>
+              <div style="font-family:Quicksand,sans-serif;font-size:9.5px;font-weight:700;color:#7a5735;height:14px;line-height:14px;">{{ d.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:0;top:392px;width:430px;height:12px;background:linear-gradient(180deg,#e8bb80,#c98f52);border-bottom:2px solid #ab7742;z-index:5;"></div>
+    <div style="position:absolute;left:0;top:404px;width:430px;height:20px;background:#a86e3c;border-bottom:3px solid #7c5231;box-shadow:inset 0 3px 0 rgba(0,0,0,0.12);z-index:5;display:flex;align-items:center;gap:10px;padding:0 12px;box-sizing:border-box;">
+      <div style="flex:1;height:9px;border:2px solid #8f5a2a;border-radius:2px;box-sizing:border-box;"></div>
+      <div style="flex:1;height:9px;border:2px solid #8f5a2a;border-radius:2px;box-sizing:border-box;"></div>
+      <div style="flex:1;height:9px;border:2px solid #8f5a2a;border-radius:2px;box-sizing:border-box;"></div>
+    </div>
+
+    <div style="position:absolute;left:0;top:424px;width:430px;height:456px;background:linear-gradient(180deg,#6b4527 0%,#7c5231 5%,#c08a4f 7%,#b98244 32%,#a97139 100%);"></div>
+
+    <div style="position:absolute;left:6px;top:424px;width:418px;height:400px;touch-action:none;cursor:pointer;" onPointerDown="{{ onPD }}" onPointerMove="{{ onPM }}" onPointerUp="{{ onPU }}">
+      <canvas width="836" height="800" style="width:418px;height:400px;display:block;" ref="{{ setMainCanvas }}"></canvas>
+    </div>
+
+    <sc-if value="{{ boostsVisible }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;left:0;top:824px;width:430px;height:56px;background:linear-gradient(180deg,#a97448,#8f6039);border-top:3px solid #7c5231;box-shadow:inset 0 3px 0 rgba(255,225,180,0.22);display:flex;align-items:center;justify-content:center;gap:12px;z-index:7;">
+        <div onClick="{{ onShake }}" style="position:relative;width:252px;height:46px;border-radius:15px;background:linear-gradient(180deg,#f0b64f,#dd9a2e);border:3px solid #7c5231;box-shadow:0 3px 0 #6f4a2c;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;opacity:{{ specOp }};animation:{{ specAnim }};">
+          <div style="position:relative;width:26px;height:24px;flex:none;">
+            <div style="position:absolute;left:4px;top:6px;width:17px;height:17px;border-radius:4px;background:#fff3dd;transform:rotate(12deg);"></div>
+            <div style="position:absolute;left:8px;top:0;width:10px;height:10px;border-radius:50%;background:#fff3dd;border:2.5px solid #c07f1c;box-sizing:border-box;"></div>
+            <div style="position:absolute;left:-4px;top:8px;width:7px;height:2.5px;border-radius:2px;background:rgba(255,243,221,0.85);"></div>
+            <div style="position:absolute;right:-4px;top:15px;width:7px;height:2.5px;border-radius:2px;background:rgba(255,243,221,0.85);"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="font-size:15px;font-weight:800;color:#6b4a2e;line-height:1;">Shake the furoshiki!</div>
+            <div style="width:160px;height:7px;border-radius:4px;background:rgba(111,74,44,0.4);overflow:hidden;">
+              <div style="height:7px;border-radius:4px;background:#fff3dd;transition:width 0.35s ease;width:{{ chargePct }}%;"></div>
+            </div>
+          </div>
+          <div style="position:absolute;right:-8px;top:-9px;min-width:23px;height:23px;padding:0 5px;border-radius:12px;background:#7c5231;border:2.5px solid #6f4a2c;color:#fff3dd;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-sizing:border-box;">{{ chargeLabel }}</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ flyerVisible }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;z-index:9;pointer-events:none;left:{{ flyerX }}px;top:{{ flyerY }}px;transform:scale({{ flyerS }});transition:left 0.9s cubic-bezier(0.35,-0.15,0.35,1),top 0.9s cubic-bezier(0.35,-0.15,0.35,1),transform 0.9s ease;" onTransitionEnd="{{ onFlyerDone }}">
+        <canvas width="112" height="112" style="width:56px;height:56px;display:block;" ref="{{ setFlyerCanvas }}"></canvas>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 446, &quot;height&quot;: 900 },
+  &quot;devFireShake&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;section&quot;: &quot;Dev · fire shake (toggle)&quot; },
+  &quot;boostsOn&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;section&quot;: &quot;Boost&quot; },
+  &quot;shakePower&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1, &quot;min&quot;: 0.3, &quot;max&quot;: 2.2, &quot;step&quot;: 0.1, &quot;unit&quot;: &quot;×&quot;, &quot;section&quot;: &quot;Boost&quot; },
+  &quot;chargePerMerge&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.14, &quot;min&quot;: 0.02, &quot;max&quot;: 1, &quot;step&quot;: 0.02, &quot;section&quot;: &quot;Boost&quot; },
+  &quot;endOfDay&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;section&quot;: &quot;Furoshiki&quot; },
+  &quot;clothColor&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#cf6b5c&quot;, &quot;options&quot;: [&quot;#cf6b5c&quot;, &quot;#6a7fb0&quot;, &quot;#7fa864&quot;, &quot;#d9a441&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Furoshiki&quot; },
+  &quot;customerEverySec&quot;: { &quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 18, &quot;min&quot;: 5, &quot;max&quot;: 60, &quot;unit&quot;: &quot;s&quot;, &quot;section&quot;: &quot;Customers&quot; },
+  &quot;entranceStyle&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Walk&quot;, &quot;Hop&quot;, &quot;Pop&quot;, &quot;Slide&quot;], &quot;default&quot;: &quot;Walk&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Customers&quot; },
+  &quot;entranceTime&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.7, &quot;min&quot;: 0.3, &quot;max&quot;: 2, &quot;step&quot;: 0.05, &quot;unit&quot;: &quot;s&quot;, &quot;section&quot;: &quot;Customers&quot; },
+  &quot;gravity&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1500, &quot;min&quot;: 600, &quot;max&quot;: 3000, &quot;step&quot;: 50, &quot;unit&quot;: &quot;px/s²&quot;, &quot;section&quot;: &quot;Physics&quot; },
+  &quot;bounciness&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.08, &quot;min&quot;: 0, &quot;max&quot;: 0.5, &quot;step&quot;: 0.01, &quot;section&quot;: &quot;Physics&quot; },
+  &quot;sizeScale&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1.3, &quot;min&quot;: 0.7, &quot;max&quot;: 1.6, &quot;step&quot;: 0.05, &quot;unit&quot;: &quot;×&quot;, &quot;section&quot;: &quot;Physics&quot; },
+  &quot;rotationAmount&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.2, &quot;min&quot;: 0, &quot;max&quot;: 1, &quot;step&quot;: 0.05, &quot;section&quot;: &quot;Physics&quot; },
+  &quot;mergeGrowTime&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.85, &quot;min&quot;: 0.2, &quot;max&quot;: 2, &quot;step&quot;: 0.05, &quot;unit&quot;: &quot;s&quot;, &quot;section&quot;: &quot;Merge&quot; },
+  &quot;comboDelay&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.5, &quot;min&quot;: 0, &quot;max&quot;: 2, &quot;step&quot;: 0.1, &quot;unit&quot;: &quot;s&quot;, &quot;section&quot;: &quot;Merge&quot; },
+  &quot;soundOn&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;section&quot;: &quot;Audio&quot; }
+}">
+class Component extends DCLogic {
+  state = { scale: 1, dropsLeft: 5, mode: 'closed', customer: 0, orderTier: null, happy: false, served: 0, flyer: null, tick: 0, charge: 0 };
+
+  Rbase = [13, 17, 22, 27, 33, 40, 48, 57, 67, 78, 90];
+  get R() { const s = this.props.sizeScale ?? 1.3; if (this._rs !== s) { this._rs = s; this._R = this.Rbase.map(r => r * s); } return this._R; }
+  rotAmt() { return this.props.rotationAmount ?? 0.2; }
+  growTime() { return this.props.mergeGrowTime ?? 0.85; }
+  comboDelay() { return this.props.comboDelay ?? 0.5; }
+  names = ['Cookie', 'Muffin', 'Kiss Cookie', 'Biscuit', 'Turnover', 'Bread Roll', 'Cinnamon Roll', 'Shell Bun', 'Piggy Cookie', 'Flan', 'Ring Cake'];
+
+  CW = 418; CH = 400; WL = 34; WR = 384; FY = 372; BL = 26; BR = 392;
+  closeT = 0; timeLeft = 18;
+  everySec() { return Math.max(3, Math.round(this.props.customerEverySec ?? 18)); }
+  cloth() { return this.props.clothColor ?? '#cf6b5c'; }
+  mix(hex, f) { const n = parseInt(hex.slice(1), 16); const m = v => Math.round(Math.min(255, v * f)); return 'rgb(' + m((n >> 16) & 255) + ',' + m((n >> 8) & 255) + ',' + m(n & 255) + ')'; }
+
+  bodies = []; parts = []; floats = [];
+  aimX = 209; canDropAt = 0; nextId = 1;
+  curTier = 0; nextTier = 1;
+  comboN = 0; lastMergeT = 0;
+
+  init() {
+    if (this.tierList) return;
+    this.tierList = this.names.map((n, i) => {
+      const it = { name: n, discovered: i < 4, cv: null };
+      it.label = n;
+      it.setIcon = (node) => { it.cv = node; if (node) this.renderIcon(node, i, it.discovered); };
+      return it;
+    });
+    this.curTier = this.pick(); this.nextTier = this.pick();
+  }
+
+  every() { return Math.max(1, Math.round(this.props.customerEvery ?? 5)); }
+  grav() { return this.props.gravity ?? 1500; }
+  rest() { return this.props.bounciness ?? 0.08; }
+
+  pick() { const w = [4, 3, 2, 1]; let s = 10 * Math.random(), t = 0; for (let i = 0; i < 4; i++) { s -= w[i]; if (s <= 0) { t = i; break; } } return t; }
+
+  componentDidMount() {
+    this.init();
+    this.onRes = () => this.setState({ scale: Math.min(1, window.innerHeight / 900, window.innerWidth / 446) });
+    window.addEventListener('resize', this.onRes); this.onRes();
+    this.setState({ dropsLeft: this.everySec() });
+    this.timeLeft = this.everySec();
+    for (let i = 0; i < 9; i++) this.bodies.push(this.mkBody(60 + Math.random() * 300, 300 - i * 34, this.pick(), 1));
+    this.raf = requestAnimationFrame(this.loop);
+  }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); window.removeEventListener('resize', this.onRes); }
+
+  mkBody(x, y, t, spawnT) {
+    return { id: this.nextId++, x, y, vx: 0, vy: 0, rot: (Math.random() - 0.5) * 0.3, vrot: (Math.random() - 0.5) * 2.4 * this.rotAmt(), tier: t, spawnT: spawnT ?? 1, squish: 0, dead: false, bornAt: this.now || 0 };
+  }
+  er(b) { const t = Math.min(1, b.spawnT); const c1 = 1.70158, c3 = c1 + 1; const e = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); return this.R[b.tier] * (0.35 + 0.65 * e); }
+
+  setMainCanvas = (cv) => { this.cv = cv; this.ctx = cv ? cv.getContext('2d') : null; if (this.ctx) { this.now = this.now || 1; this.draw(); } };
+  setNextCanvas = (cv) => { this.nextCv = cv; if (cv) this.drawSmall(cv, this.nextTier, 14); };
+  setOrderIcon = (cv) => { this.orderCv = cv; if (cv && this.state.orderTier != null) this.drawSmall(cv, this.state.orderTier, 16); };
+  setFlyerCanvas = (cv) => { if (cv && this.state.flyer) this.drawSmall(cv, this.state.flyer.tier, 21); };
+  setCustCanvas = (cv) => { this.custCv = cv; if (cv) this.drawCustomer(cv, this.state.customer); };
+
+  loop = (t) => {
+    this.raf = requestAnimationFrame(this.loop);
+    if (!this.ctx) return;
+    const now = t / 1000;
+    const dt = Math.min(0.032, this.lastT ? now - this.lastT : 0.016);
+    this.lastT = now; this.now = now;
+    const tgt = (this.props.endOfDay ?? false) ? 1 : 0;
+    const dc = tgt - this.closeT;
+    if (Math.abs(dc) > 0.001) this.closeT += Math.sign(dc) * Math.min(Math.abs(dc), dt / 1.1);
+    if (this.state.mode === 'closed' && !this.state.flyer && this.closeT < 0.4) {
+      this.timeLeft -= dt;
+      const n = Math.max(0, Math.ceil(this.timeLeft));
+      if (n !== this.state.dropsLeft) this.setState({ dropsLeft: n });
+      if (this.timeLeft <= 0) { this.timeLeft = this.everySec(); this.openWindow(); }
+    }
+    for (let i = 0; i < 3; i++) this.step(dt / 3);
+    this.draw();
+  };
+
+  step(dt) {
+    const G = this.grav(), E = this.rest();
+    const L = this.WL, Rt = this.WR, F = this.FY;
+    const bs = this.bodies;
+    for (const b of bs) {
+      b.vy += G * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rot += b.vrot * dt;
+      const cap = 3 * this.rotAmt() + 0.15;
+      if (b.vrot > cap) b.vrot = cap; else if (b.vrot < -cap) b.vrot = -cap;
+      b.vrot *= 0.99; b.squish *= (1 - 6 * dt);
+      if (b.spawnT < 1) b.spawnT = Math.min(1, b.spawnT + dt / this.growTime());
+    }
+    const merges = [];
+    for (let i = 0; i < bs.length; i++) {
+      const a = bs[i]; if (a.dead) continue;
+      for (let j = i + 1; j < bs.length; j++) {
+        const c = bs[j]; if (c.dead) continue;
+        const ra = this.er(a), rc = this.er(c);
+        let dx = c.x - a.x, dy = c.y - a.y;
+        let d = Math.hypot(dx, dy); const min = ra + rc;
+        if (d >= min) continue;
+        if (d < 0.01) { d = 0.01; dx = 0.01; dy = 0; }
+        const nx = dx / d, ny = dy / d;
+        if (a.tier === c.tier && a.tier < this.R.length - 1 && a.spawnT > 0.55 && c.spawnT > 0.55 && this.now - a.bornAt > this.comboDelay() && this.now - c.bornAt > this.comboDelay()) { a.dead = true; c.dead = true; merges.push([a, c]); continue; }
+        const ma = ra * ra, mc = rc * rc, tm = ma + mc;
+        const ov = (min - d);
+        a.x -= nx * ov * (mc / tm); a.y -= ny * ov * (mc / tm);
+        c.x += nx * ov * (ma / tm); c.y += ny * ov * (ma / tm);
+        const rvx = c.vx - a.vx, rvy = c.vy - a.vy;
+        const vn = rvx * nx + rvy * ny;
+        if (vn < 0) {
+          const jm = -(1 + E) * vn / (1 / ma + 1 / mc);
+          a.vx -= jm * nx / ma; a.vy -= jm * ny / ma;
+          c.vx += jm * nx / mc; c.vy += jm * ny / mc;
+          const q = Math.min(0.28, Math.abs(vn) / 1500);
+          if (q > 0.05) { a.squish = Math.max(a.squish, q); c.squish = Math.max(c.squish, q); }
+          const vt = rvx * -ny + rvy * nx;
+          const rk = 0.15 * this.rotAmt();
+          a.vrot += (vt / ra) * rk; c.vrot += (vt / rc) * rk;
+        }
+      }
+    }
+    const cxw = (this.BL + this.BR) / 2, hw = (this.BR - this.BL) / 2;
+    for (const b of bs) {
+      const r = this.er(b);
+      if (b.x - r < L) { b.x = L + r; b.vx = Math.abs(b.vx) * E; b.vrot = -b.vy / r * 0.4 * this.rotAmt(); }
+      if (b.x + r > Rt) { b.x = Rt - r; b.vx = -Math.abs(b.vx) * E; b.vrot = b.vy / r * 0.4 * this.rotAmt(); }
+      const k = Math.min(1, Math.abs(b.x - cxw) / hw);
+      const F2 = F - 26 * k * k;
+      if (b.y + r > F2) {
+        const vi = b.vy;
+        b.y = F2 - r; b.vy = -Math.abs(b.vy) * E * 0.6;
+        if (Math.abs(b.vy) < 20) b.vy = 0;
+        b.vx *= (1 - 9 * dt); b.vx -= ((b.x - cxw) / hw) * 34 * dt;
+        b.vrot += (b.vx / r - b.vrot) * Math.min(0.4, 0.05 + 0.5 * this.rotAmt());
+        if (vi > 180) b.squish = Math.max(b.squish, Math.min(0.3, vi / 1600));
+      }
+    }
+    if (merges.length) {
+      for (const [a, c] of merges) this.doMerge(a, c);
+      this.bodies = this.bodies.filter(b => !b.dead);
+    }
+    for (const p of this.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy = p.vy * 0.96 + (p.star ? -20 : -60) * dt; }
+    this.parts = this.parts.filter(p => p.t < p.life);
+    for (const f of this.floats) { f.t += dt; f.y -= 42 * dt; }
+    this.floats = this.floats.filter(f => f.t < 1);
+  }
+
+  doMerge(a, c) {
+    const t2 = a.tier + 1;
+    const ra = this.er(a), rc = this.er(c);
+    const x = (a.x * ra + c.x * rc) / (ra + rc), y = (a.y * ra + c.y * rc) / (ra + rc);
+    const nb = this.mkBody(x, y, t2, 0);
+    nb.vy = -70; nb.vx = (a.vx + c.vx) * 0.3;
+    this.bodies.push(nb);
+    this.burst(x, y, this.R[t2]);
+    this.snd('merge', t2);
+    const cp = this.props.chargePerMerge ?? 0.14;
+    if (this.state.charge < 1) this.setState({ charge: Math.min(1, this.state.charge + cp) });
+    if (this.now - this.lastMergeT < 1.4) this.comboN++; else this.comboN = 1;
+    this.lastMergeT = this.now;
+    if (this.comboN >= 2) this.floats.push({ x, y: y - this.R[t2] - 8, t: 0, txt: 'Combo ' + this.comboN + '!' });
+    const it = this.tierList[t2];
+    if (!it.discovered) {
+      it.discovered = true;
+      if (it.cv) this.renderIcon(it.cv, t2, true);
+      this.floats.push({ x, y: y - this.R[t2] - 26, t: 0, txt: 'New in the case!' });
+      this.snd('disco');
+      this.setState({ tick: this.state.tick + 1 });
+    }
+  }
+
+  burst(x, y, r) {
+    for (let i = 0; i < 9; i++) { const a = Math.random() * 6.28, s = 60 + Math.random() * 110; this.parts.push({ x: x + Math.cos(a) * r * 0.5, y: y + Math.sin(a) * r * 0.5, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: 0, life: 0.5 + Math.random() * 0.25, r: 4 + Math.random() * 5, col: '#fff3dd', star: false }); }
+    for (let i = 0; i < 6; i++) { const a = Math.random() * 6.28, s = 90 + Math.random() * 130; this.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: 0, life: 0.6, r: 3 + Math.random() * 3, col: '#f0b64f', star: true }); }
+  }
+
+  doShake() {
+    const p = this.props.shakePower ?? 1;
+    for (const b of this.bodies) {
+      b.vy = -(190 + Math.random() * 190) * p;
+      b.vx = (Math.random() - 0.5) * 350 * p;
+      b.vrot += (Math.random() - 0.5) * 3.2 * this.rotAmt();
+      b.squish = 0.2;
+    }
+    this.shakeUntil = (this.now || 0) + 0.6;
+    this.floats.push({ x: (this.BL + this.BR) / 2, y: 176, t: 0, txt: 'Shake!' });
+    this.snd('shake');
+  }
+  onShake = () => {
+    this.ensureAudio();
+    if (this.state.charge < 1 || this.closeT > 0.12) return;
+    this.setState({ charge: 0 });
+    this.doShake();
+  };
+  componentDidUpdate(prev) { if (prev.devFireShake !== this.props.devFireShake) this.doShake(); }
+
+  orderActive() { const s = this.state; return s.mode === 'open' && !s.happy && s.orderTier != null && !s.flyer; }
+  servableAt(x, y) {
+    if (!this.orderActive()) return null;
+    let best = null, bd = 1e9;
+    for (const b of this.bodies) {
+      if (b.tier !== this.state.orderTier) continue;
+      const d = Math.hypot(b.x - x, b.y - y);
+      if (d < this.er(b) + 6 && d < bd) { best = b; bd = d; }
+    }
+    return best;
+  }
+  serve(b) {
+    const t = b.tier;
+    this.bodies = this.bodies.filter(x => x !== b);
+    this.burst(b.x, b.y, this.R[t]);
+    this.setState({ flyer: { tier: t, x: 6 + b.x - 28, y: 424 + b.y - 28, s: 1 } });
+    setTimeout(() => { if (this.state.flyer) this.setState({ flyer: { tier: t, x: 182, y: 224, s: 0.6 } }); }, 40);
+  }
+  onFlyerDone = (e) => {
+    if (e.propertyName !== 'top' || !this.state.flyer) return;
+    this.snd('serve');
+    this.setState({ flyer: null, happy: true, served: this.state.served + 1 });
+    setTimeout(() => { this.timeLeft = this.everySec(); this.setState({ mode: 'closed', happy: false, orderTier: null, dropsLeft: this.everySec() }); }, 1400);
+  };
+
+  openWindow() {
+    const order = 2 + Math.floor(Math.random() * 4);
+    const cust = this.state.served % 3;
+    this.setState({ mode: 'open', customer: cust, orderTier: order, happy: false }, () => {
+      if (this.custCv) this.drawCustomer(this.custCv, cust);
+      if (this.orderCv) this.drawSmall(this.orderCv, order, 16);
+    });
+    this.snd('chime');
+  }
+
+  canvasXY(e) { const r = this.cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * this.CW, (e.clientY - r.top) / r.height * this.CH]; }
+  onPD = (e) => { this.ensureAudio(); const [x, y] = this.canvasXY(e); this.aimX = x; this.px = x; this.py = y; };
+  onPM = (e) => { const [x, y] = this.canvasXY(e); this.aimX = x; this.px = x; this.py = y; };
+  onPU = (e) => {
+    const [x, y] = this.canvasXY(e); this.aimX = x; this.px = x; this.py = y;
+    const sb = this.servableAt(x, y);
+    if (sb) { this.serve(sb); return; }
+    if (this.closeT > 0.12) return;
+    if (this.now < this.canDropAt) return;
+    const t = this.curTier, r = this.R[t];
+    const b = this.mkBody(Math.max(this.WL + r, Math.min(this.WR - r, this.aimX)), 36, t, 1); b.vy = 60;
+    this.bodies.push(b);
+    this.snd('drop');
+    this.canDropAt = this.now + 0.5;
+    this.curTier = this.nextTier; this.nextTier = this.pick();
+    if (this.nextCv) this.drawSmall(this.nextCv, this.nextTier, 14);
+  };
+
+  // ---------- drawing ----------
+  draw() {
+    const ctx = this.ctx; if (!ctx) return;
+    const W = this.CW, H = this.CH;
+    const BL = this.BL, BR = this.BR;
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    // cafe desk
+    ctx.fillStyle = 'rgba(70,44,22,0.45)'; ctx.fillRect(0, 0, W, 14);
+    ctx.strokeStyle = 'rgba(255,226,182,0.55)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, 16); ctx.lineTo(W, 16); ctx.stroke();
+    ctx.strokeStyle = 'rgba(92,58,26,0.3)'; ctx.lineWidth = 2; ctx.setLineDash([]);
+    for (const y of [58, 150, 268, 390]) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(64,38,16,0.22)';
+    ctx.beginPath(); ctx.ellipse(W / 2, 92, 206, 30, 0, 0, 6.28); ctx.fill();
+    // furoshiki cloth
+    const sh = this.shakeUntil && this.now < this.shakeUntil ? (this.shakeUntil - this.now) / 0.6 : 0;
+    if (sh) ctx.setTransform(2, 0, 0, 2, Math.sin(this.now * 47) * sh * 26, Math.cos(this.now * 39) * sh * 12);
+    const C = this.cloth(), cx = (BL + BR) / 2;
+    ctx.beginPath();
+    ctx.moveTo(BL - 16, 40);
+    ctx.quadraticCurveTo(BL + 4, 88, BL + 36, 100);
+    ctx.quadraticCurveTo(cx - 62, 124, cx, 110);
+    ctx.quadraticCurveTo(cx + 62, 124, BR - 36, 100);
+    ctx.quadraticCurveTo(BR - 4, 88, BR + 16, 40);
+    ctx.lineTo(BR + 16, H); ctx.lineTo(BL - 16, H); ctx.closePath();
+    ctx.fillStyle = C; ctx.fill();
+    ctx.strokeStyle = this.mix(C, 0.72); ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.save(); ctx.clip();
+    ctx.strokeStyle = 'rgba(255,246,232,0.55)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(BL - 2, 62); ctx.quadraticCurveTo(BL + 18, 100, BL + 46, 112);
+    ctx.quadraticCurveTo(cx - 58, 134, cx, 122); ctx.quadraticCurveTo(cx + 58, 134, BR - 46, 112);
+    ctx.quadraticCurveTo(BR - 18, 100, BR + 2, 62); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,246,232,0.34)';
+    for (let yy = 140; yy < H; yy += 42) for (let xx = BL - 4; xx < BR + 10; xx += 42) { ctx.beginPath(); ctx.arc(xx + (yy % 84 ? 21 : 0), yy, 4, 0, 6.28); ctx.fill(); }
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.beginPath(); ctx.moveTo(BL - 16, 40); ctx.quadraticCurveTo(BL + 4, 88, BL + 36, 100); ctx.lineTo(BL + 36, H); ctx.lineTo(BL - 16, H); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(BR + 16, 40); ctx.quadraticCurveTo(BR - 4, 88, BR - 36, 100); ctx.lineTo(BR - 36, H); ctx.lineTo(BR + 16, H); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    // aim + held
+    if (this.now >= this.canDropAt && this.closeT < 0.12) {
+      const hx = Math.max(this.WL + this.R[this.curTier], Math.min(this.WR - this.R[this.curTier], this.aimX));
+      ctx.save(); ctx.setLineDash([4, 10]); ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(hx, 66); ctx.lineTo(hx, 372); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.translate(hx, 42); this.drawPastry(ctx, this.curTier); ctx.restore();
+    }
+    // bodies
+    const oa = this.orderActive();
+    const hov = oa && this.px != null ? this.servableAt(this.px, this.py) : null;
+    for (const b of this.bodies) {
+      const r = this.er(b);
+      const hovS = hov === b ? 1.14 : 1;
+      const s = (r / this.R[b.tier]) * hovS;
+      if (oa && b.tier === this.state.orderTier) {
+        const pulse = 1 + Math.sin(this.now * 5) * 0.05;
+        ctx.save(); ctx.translate(b.x, b.y);
+        ctx.strokeStyle = hov === b ? '#fff3dd' : '#f0b64f';
+        ctx.lineWidth = hov === b ? 5 : 3.5;
+        ctx.setLineDash(hov === b ? [] : [7, 7]);
+        ctx.globalAlpha = 0.95;
+        ctx.beginPath(); ctx.arc(0, 0, r * hovS * pulse + 6, 0, 6.28); ctx.stroke();
+        ctx.restore();
+      }
+      ctx.save(); ctx.translate(b.x, b.y);
+      ctx.scale(1 + b.squish * 0.6, 1 - b.squish);
+      ctx.rotate(b.rot); ctx.scale(s, s);
+      this.drawPastry(ctx, b.tier);
+      ctx.restore();
+    }
+    // particles
+    for (const p of this.parts) {
+      const k = 1 - p.t / p.life;
+      ctx.globalAlpha = k;
+      if (p.star) {
+        ctx.strokeStyle = p.col; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        const r = p.r * (0.5 + k);
+        ctx.beginPath(); ctx.moveTo(p.x - r, p.y); ctx.lineTo(p.x + r, p.y); ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x, p.y + r); ctx.stroke();
+      } else { ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.4 + k * 0.8), 0, 6.28); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    }
+    // floats
+    for (const f of this.floats) {
+      const k = 1 - f.t; ctx.globalAlpha = Math.min(1, k * 2);
+      ctx.font = '700 17px "Baloo 2", sans-serif'; ctx.textAlign = 'center';
+      ctx.lineWidth = 4; ctx.strokeStyle = '#8a5a33'; ctx.lineJoin = 'round';
+      ctx.strokeText(f.txt, f.x, f.y); ctx.fillStyle = '#fff3dd'; ctx.fillText(f.txt, f.x, f.y);
+      ctx.globalAlpha = 1;
+    }
+    // folded hem
+    ctx.fillStyle = this.mix(this.cloth(), 0.88); ctx.fillRect(BL - 16, 372, BR - BL + 32, H - 372);
+    ctx.strokeStyle = this.mix(this.cloth(), 0.68); ctx.lineWidth = 2.5; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(BL - 16, 373); ctx.lineTo(BR + 16, 373); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,246,232,0.5)'; ctx.lineWidth = 2; ctx.setLineDash([9, 8]);
+    ctx.beginPath(); ctx.moveTo(BL - 10, 386); ctx.lineTo(BR + 10, 386); ctx.stroke(); ctx.setLineDash([]);
+    // fold closed
+    if (this.closeT > 0.002) this.drawFold(ctx, this.closeT, BL, BR, H);
+    // next-up plaque
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    const nx = BR - 34, ny = 34;
+    ctx.fillStyle = 'rgba(255,243,221,0.95)'; this.rr(ctx, nx - 32, ny - 24, 64, 50, 12); ctx.fill();
+    ctx.strokeStyle = '#a97448'; ctx.lineWidth = 2.5; this.rr(ctx, nx - 32, ny - 24, 64, 50, 12); ctx.stroke();
+    ctx.font = '800 11px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#a58358';
+    ctx.fillText('NEXT', nx, ny - 12);
+    ctx.save(); ctx.translate(nx, ny + 8); const ns = 13 / this.R[this.nextTier]; ctx.scale(ns, ns); this.drawPastry(ctx, this.nextTier); ctx.restore();
+  }
+
+  drawFold(ctx, p, BL, BR, H) {
+    const C = this.cloth(), cx = (BL + BR) / 2;
+    const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+    const flap = (ax, dir) => {
+      ctx.save(); ctx.translate(ax, 352); ctx.rotate(dir * e * 1.42);
+      ctx.beginPath(); ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(dir * 34, -190, dir * 4, -318);
+      ctx.quadraticCurveTo(dir * 150, -178, dir * 214, -8);
+      ctx.closePath();
+      ctx.fillStyle = this.mix(C, dir > 0 ? 1.06 : 0.9); ctx.fill();
+      ctx.strokeStyle = this.mix(C, 0.66); ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.save(); ctx.clip();
+      ctx.strokeStyle = 'rgba(255,246,232,0.45)'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(dir * 12, -12); ctx.quadraticCurveTo(dir * 40, -180, dir * 14, -300); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,246,232,0.3)';
+      for (let i = 0; i < 7; i++) { ctx.beginPath(); ctx.arc(dir * (30 + i * 22), -40 - i * 26, 4, 0, 6.28); ctx.fill(); }
+      ctx.restore(); ctx.restore();
+    };
+    flap(BL + 12, 1); flap(BR - 12, -1);
+    if (p > 0.55) {
+      const k = Math.min(1, (p - 0.55) / 0.45);
+      ctx.save(); ctx.translate(cx, 108); ctx.scale(k, k);
+      ctx.strokeStyle = this.mix(C, 0.66); ctx.lineWidth = 2.5;
+      ctx.fillStyle = this.mix(C, 1.1);
+      ctx.beginPath(); ctx.ellipse(-30, -6, 30, 17, -0.45, 0, 6.28); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(30, -6, 30, 17, 0.45, 0, 6.28); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = this.mix(C, 1.18);
+      ctx.beginPath(); ctx.ellipse(0, 4, 26, 21, 0, 0, 6.28); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,246,232,0.5)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 4, 13, 2.4, 5.4); ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha = k;
+      ctx.font = '800 20px "Baloo 2", sans-serif'; ctx.textAlign = 'center';
+      ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.strokeStyle = this.mix(C, 0.6);
+      ctx.strokeText('Closing time', cx, 190); ctx.fillStyle = '#fff3dd'; ctx.fillText('Closing time', cx, 190);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+  drawSmall(cv, tier, targetR) {
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    const w = cv.width / 2, h = cv.height / 2;
+    ctx.clearRect(0, 0, w, h);
+    ctx.save(); ctx.translate(w / 2, h / 2);
+    const s = targetR / this.R[tier]; ctx.scale(s, s);
+    this.drawPastry(ctx, tier); ctx.restore();
+  }
+
+  renderIcon(cv, tier, discovered) {
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    const w = cv.width / 2, h = cv.height / 2;
+    ctx.clearRect(0, 0, w, h);
+    const tmp = document.createElement('canvas'); tmp.width = cv.width; tmp.height = cv.height;
+    const tc = tmp.getContext('2d');
+    tc.setTransform(2, 0, 0, 2, 0, 0); tc.translate(w / 2, h / 2 + 1);
+    const s = (Math.min(w, h) * 0.44) / this.R[tier]; tc.scale(s, s);
+    this.drawPastry(tc, tier);
+    if (!discovered) { tc.setTransform(1, 0, 0, 1, 0, 0); tc.globalCompositeOperation = 'source-in'; tc.fillStyle = '#c3ae93'; tc.fillRect(0, 0, tmp.width, tmp.height); }
+    ctx.drawImage(tmp, 0, 0, w, h);
+    const it = this.tierList[tier];
+    it.label = discovered ? it.name : '?';
+  }
+
+  drawPastry(ctx, t) {
+    const R = this.R[t];
+    const O = Math.max(2, R * 0.09);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    const P = (fill, stroke) => { ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = O; ctx.stroke(); } };
+    if (t === 0) {
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.28); P('#f4d9a8', '#c9a26b');
+      ctx.fillStyle = '#6b4a2e';
+      ctx.beginPath(); ctx.arc(-R * 0.34, -R * 0.12, R * 0.1, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(R * 0.34, -R * 0.12, R * 0.1, 0, 6.28); ctx.fill();
+      ctx.strokeStyle = '#6b4a2e'; ctx.lineWidth = O * 0.8;
+      ctx.beginPath(); ctx.arc(0, R * 0.08, R * 0.32, 0.35, 2.79); ctx.stroke();
+      ctx.fillStyle = 'rgba(232,143,162,0.7)';
+      ctx.beginPath(); ctx.arc(-R * 0.58, R * 0.18, R * 0.13, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(R * 0.58, R * 0.18, R * 0.13, 0, 6.28); ctx.fill();
+    } else if (t === 1) {
+      ctx.beginPath(); ctx.moveTo(-R * 0.72, -R * 0.05); ctx.lineTo(R * 0.72, -R * 0.05); ctx.lineTo(R * 0.55, R * 0.92); ctx.lineTo(-R * 0.55, R * 0.92); ctx.closePath(); P('#d95f43', '#b04531');
+      ctx.strokeStyle = '#b04531'; ctx.lineWidth = O * 0.7;
+      for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(i * R * 0.3, R * 0.05); ctx.lineTo(i * R * 0.24, R * 0.85); ctx.stroke(); }
+      ctx.beginPath(); ctx.ellipse(0, -R * 0.32, R * 0.8, R * 0.62, 0, 3.14, 6.28); ctx.closePath(); P('#f0c26a', '#cf9b4a');
+      ctx.fillStyle = '#b97f33';
+      ctx.beginPath(); ctx.arc(-R * 0.3, -R * 0.5, R * 0.06, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(R * 0.2, -R * 0.62, R * 0.06, 0, 6.28); ctx.fill();
+    } else if (t === 2) {
+      ctx.beginPath(); ctx.moveTo(0, -R * 0.95);
+      ctx.quadraticCurveTo(R * 0.85, -R * 0.1, R * 0.8, R * 0.55);
+      ctx.quadraticCurveTo(R * 0.5, R * 0.9, 0, R * 0.9);
+      ctx.quadraticCurveTo(-R * 0.5, R * 0.9, -R * 0.8, R * 0.55);
+      ctx.quadraticCurveTo(-R * 0.85, -R * 0.1, 0, -R * 0.95);
+      ctx.closePath(); P('#e88fa2', '#c96b82');
+      ctx.beginPath(); ctx.arc(0, -R * 0.55, R * 0.28, 0, 6.28); P('#d95f77');
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      for (const [dx, dy] of [[-0.35, 0.1], [0.3, 0.25], [0, 0.55], [-0.15, -0.15], [0.45, -0.1]]) { ctx.beginPath(); ctx.arc(dx * R, dy * R, R * 0.06, 0, 6.28); ctx.fill(); }
+    } else if (t === 3) {
+      this.rr(ctx, -R * 0.85, -R * 0.05, R * 1.7, R * 0.75, R * 0.3); P('#f2d9ae', '#cfa870');
+      ctx.beginPath(); ctx.ellipse(0, -R * 0.15, R * 0.82, R * 0.62, 0, 3.14, 6.28); ctx.closePath(); P('#f6e3bd', '#cfa870');
+      ctx.strokeStyle = '#c94f4f'; ctx.lineWidth = R * 0.22; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-R * 0.72, R * 0.08);
+      ctx.quadraticCurveTo(-R * 0.3, R * 0.28, 0, R * 0.1);
+      ctx.quadraticCurveTo(R * 0.35, -R * 0.05, R * 0.72, R * 0.12); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      for (const [dx, dy] of [[-0.4, -0.5], [-0.05, -0.62], [0.35, -0.45]]) { ctx.beginPath(); ctx.arc(dx * R, dy * R, R * 0.055, 0, 6.28); ctx.fill(); }
+    } else if (t === 4) {
+      ctx.beginPath(); ctx.arc(0, R * 0.25, R * 0.92, 3.14, 6.28); ctx.quadraticCurveTo(0, R * 0.45, -R * 0.92, R * 0.25); ctx.closePath(); P('#e8a24b', '#bf7c2f');
+      ctx.fillStyle = '#d18a35';
+      for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.arc(i * R * 0.26, R * 0.28 + Math.abs(i) * R * 0.008, R * 0.11, 0, 6.28); ctx.fill(); }
+      ctx.fillStyle = '#bf7c2f';
+      for (const dx of [-0.3, 0, 0.3]) { ctx.beginPath(); ctx.arc(dx * R, -R * 0.15, R * 0.05, 0, 6.28); ctx.fill(); }
+    } else if (t === 5) {
+      ctx.beginPath(); ctx.ellipse(0, 0, R * 0.98, R * 0.6, 0, 0, 6.28); P('#efb96b', '#c2884a');
+      ctx.beginPath(); ctx.ellipse(0, 0, R * 0.6, R * 0.22, 0, 0, 6.28); P('#f7dca8', '#c2884a');
+      ctx.strokeStyle = '#c2884a'; ctx.lineWidth = O * 0.7;
+      ctx.beginPath(); ctx.moveTo(-R * 0.5, 0); ctx.quadraticCurveTo(0, -R * 0.12, R * 0.5, 0); ctx.stroke();
+    } else if (t === 6) {
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.28); P('#e0a055', '#b97a3a');
+      ctx.strokeStyle = '#b97a3a'; ctx.lineWidth = R * 0.16;
+      ctx.beginPath();
+      for (let a = 0; a < 12.5; a += 0.2) { const rr = R * 0.08 + a * R * 0.072; const x = Math.cos(a) * rr, y = Math.sin(a) * rr; if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,250,240,0.85)'; ctx.lineWidth = R * 0.14; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-R * 0.7, -R * 0.3); ctx.quadraticCurveTo(-R * 0.2, -R * 0.55, R * 0.15, -R * 0.35); ctx.quadraticCurveTo(R * 0.5, -R * 0.18, R * 0.72, -R * 0.3); ctx.stroke();
+    } else if (t === 7) {
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.28); P('#efb3bd', '#cf8b96');
+      ctx.strokeStyle = '#fae3e6'; ctx.lineWidth = R * 0.11; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(0, 0, R * 0.3, 0, 6.28); ctx.stroke();
+      for (let i = 0; i < 8; i++) {
+        const a = i * 0.785;
+        ctx.beginPath(); ctx.moveTo(Math.cos(a) * R * 0.34, Math.sin(a) * R * 0.34);
+        ctx.quadraticCurveTo(Math.cos(a + 0.25) * R * 0.68, Math.sin(a + 0.25) * R * 0.68, Math.cos(a + 0.12) * R * 0.94, Math.sin(a + 0.12) * R * 0.94);
+        ctx.stroke();
+      }
+    } else if (t === 8) {
+      ctx.beginPath(); ctx.ellipse(-R * 0.12, R * 0.08, R * 0.78, R * 0.58, 0, 0, 6.28); P('#b5793f', '#8f5a2a');
+      ctx.fillStyle = '#b5793f';
+      for (const dx of [-0.55, -0.15, 0.25]) { this.rr(ctx, dx * R, R * 0.45, R * 0.22, R * 0.32, R * 0.08); ctx.fill(); ctx.strokeStyle = '#8f5a2a'; ctx.lineWidth = O * 0.7; ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(R * 0.28, -R * 0.62); ctx.lineTo(R * 0.55, -R * 0.85); ctx.lineTo(R * 0.66, -R * 0.5); ctx.closePath(); P('#b5793f', '#8f5a2a');
+      ctx.beginPath(); ctx.arc(R * 0.45, -R * 0.18, R * 0.44, 0, 6.28); P('#b5793f', '#8f5a2a');
+      ctx.beginPath(); ctx.ellipse(R * 0.78, -R * 0.1, R * 0.18, R * 0.14, 0, 0, 6.28); P('#d9a86f', '#8f5a2a');
+      ctx.fillStyle = '#8f5a2a';
+      ctx.beginPath(); ctx.arc(R * 0.73, -R * 0.12, R * 0.035, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(R * 0.84, -R * 0.12, R * 0.035, 0, 6.28); ctx.fill();
+      ctx.beginPath(); ctx.arc(R * 0.42, -R * 0.3, R * 0.05, 0, 6.28); ctx.fill();
+      ctx.strokeStyle = '#8f5a2a'; ctx.lineWidth = O * 0.7;
+      ctx.beginPath(); ctx.arc(-R * 0.88, -R * 0.05, R * 0.14, 1.5, 5.2); ctx.stroke();
+    } else if (t === 9) {
+      ctx.beginPath(); ctx.moveTo(-R * 0.62, -R * 0.6); ctx.lineTo(R * 0.62, -R * 0.6);
+      ctx.quadraticCurveTo(R * 0.72, -R * 0.6, R * 0.75, -R * 0.45);
+      ctx.lineTo(R * 0.92, R * 0.55); ctx.quadraticCurveTo(R * 0.95, R * 0.72, R * 0.75, R * 0.72);
+      ctx.lineTo(-R * 0.75, R * 0.72); ctx.quadraticCurveTo(-R * 0.95, R * 0.72, -R * 0.92, R * 0.55);
+      ctx.lineTo(-R * 0.75, -R * 0.45); ctx.quadraticCurveTo(-R * 0.72, -R * 0.6, -R * 0.62, -R * 0.6);
+      ctx.closePath(); P('#f2c464', '#d19a3c');
+      ctx.beginPath(); ctx.moveTo(-R * 0.68, -R * 0.35);
+      ctx.lineTo(-R * 0.62, -R * 0.58); ctx.quadraticCurveTo(0, -R * 0.72, R * 0.62, -R * 0.58); ctx.lineTo(R * 0.68, -R * 0.35);
+      ctx.quadraticCurveTo(R * 0.45, -R * 0.18, R * 0.3, -R * 0.38);
+      ctx.quadraticCurveTo(R * 0.15, -R * 0.1, -R * 0.05, -R * 0.34);
+      ctx.quadraticCurveTo(-R * 0.25, -R * 0.05, -R * 0.42, -R * 0.3);
+      ctx.quadraticCurveTo(-R * 0.55, -R * 0.15, -R * 0.68, -R * 0.35);
+      ctx.closePath(); P('#b06a2a', '#96591f');
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = R * 0.09; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-R * 0.55, R * 0.3); ctx.quadraticCurveTo(-R * 0.5, R * 0.5, -R * 0.3, R * 0.55); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(0, 0, R * 0.95, 0, 6.28); ctx.arc(0, 0, R * 0.4, 0, 6.28, true); P('#eec27a', '#c8964d');
+      ctx.strokeStyle = '#c8964d'; ctx.lineWidth = O; ctx.beginPath(); ctx.arc(0, 0, R * 0.4, 0, 6.28); ctx.stroke();
+      const cols = ['#d95f43', '#7fa864', '#e88fa2', '#f0b64f'];
+      for (let i = 0; i < 8; i++) {
+        const a = i * 0.785 + 0.2;
+        ctx.strokeStyle = cols[i % 4]; ctx.lineWidth = R * 0.16; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(0, 0, R * 0.68, a, a + 0.3); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = R * 0.07;
+      for (let i = 0; i < 8; i++) { const a = i * 0.785 + 0.6; ctx.beginPath(); ctx.arc(0, 0, R * 0.68, a, a + 0.16); ctx.stroke(); }
+    }
+  }
+
+  drawCustomer(cv, idx) {
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    ctx.clearRect(0, 0, 210, 170);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    const shirt = ['#d95f43', '#7fa864', '#7f9fc9'][idx];
+    const skin = ['#b5793f', '#cdc5ba', '#f0c25e'][idx];
+    const dark = ['#8f5a2a', '#9a9186', '#c99436'][idx];
+    const P = (f, s) => { ctx.fillStyle = f; ctx.fill(); if (s) { ctx.strokeStyle = s; ctx.lineWidth = 3; ctx.stroke(); } };
+    this.rr(ctx, 45, 116, 120, 58, 26); P(shirt, 'rgba(0,0,0,0.15)');
+    this.rr(ctx, 63, 128, 84, 46, 14); P('#fff3dd', '#e0cba6');
+    ctx.strokeStyle = '#e0cba6'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(75, 128); ctx.lineTo(80, 118); ctx.moveTo(135, 128); ctx.lineTo(130, 118); ctx.stroke();
+    if (idx === 0) {
+      ctx.beginPath(); ctx.arc(70, 38, 15, 0, 6.28); P(skin, dark);
+      ctx.beginPath(); ctx.arc(140, 38, 15, 0, 6.28); P(skin, dark);
+      ctx.beginPath(); ctx.arc(70, 38, 7, 0, 6.28); P('#d9a86f');
+      ctx.beginPath(); ctx.arc(140, 38, 7, 0, 6.28); P('#d9a86f');
+    } else if (idx === 1) {
+      ctx.beginPath(); ctx.moveTo(58, 52); ctx.lineTo(66, 20); ctx.lineTo(88, 40); ctx.closePath(); P(skin, dark);
+      ctx.beginPath(); ctx.moveTo(152, 52); ctx.lineTo(144, 20); ctx.lineTo(122, 40); ctx.closePath(); P(skin, dark);
+      ctx.beginPath(); ctx.moveTo(64, 47); ctx.lineTo(68, 30); ctx.lineTo(80, 41); ctx.closePath(); P('#e8a7b5');
+      ctx.beginPath(); ctx.moveTo(146, 47); ctx.lineTo(142, 30); ctx.lineTo(130, 41); ctx.closePath(); P('#e8a7b5');
+    } else {
+      ctx.strokeStyle = dark; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(105, 32); ctx.quadraticCurveTo(100, 18, 92, 16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(105, 32); ctx.quadraticCurveTo(106, 16, 114, 12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(105, 32); ctx.quadraticCurveTo(114, 22, 122, 20); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(105, 78, 44, 0, 6.28); P(skin, dark);
+    ctx.fillStyle = '#4a3324';
+    ctx.beginPath(); ctx.arc(89, 74, 4.5, 0, 6.28); ctx.fill();
+    ctx.beginPath(); ctx.arc(121, 74, 4.5, 0, 6.28); ctx.fill();
+    ctx.fillStyle = 'rgba(232,143,162,0.75)';
+    ctx.beginPath(); ctx.arc(78, 90, 7, 0, 6.28); ctx.fill();
+    ctx.beginPath(); ctx.arc(132, 90, 7, 0, 6.28); ctx.fill();
+    if (idx === 0) {
+      ctx.beginPath(); ctx.ellipse(105, 94, 16, 12, 0, 0, 6.28); P('#e8c191', dark);
+      ctx.fillStyle = '#6f4a2c'; ctx.beginPath(); ctx.ellipse(105, 90, 5, 3.5, 0, 0, 6.28); ctx.fill();
+      ctx.strokeStyle = '#6f4a2c'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(100, 97, 4, 0.3, 2.6); ctx.stroke();
+      ctx.beginPath(); ctx.arc(110, 97, 4, 0.5, 2.8); ctx.stroke();
+    } else if (idx === 1) {
+      ctx.fillStyle = '#e8a7b5';
+      ctx.beginPath(); ctx.moveTo(101, 88); ctx.lineTo(109, 88); ctx.lineTo(105, 93); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#4a3324'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(100, 96, 4.5, 0.4, 2.6); ctx.stroke();
+      ctx.beginPath(); ctx.arc(110, 96, 4.5, 0.5, 2.7); ctx.stroke();
+      ctx.strokeStyle = 'rgba(74,51,36,0.6)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(58, 84); ctx.lineTo(74, 86); ctx.moveTo(58, 94); ctx.lineTo(74, 92); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(152, 84); ctx.lineTo(136, 86); ctx.moveTo(152, 94); ctx.lineTo(136, 92); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(97, 86); ctx.lineTo(113, 86); ctx.lineTo(105, 98); ctx.closePath(); P('#e07b3a', '#c2611f');
+      ctx.strokeStyle = '#4a3324'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(89, 74, 6.5, 3.5, 5.9); ctx.stroke();
+    }
+  }
+
+  ensureAudio() { if (!this.ac) { try { this.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } }
+  tone(f, t0, dur, type, vol) {
+    const ac = this.ac; if (!ac) return;
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, ac.currentTime + t0);
+    g.gain.setValueAtTime(0, ac.currentTime + t0);
+    g.gain.linearRampToValueAtTime(vol, ac.currentTime + t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + t0 + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(ac.currentTime + t0); o.stop(ac.currentTime + t0 + dur + 0.05);
+  }
+  snd(kind, n) {
+    if (!(this.props.soundOn ?? true) || !this.ac) return;
+    if (kind === 'drop') this.tone(180, 0, 0.1, 'sine', 0.12);
+    else if (kind === 'merge') { const f = 260 + n * 55; this.tone(f, 0, 0.12, 'triangle', 0.16); this.tone(f * 1.5, 0.06, 0.14, 'triangle', 0.12); }
+    else if (kind === 'disco') { this.tone(660, 0, 0.12, 'sine', 0.12); this.tone(880, 0.09, 0.16, 'sine', 0.12); this.tone(1100, 0.18, 0.2, 'sine', 0.1); }
+    else if (kind === 'shake') { for (let i = 0; i < 6; i++) this.tone(300 + Math.random() * 560, i * 0.04, 0.08, 'triangle', 0.045); this.tone(170, 0.02, 0.32, 'sine', 0.07); }
+    else if (kind === 'chime') { this.tone(1318, 0, 0.55, 'sine', 0.09); this.tone(1760, 0.02, 0.6, 'sine', 0.055); this.tone(2637, 0.04, 0.3, 'sine', 0.03); this.tone(1568, 0.24, 0.55, 'sine', 0.07); this.tone(2093, 0.26, 0.5, 'sine', 0.04); }
+    else if (kind === 'serve') { this.tone(523, 0, 0.12, 'sine', 0.13); this.tone(659, 0.09, 0.12, 'sine', 0.13); this.tone(784, 0.18, 0.22, 'sine', 0.13); }
+  }
+
+  renderVals() {
+    this.init();
+    const s = this.state;
+    const open = s.mode === 'open';
+    let maxD = 0;
+    for (let i = 0; i < this.tierList.length; i++) if (this.tierList[i].discovered) maxD = i;
+    const start = Math.max(0, Math.min(this.tierList.length - 5, maxD - 3));
+    const ent = ({ Walk: 'custWalkIn', Hop: 'custHop', Pop: 'custPop', Slide: 'custSlide' })[this.props.entranceStyle ?? 'Walk'] || 'custWalkIn';
+    const et = this.props.entranceTime ?? 0.7;
+    return {
+      scale: s.scale,
+      served: s.served,
+      signTop: open ? 'now serving' : 'next customer in',
+      signBig: open ? '♥' : s.dropsLeft + 's',
+      customerVisible: open,
+      custAnim: s.happy ? 'happyBounce 0.45s ease 2' : (open ? ent + ' ' + et + 's cubic-bezier(0.22,0.9,0.3,1) both' : 'none'),
+      bubbleVisible: open && !s.happy && s.orderTier != null,
+      thanksVisible: s.happy,
+      orderName: s.orderTier != null ? this.names[s.orderTier] : '',
+      caseItems: this.tierList.slice(start, start + 5),
+      boostsVisible: this.props.boostsOn ?? true,
+      chargePct: Math.round(s.charge * 100),
+      chargeLabel: s.charge >= 1 ? 'READY!' : Math.round(s.charge * 100) + '%',
+      specAnim: s.charge >= 1 ? 'boostPulse 1.15s ease-in-out infinite' : 'none',
+      specOp: s.charge >= 1 ? 1 : 0.72,
+      onShake: this.onShake,
+      flyerVisible: !!s.flyer,
+      flyerX: s.flyer ? s.flyer.x : 0,
+      flyerY: s.flyer ? s.flyer.y : 0,
+      flyerS: s.flyer ? s.flyer.s : 1,
+      setMainCanvas: this.setMainCanvas, setNextCanvas: this.setNextCanvas,
+      setOrderIcon: this.setOrderIcon, setFlyerCanvas: this.setFlyerCanvas, setCustCanvas: this.setCustCanvas,
+      onPD: this.onPD, onPM: this.onPM, onPU: this.onPU, onFlyerDone: this.onFlyerDone,
+    };
+  }
+}
+</script>
+</body>
+</html>

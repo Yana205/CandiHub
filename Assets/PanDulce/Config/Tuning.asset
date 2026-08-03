@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63643862a90b04f1fb7891b54020e4c6, type: 3}
+  m_Name: Tuning
+  m_EditorClassIdentifier: PanDulce.Runtime::PanDulce.Runtime.TuningConfig
+  data:
+    gravity: 1500
+    bounciness: 0.08
+    sizeScale: 1.3000001
+    rotationAmount: 0.2
+    mergeGrowTime: 0.85
+    comboDelay: 0.5
+    customerEverySec: 18
+    entranceStyle: 0
+    entranceTime: 0.7
+    endOfDay: 0
+    boostsOn: 1
+    shakePower: 1
+    chargePerMerge: 0.14
+    soundOn: 1
+    substeps: 3
+    floorSag: 26
+    centerPull: 34
+    groundFriction: 9
+    comboWindow: 1.4
+    mergePopVy: -70
+    squishAmount: 1
+    particleScale: 1
+    dropCooldown: 0.5
+    dropVy: 60
+    flySec: 0.9
+    happyMs: 1400
+    startingBodies: 9
+    shakeDuration: 0.6
+    topOut: 1
+    topOutLine: 82
+    topOutGrace: 2.2
+    showDangerLine: 1
+    timeScale: 1
+    paused: 0
