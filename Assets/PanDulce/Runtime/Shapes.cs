@@ -109,6 +109,25 @@ namespace PanDulce.Runtime
             return Store(key, tex);
         }
 
+        /// <summary>White with alpha fading topA → bottomA — for glass and glare.</summary>
+        public static Sprite VerticalAlphaGradient(int h, float topA, float bottomA)
+        {
+            string key = $"vag:{h}:{topA:F2}:{bottomA:F2}";
+            if (cache.TryGetValue(key, out var cached) && cached != null) return cached;
+
+            h = Mathf.Max(2, h);
+            var tex = NewTexture(1, h);
+            var px = new Color32[h];
+            for (int y = 0; y < h; y++)
+            {
+                float k = 1f - (y / (float)(h - 1));           // texture y is bottom-up
+                px[y] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(Mathf.Lerp(topA, bottomA, k)) * 255f));
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            return Store(key, tex);
+        }
+
         /// <summary>A horizontal dashed line, for the aim guide and the danger line.</summary>
         public static Sprite Dashes(int dash, int gap, int thickness)
         {
