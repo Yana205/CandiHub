@@ -27,24 +27,18 @@
 
 ---
 
-### Task 0: Commit the pending working-tree state and establish a green baseline
+### Task 0: Establish a green baseline
 
-The repo has uncommitted work from a previous session (camera-based stage fitting, Game View size setup, `StageFitTests`). It is coherent and should land as its own commit so this plan's diffs stay clean.
+The previously pending stage-fitting work was committed by the user as `e51d9ce update`; the tree should already be clean.
 
-**Files:**
-- Commit (no edits): `Assets/PanDulce/Editor/StageBuilder.cs`, `Assets/PanDulce/Runtime/StageFitter.cs`, `Assets/PanDulce/Runtime/StageSpace.cs`, `Assets/PanDulce/Tests/PanDulce.Tests.asmdef`, `Assets/Scenes/Main.unity`, `ProjectSettings/ProjectSettings.asset`, `Assets/PanDulce/Editor/GameViewSizeSetup.cs(+.meta)`, `Assets/PanDulce/Editor/StageSceneNormalizer.cs(+.meta)`, `Assets/PanDulce/Tests/StageFitTests.cs(+.meta)`
+**Files:** none.
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: a clean working tree and a verified-green test baseline for every later task.
+- Produces: a verified-clean working tree and a verified-green test baseline for every later task.
 
-- [ ] **Step 1: Run the EditMode tests** via MCP `tests-run` (testMode `EditMode`). Expected: all pass (28 existing + StageFitTests). If any fail, STOP and report — do not commit a red baseline.
-- [ ] **Step 2: Commit everything pending**
-
-```bash
-git add -A
-git commit -m "Commit pending stage-fitting and game-view setup work"
-```
+- [ ] **Step 1: Confirm the tree is clean** — `git status --short` returns nothing. If anything is pending, stop and surface it before proceeding.
+- [ ] **Step 2: Run the EditMode tests** via MCP `tests-run` (testMode `EditMode`). Expected: all pass (28 existing + StageFitTests). If any fail, STOP and report — do not build on a red baseline.
 
 ---
 
