@@ -42,6 +42,7 @@ namespace PanDulce.Runtime
         [SerializeField] CustomerView customer;
         [SerializeField] ServeFlightView serveFlight;
         [SerializeField] GameOverCard gameOverCard;
+        [SerializeField] NextPlaqueView nextPlaque;
         [SerializeField] PointerInput pointer;
         [SerializeField] SfxPlayer sfx;
 
@@ -165,6 +166,7 @@ namespace PanDulce.Runtime
             if (boostBar != null) boostBar.Sync(Boost.Charge, Boost.Ready, tuning.BoostsOn, Sim.Now);
             if (sign != null) sign.Sync(Shop.State, Shop.SecondsShown);
             if (displayCase != null) displayCase.Sync(Sim);
+            if (nextPlaque != null) nextPlaque.Sync(Sim.NextTier);
         }
 
         Color CurrentClothColor => Palette.ClothSwatches[clothSwatch % Palette.ClothSwatches.Length];
@@ -327,7 +329,8 @@ namespace PanDulce.Runtime
                                AimGuideView aimGuide, DangerLineView danger, FoldView foldView,
                                TopBarView top, BoostBarView boost, OrderBubbleView orderBubble,
                                SignView signView, DisplayCaseView caseView, CustomerView customerView,
-                               ServeFlightView flight, GameOverCard card, PointerInput input, SfxPlayer audio)
+                               ServeFlightView flight, GameOverCard card, NextPlaqueView plaque,
+                               PointerInput input, SfxPlayer audio)
         {
             tuning = cfg; database = db; cam = camera; playRoot = play;
             clothShakeRoot = shaker; cloth = clothView; bodies = pastryPool;
@@ -335,7 +338,7 @@ namespace PanDulce.Runtime
             dangerLine = danger; fold = foldView; topBar = top; boostBar = boost;
             bubble = orderBubble; sign = signView; displayCase = caseView;
             customer = customerView; serveFlight = flight; gameOverCard = card;
-            pointer = input; sfx = audio;
+            nextPlaque = plaque; pointer = input; sfx = audio;
         }
 
         public PastryDatabase Database => database;

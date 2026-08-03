@@ -95,6 +95,9 @@ namespace PanDulce.Editor
             play.transform.localPosition = StageCoords.Stage(StageCoords.PlayOriginX,
                                                              StageCoords.PlayOriginY);
 
+            var deskGo = Child(play.transform, "Desk");
+            var desk = deskGo.AddComponent<DeskView>();
+
             var shakeRootGo = Child(play.transform, "ClothShakeRoot");
             var shaker = shakeRootGo.AddComponent<ClothShaker>();
 
@@ -122,6 +125,10 @@ namespace PanDulce.Editor
             // FoldFlaps sits outside the shake root so the fold does not wobble
             var foldGo = Child(play.transform, "FoldFlaps");
             var fold = foldGo.AddComponent<FoldView>();
+
+            var plaqueGo = Child(play.transform, "NextPlaque");
+            var plaque = plaqueGo.AddComponent<NextPlaqueView>();
+            plaque.EditorAssign(db);
 
             // 26 · UI
             var ui = Folder(stage.transform, "[ 26 · UI ]");
@@ -155,7 +162,8 @@ namespace PanDulce.Editor
 
             gameRoot.EditorWire(tuning, db, cam, play.transform, shaker, cloth, bodies,
                                 particles, floats, aim, danger, fold, topBar, boostBar,
-                                bubble, sign, displayCase, customer, flight, card, pointer, sfx);
+                                bubble, sign, displayCase, customer, flight, card, plaque,
+                                pointer, sfx);
 
             // Strip generated content, save a clean scene, then put the preview back.
             var views = Object.FindObjectsByType<GeneratedView>(FindObjectsInactive.Include);

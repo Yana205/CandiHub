@@ -24,7 +24,8 @@ namespace PanDulce.Runtime
         MeshRenderer meshRenderer;
         Mesh mesh;
         LineRenderer outline;
-        SpriteRenderer hemBand, hemLine, stitch, dots;
+        SpriteRenderer hemBand, hemLine, stitch, dots, shadeL, shadeR;
+        LineRenderer seam;
         Color lastColor;
         readonly List<Vector2> top = new List<Vector2>(128);
 
@@ -72,6 +73,19 @@ namespace PanDulce.Runtime
             hemLine = MakeSprite("HemLine", Shapes.White, 61);
             stitch = MakeSprite("HemStitch", Shapes.Dashes(9, 8, 2), 62);
             dots = MakeSprite("ClothDots", DotTexture(), 12);
+            shadeL = MakeSprite("ShadeL", Shapes.White, 13);
+            shadeR = MakeSprite("ShadeR", Shapes.White, 13);
+
+            // A second LineRenderer cannot live on the same GameObject as `outline`, so the
+            // highlight seam gets its own child.
+            var seamGo = new GameObject("Seam") { hideFlags = HideFlags.DontSave };
+            seamGo.transform.SetParent(transform, false);
+            seam = seamGo.AddComponent<LineRenderer>();
+            seam.useWorldSpace = false;
+            seam.widthMultiplier = 2.5f * StageCoords.PX;
+            seam.numCornerVertices = 4; seam.numCapVertices = 4;
+            seam.material = mat;
+            seam.sortingLayerName = "PlayArea"; seam.sortingOrder = 12;
 
             BuildGeometry();
             Repaint();
@@ -182,6 +196,11 @@ namespace PanDulce.Runtime
 
             outline.positionCount = n;
             for (int i = 0; i < n; i++) outline.SetPosition(i, verts[i]);
+
+            // Highlight seam: the same curve, traced 12 px lower.
+            seam.positionCount = top.Count;
+            for (int i = 0; i < top.Count; i++)
+                seam.SetPosition(i, new Vector3(top[i].x * StageCoords.PX, -(top[i].y + 12f) * StageCoords.PX, 0f));
         }
 
         /// <summary>Samples a quadratic bezier into `top`, returning its end point.</summary>
@@ -216,6 +235,12 @@ namespace PanDulce.Runtime
 
             Color stroke = Palette.Mix(clothColor, 0.72f);
             outline.startColor = outline.endColor = stroke;
+
+            seam.startColor = seam.endColor = new Color(1f, 246f/255f, 232f/255f, 0.55f);
+            PlaceRect(shadeL, SimField.BL, 110f, 70f, 262f);
+            shadeL.color = new Color(0f, 0f, 0f, 0.12f);
+            PlaceRect(shadeR, SimField.BR - 70f, 110f, 70f, 262f);
+            shadeR.color = new Color(0f, 0f, 0f, 0.12f);
 
             // Hem: solid band from y 372 down, a darker line at 373, a stitch at 386 (§8.5.6).
             PlaceRect(hemBand, SimField.BL, 372f, SimField.BR - SimField.BL, BottomY - 372f);
