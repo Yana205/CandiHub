@@ -3,6 +3,7 @@
     "rootNamespace": "PanDulce.Tests",
     "references": [
         "PanDulce.Core",
+        "PanDulce.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

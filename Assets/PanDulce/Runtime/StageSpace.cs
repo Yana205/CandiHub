@@ -48,4 +48,41 @@ namespace PanDulce.Runtime
         public static float RotationDegrees(float bodyRotRadians)
             => -bodyRotRadians * Mathf.Rad2Deg;
     }
+
+    /// <summary>
+    /// The §5.1 contain-fit, as pure arithmetic over screen dimensions.
+    ///
+    /// The stage lives in world space at a fixed scale of 1, so fitting is the camera's job:
+    /// widen the orthographic frustum until the 446 × 900 safe box fits inside it. Scaling
+    /// the stage transform instead would double-apply the mapping the camera already does —
+    /// a screen-px/stage-px ratio is not a world-space scale factor.
+    /// </summary>
+    public static class StageFit
+    {
+        /// <summary>
+        /// Screen px per stage px once the safe box is contained. This is the honest meaning
+        /// of the ratio: it converts between the two pixel spaces, which is what
+        /// <c>SafeAreaInset</c> needs when turning <c>Screen.safeArea</c> into stage px.
+        /// </summary>
+        public static float ScreenPxPerStagePx(int screenW, int screenH)
+        {
+            if (screenW <= 0 || screenH <= 0) return 1f;
+
+            float s = Mathf.Min(screenH / StageCoords.SafeH, screenW / StageCoords.SafeW);
+            return s > 0f && !float.IsNaN(s) ? s : 1f;
+        }
+
+        /// <summary>
+        /// Orthographic half-height, in world units, that contains the safe box.
+        ///
+        /// Equivalent to <c>max(4.5, 2.23 / aspect)</c>: tall phones are width-limited and
+        /// get vertical slack, which is what the backdrop bleed exists to fill.
+        /// </summary>
+        public static float OrthographicSize(int screenW, int screenH)
+        {
+            if (screenH <= 0) return StageCoords.SafeH * StageCoords.PX * 0.5f;
+
+            return screenH / ScreenPxPerStagePx(screenW, screenH) * StageCoords.PX * 0.5f;
+        }
+    }
 }

@@ -57,15 +57,18 @@ namespace PanDulce.Editor
             }
             cam.transform.SetParent(cameraFolder.transform, false);
             cam.orthographic = true;
-            cam.orthographicSize = 4.4f;
+            // A baseline only: StageFitter widens this at runtime to contain the safe box.
+            // 4.5 is the height-limited case, where 900 stage px exactly fill the view.
+            cam.orthographicSize = StageCoords.SafeH * StageCoords.PX * 0.5f;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = Palette.Page;
             cam.transform.position = new Vector3(0f, 0f, -10f);
             if (cam.GetComponent<AudioListener>() == null) cam.gameObject.AddComponent<AudioListener>();
 
-            // ---- [ 20 · STAGE ] — the only object that scales ----
+            // ---- [ 20 · STAGE ] — fixed scale; the camera is what adapts (§5.1) ----
             var stage = Folder(null, "[ 20 · STAGE ]");
-            stage.AddComponent<StageFitter>();
+            var fitter = stage.AddComponent<StageFitter>();
+            fitter.EditorAssign(cam);
 
             // 21 · BACKDROP
             var backdrop = Folder(stage.transform, "[ 21 · BACKDROP ]");

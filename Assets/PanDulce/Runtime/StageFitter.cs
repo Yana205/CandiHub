@@ -3,44 +3,116 @@ using UnityEngine;
 namespace PanDulce.Runtime
 {
     /// <summary>
-    /// Scales the stage root to fit the screen — the ONLY object in the game that scales (§5.1).
+    /// Fits the 430 × 880 design frame onto the screen by widening the camera (§5.1).
     ///
-    /// The design frame is 430 × 880 inside a 446 × 900 safe box, an aspect of 0.495. Real
-    /// phones are taller, so width is the limiting dimension and the slack appears as
-    /// horizontal bars — which is why the backdrop bleeds beyond the frame.
+    /// The design frame sits inside a 446 × 900 safe box, an aspect of 0.495. Real phones are
+    /// taller, so width is the limiting dimension and the slack appears as horizontal bars —
+    /// which is why the backdrop bleeds beyond the frame.
+    ///
+    /// The stage itself never scales. It is authored at 1 stage px = 0.01 world units and
+    /// stays there; the orthographic camera is what adapts. Scaling the stage transform
+    /// instead double-applies the stage → screen mapping the camera already performs, because
+    /// a screen-px/stage-px ratio is not a world-space scale factor. That was a real bug: with
+    /// the camera pinned at size 4.4 it showed a fixed 880 stage px, so on an iPhone 15 the
+    /// 2.62 ratio cropped away 62% of the stage.
     /// </summary>
     [ExecuteAlways]
     public sealed class StageFitter : MonoBehaviour
     {
+        /// <summary>
+        /// Screen px per stage px. <see cref="SafeAreaInset"/> divides by this to convert
+        /// <c>Screen.safeArea</c> into stage px, which is the ratio's honest meaning.
+        /// </summary>
         public static float CurrentScale { get; private set; } = 1f;
 
+        [SerializeField] Camera targetCamera;
+
         int lastW, lastH;
+
+        /// <summary>Editor-time wiring, so the reference is committed rather than resolved
+        /// by tag lookup on first frame.</summary>
+        public void EditorAssign(Camera cam) { targetCamera = cam; Fit(); }
 
         void OnEnable() { lastW = lastH = 0; Fit(); }
 
         void Update()
         {
-            if (Screen.width == lastW && Screen.height == lastH) return;
+            ResolveViewport(out int w, out int h);
+            if (w == lastW && h == lastH) return;
             Fit();
         }
 
         void Fit()
         {
-            lastW = Screen.width;
-            lastH = Screen.height;
+            ResolveViewport(out lastW, out lastH);
             if (lastW <= 0 || lastH <= 0) return;
 
-            float scale = Mathf.Min(lastH / StageCoords.SafeH, lastW / StageCoords.SafeW);
-            if (scale <= 0f || float.IsNaN(scale)) scale = 1f;
+            CurrentScale = StageFit.ScreenPxPerStagePx(lastW, lastH);
 
-            CurrentScale = scale;
-            transform.localScale = new Vector3(scale, scale, 1f);
-
-            // Keep the stage centred: the frame's top-left sits at the stage root's origin.
+            // Fixed placement: the frame's top-left sits at the stage root's origin, so the
+            // 430 × 880 frame lands centred on a camera positioned at x=0, y=0.
+            transform.localScale = Vector3.one;
             transform.localPosition = new Vector3(
-                -StageCoords.StageW * StageCoords.PX * scale * 0.5f,
-                 StageCoords.StageH * StageCoords.PX * scale * 0.5f, 0f);
+                -StageCoords.StageW * StageCoords.PX * 0.5f,
+                 StageCoords.StageH * StageCoords.PX * 0.5f, 0f);
+
+            var cam = ResolveCamera();
+            if (cam == null) return;
+
+            cam.orthographic = true;
+            cam.orthographicSize = StageFit.OrthographicSize(lastW, lastH);
         }
+
+        Camera ResolveCamera()
+        {
+            if (targetCamera == null) targetCamera = Camera.main;
+            return targetCamera;
+        }
+
+        /// <summary>
+        /// The dimensions to fit against. In a build this is simply the screen.
+        ///
+        /// Not so in the Editor: outside play mode <c>Screen.width/height</c> report whichever
+        /// EditorWindow is currently repainting, not the Game view. That is how a 578 × 956
+        /// inspector panel once produced the committed 1.0622 stage scale. Ask the Game view
+        /// directly instead, and fall back to Screen if the internal call ever disappears.
+        /// </summary>
+        static void ResolveViewport(out int w, out int h)
+        {
+            w = Screen.width;
+            h = Screen.height;
+#if UNITY_EDITOR
+            if (Application.isPlaying) return;
+            if (TryGetGameViewSize(out int gw, out int gh)) { w = gw; h = gh; }
+#endif
+        }
+
+#if UNITY_EDITOR
+        static System.Reflection.MethodInfo gameViewSizeMethod;
+        static bool gameViewSizeResolved;
+
+        static bool TryGetGameViewSize(out int w, out int h)
+        {
+            w = h = 0;
+
+            if (!gameViewSizeResolved)
+            {
+                gameViewSizeResolved = true;
+                gameViewSizeMethod = typeof(UnityEditor.Handles).GetMethod(
+                    "GetMainGameViewSize",
+                    System.Reflection.BindingFlags.Static |
+                    System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.Public);
+            }
+
+            if (gameViewSizeMethod == null) return false;
+
+            var size = (Vector2)gameViewSizeMethod.Invoke(null, null);
+            w = Mathf.RoundToInt(size.x);
+            h = Mathf.RoundToInt(size.y);
+            return w > 0 && h > 0;
+        }
+#endif
     }
 
     /// <summary>
