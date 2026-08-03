@@ -161,7 +161,7 @@ namespace PanDulce.Runtime
                                 TopOut.Blinking, Sim.Now);
 
             if (fold != null) fold.Sync(Day.CloseT, CurrentClothColor);
-            if (topBar != null) topBar.Sync(Shop.Served, Score.Score, Score.Best, Sim.NextTier);
+            if (topBar != null) topBar.Sync(Shop.Served, Sim.NextTier);
             if (boostBar != null) boostBar.Sync(Boost.Charge, Boost.Ready, tuning.BoostsOn, Sim.Now);
             if (sign != null) sign.Sync(Shop.State, Shop.SecondsShown);
             if (displayCase != null) displayCase.Sync(Sim);

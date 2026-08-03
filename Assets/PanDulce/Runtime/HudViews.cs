@@ -7,23 +7,21 @@ namespace PanDulce.Runtime
     /// <summary>
     /// Top bar — stage (0,0) 430 × 56 (§8.2).
     ///
-    /// The centre slot carries the score instead of the "Sweet Bakery" title: this build
-    /// has a score layer, and a phone screen cannot afford decoration in the one slot that
-    /// needs to be readable at a glance.
+    /// The centre carries the "Sweet Bakery" title per the mock; score lives on the run-end card.
     /// </summary>
     public sealed class TopBarView : GeneratedView
     {
-        TextMeshPro customersLabel, scoreLabel, bestLabel;
+        TextMeshPro customersLabel;
         SpriteRenderer nextIcon;
-        int shownScore, shownBest, shownServed, shownNext;
+        int shownServed = -1, shownNext = -1;
 
         protected override void Build()
         {
-            shownScore = shownBest = shownServed = shownNext = -1;
+            shownServed = shownNext = -1;
             var t = Content;
 
-            ViewFactory.Rect(t, "Background", Shapes.White, 0f, -60f, 430f, 116f,
-                             Palette.BarTop, "Overlay", 0);
+            ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.89f),
+                             0f, -60f, 430f, 116f, Palette.BarTop, "Overlay", 0);
             ViewFactory.Rect(t, "BottomBorder", Shapes.White, 0f, 52f, 430f, 4f,
                              Palette.BarBorder, "Overlay", 1);
 
@@ -31,23 +29,21 @@ namespace PanDulce.Runtime
             customersLabel = ViewFactory.Label(t, "CustomersLabel", "Customers: 0",
                                                10f, 28f, 104f, 14f, Palette.Cream, "Overlay", 3);
 
-            scoreLabel = ViewFactory.Label(t, "Score", "0", 145f, 24f, 140f, 24f,
-                                           Palette.Cream, "Overlay", 3);
-            bestLabel = ViewFactory.Label(t, "Best", "best 0", 145f, 42f, 140f, 10f,
-                                          Palette.WithAlpha(Palette.Cream, 0.75f), "Overlay", 3,
-                                          TextAlignmentOptions.Center, FontStyles.Normal);
+            // Sweet Bakery — 22px 800 cream with a 2px dark drop (§8.2)
+            ViewFactory.Label(t, "TitleShadow", "Sweet Bakery", 115f, 32f, 200f, 22f,
+                              Palette.Hex("#6f4a2c"), "Overlay", 2);
+            ViewFactory.Label(t, "Title", "Sweet Bakery", 115f, 30f, 200f, 22f,
+                              Palette.Cream, "Overlay", 3);
 
             ViewFactory.Panel(t, "NextChip", 316f, 10f, 104f, 36f, 10, Palette.ChipFill, "Overlay", 2);
             ViewFactory.Label(t, "NextLabel", "Next", 322f, 30f, 40f, 13f, Palette.Cream, "Overlay", 3);
             nextIcon = ViewFactory.Icon(t, "NextIcon", database, 0, 396f, 28f, 14f, "Overlay", 3);
         }
 
-        public void Sync(int served, int score, int best, int nextTier)
+        public void Sync(int served, int nextTier)
         {
             if (!IsBuilt) return;
             if (served != shownServed) { shownServed = served; customersLabel.text = $"Customers: {served}"; }
-            if (score != shownScore) { shownScore = score; scoreLabel.text = score.ToString("N0"); }
-            if (best != shownBest) { shownBest = best; bestLabel.text = $"best {best:N0}"; }
             if (nextTier != shownNext && database != null)
             {
                 shownNext = nextTier;
