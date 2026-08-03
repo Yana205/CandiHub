@@ -76,7 +76,7 @@ namespace PanDulce.Runtime
     /// <summary>The bear, rising from behind the counter through the opening.</summary>
     public sealed class CustomerView : GeneratedView
     {
-        const float AnchorX = 215f, AnchorY = 448f, RisePx = 150f;
+        const float AnchorX = 215f, AnchorY = 355f, RisePx = 130f;
 
         Transform bearAnchor;
         SpriteRenderer bear;
@@ -89,13 +89,13 @@ namespace PanDulce.Runtime
             present = false;
             var t = Content;
 
-            // the opening — always visible, in front of the bear (Furniture > Customer)
+            // the opening — always visible, in front of the case glass (Case > Customer)
             var ring = ViewFactory.Rect(t, "CounterOpening",
                                         database != null ? database.CounterOpening : null,
-                                        0f, 0f, 1f, 1f, Color.white, "Furniture", 25);
+                                        0f, 0f, 1f, 1f, Color.white, "Case", 20);
             ring.drawMode = SpriteDrawMode.Simple;
             ring.transform.localScale = Vector3.one;            // baked 180×80 stage px at PPU 100/2x
-            ring.transform.localPosition = StageCoords.Stage(AnchorX, 430f);
+            ring.transform.localPosition = StageCoords.Stage(AnchorX, 318f);
 
             bearAnchor = ViewFactory.Node(t, "BearAnchor", AnchorX, AnchorY).transform;
             var go = new GameObject("Bear") { hideFlags = HideFlags.DontSave };
@@ -164,10 +164,10 @@ namespace PanDulce.Runtime
         static Vector3 Base() => StageCoords.Stage(AnchorX, AnchorY);
     }
 
-    /// <summary>The pastry's arc from the cloth to the bear, ending at stage (215,330).</summary>
+    /// <summary>The pastry's arc from the cloth to the bear, ending at stage (215,260).</summary>
     public sealed class ServeFlightView : GeneratedView
     {
-        static readonly Vector2 Target = new Vector2(215f, 330f);
+        static readonly Vector2 Target = new Vector2(215f, 260f);
 
         SpriteRenderer sprite;
         Vector2 from;
