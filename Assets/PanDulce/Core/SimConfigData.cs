@@ -25,6 +25,9 @@ namespace PanDulce.Core
         public float chargePerMerge = 0.14f;
         public bool soundOn = true;
 
+        /// <summary>Which furoshiki swatch is active (view-only — not part of ISimConfig).</summary>
+        public int clothColorIndex = 0;
+
         // Tier B — "Beyond the mock" (§6.3)
         public int substeps = 3;
         public float floorSag = 26f;

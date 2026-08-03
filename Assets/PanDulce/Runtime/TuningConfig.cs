@@ -33,6 +33,7 @@ namespace PanDulce.Runtime
         public float ShakePower => data.ShakePower;
         public float ChargePerMerge => data.ChargePerMerge;
         public bool SoundOn => data.SoundOn;
+        public int ClothColorIndex => data.clothColorIndex;
 
         public int Substeps => data.Substeps;
         public float FloorSag => data.FloorSag;

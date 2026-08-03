@@ -168,8 +168,8 @@ namespace PanDulce.Runtime
             if (nextPlaque != null) nextPlaque.Sync(Sim.NextTier);
         }
 
-        Color CurrentClothColor => Palette.ClothSwatches[clothSwatch % Palette.ClothSwatches.Length];
-        int clothSwatch;
+        Color CurrentClothColor
+            => Palette.ClothSwatches[Mathf.Abs(tuning.ClothColorIndex) % Palette.ClothSwatches.Length];
 
         // ---------------------------------------------------------------- input
 
@@ -260,7 +260,8 @@ namespace PanDulce.Runtime
             CompleteServe();
         }
 
-        public void CycleClothColor() => clothSwatch = (clothSwatch + 1) % Palette.ClothSwatches.Length;
+        public void CycleClothColor()
+            => tuning.Data.clothColorIndex = (tuning.Data.clothColorIndex + 1) % Palette.ClothSwatches.Length;
 
         // ---------------------------------------------------------------- run lifecycle
 
