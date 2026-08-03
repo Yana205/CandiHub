@@ -1,7 +1,5 @@
 namespace PanDulce.Core
 {
-    public enum EntranceStyle { Walk = 0, Hop = 1, Pop = 2, Slide = 3 }
-
     /// <summary>
     /// The read-only knob interface the sim consumes. This is the seam that keeps Core
     /// Unity-free: the live TuningConfig ScriptableObject implements it, and tests pass
@@ -17,7 +15,6 @@ namespace PanDulce.Core
         float MergeGrowTime { get; }
         float ComboDelay { get; }
         int CustomerEverySec { get; }
-        EntranceStyle EntranceStyle { get; }
         float EntranceTime { get; }
         bool EndOfDay { get; }
         bool BoostsOn { get; }

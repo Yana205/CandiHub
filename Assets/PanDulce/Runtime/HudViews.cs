@@ -157,13 +157,19 @@ namespace PanDulce.Runtime
             shownTier = -1;
             var t = Content;
 
-            ViewFactory.Panel(t, "Box", 132f, 136f, 190f, 62f, 18, Palette.Hex("#fffaf0"), "Overlay", 10);
-            icon = ViewFactory.Icon(t, "Icon", database, 2, 156f, 167f, 16f, "Overlay", 12);
-            nameLabel = ViewFactory.Label(t, "Name", "", 178f, 162f, 138f, 15f,
+            ViewFactory.Panel(t, "Shadow", 140f, 164f, 244f, 70f, 18,
+                              new Color(122f/255f, 84f/255f, 49f/255f, 0.25f), "Overlay", 9);
+            ViewFactory.Panel(t, "Border", 140f, 160f, 244f, 70f, 18, Palette.Hex("#e0cba6"), "Overlay", 10);
+            ViewFactory.Panel(t, "Box", 143f, 163f, 238f, 64f, 16, Palette.Hex("#fffaf0"), "Overlay", 11);
+            var tail = ViewFactory.Panel(t, "Tail", 196f, 218f, 18f, 18f, 3, Palette.Hex("#fffaf0"), "Overlay", 11);
+            tail.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+
+            icon = ViewFactory.Icon(t, "Icon", database, 2, 170f, 195f, 16f, "Overlay", 12);
+            nameLabel = ViewFactory.Label(t, "Name", "", 192f, 188f, 180f, 15f,
                                           Palette.Hex("#6b4a2e"), "Overlay", 12,
                                           TextAlignmentOptions.Left);
             ViewFactory.Label(t, "Hint", "tap it in the cloth to hand it over",
-                              178f, 180f, 138f, 9f, Palette.Hex("#a58358"), "Overlay", 12,
+                              192f, 208f, 180f, 9f, Palette.Hex("#a58358"), "Overlay", 12,
                               TextAlignmentOptions.Left, FontStyles.Normal);
             SetVisible(false);
         }

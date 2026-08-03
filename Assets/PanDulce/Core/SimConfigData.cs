@@ -18,7 +18,6 @@ namespace PanDulce.Core
         public float mergeGrowTime = 0.85f;
         public float comboDelay = 0.5f;
         public int customerEverySec = 18;
-        public EntranceStyle entranceStyle = EntranceStyle.Walk;
         public float entranceTime = 0.7f;
         public bool endOfDay = false;
         public bool boostsOn = true;
@@ -61,7 +60,6 @@ namespace PanDulce.Core
         public float MergeGrowTime => mergeGrowTime;
         public float ComboDelay => comboDelay;
         public int CustomerEverySec => customerEverySec;
-        public EntranceStyle EntranceStyle => entranceStyle;
         public float EntranceTime => entranceTime;
         public bool EndOfDay => endOfDay;
         public bool BoostsOn => boostsOn;

@@ -27,7 +27,6 @@ namespace PanDulce.Runtime
         public float MergeGrowTime => data.MergeGrowTime;
         public float ComboDelay => data.ComboDelay;
         public int CustomerEverySec => data.CustomerEverySec;
-        public EntranceStyle EntranceStyle => data.EntranceStyle;
         public float EntranceTime => data.EntranceTime;
         public bool EndOfDay => data.EndOfDay;
         public bool BoostsOn => data.BoostsOn;

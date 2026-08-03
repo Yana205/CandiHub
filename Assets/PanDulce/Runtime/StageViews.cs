@@ -73,42 +73,50 @@ namespace PanDulce.Runtime
         }
     }
 
-    /// <summary>The current regular, with the four entrance animations (§8.6).</summary>
+    /// <summary>The bear, rising from behind the counter through the opening.</summary>
     public sealed class CustomerView : GeneratedView
     {
-        SpriteRenderer sprite;
-        Transform anchor;
-        float entranceStart, happyStart;
-        EntranceStyle style;
-        float duration = 0.7f;
+        const float AnchorX = 215f, AnchorY = 448f, RisePx = 150f;
+
+        Transform bearAnchor;
+        SpriteRenderer bear;
+        float entranceStart = -1f, happyStart = -1f, duration = 0.7f;
+        bool present;
 
         protected override void Build()
         {
-            entranceStart = -1f;
-            happyStart = -1f;
+            entranceStart = happyStart = -1f;
+            present = false;
+            var t = Content;
 
-            anchor = ViewFactory.Node(Content, "CustomerAnchor", 210f, 342f).transform;
+            // the opening — always visible, in front of the bear (Furniture > Customer)
+            var ring = ViewFactory.Rect(t, "CounterOpening",
+                                        database != null ? database.CounterOpening : null,
+                                        0f, 0f, 1f, 1f, Color.white, "Furniture", 25);
+            ring.drawMode = SpriteDrawMode.Simple;
+            ring.transform.localScale = Vector3.one;            // baked 180×80 stage px at PPU 100/2x
+            ring.transform.localPosition = StageCoords.Stage(AnchorX, 430f);
 
-            var go = new GameObject("CustomerSprite") { hideFlags = HideFlags.DontSave };
-            go.transform.SetParent(anchor, false);
-            sprite = go.AddComponent<SpriteRenderer>();
-            sprite.sharedMaterial = SpriteMaterials.Unlit;
-            sprite.sortingLayerName = "Customer";
-            sprite.sortingOrder = 0;
-            if (database != null) sprite.sprite = database.Customer(0);
-            // Authored 210×170 at 2x with a centre pivot → lift by half its height so the
-            // anchor behaves as bottom-centre, which is what the entrances assume.
-            go.transform.localPosition = new Vector3(0f, 85f * StageCoords.PX, 0f);
-
-            SetVisible(false);
+            bearAnchor = ViewFactory.Node(t, "BearAnchor", AnchorX, AnchorY).transform;
+            var go = new GameObject("Bear") { hideFlags = HideFlags.DontSave };
+            go.transform.SetParent(bearAnchor, false);
+            bear = go.AddComponent<SpriteRenderer>();
+            bear.sharedMaterial = SpriteMaterials.Unlit;
+            bear.sortingLayerName = "Customer";
+            bear.sortingOrder = 0;
+            if (database != null) bear.sprite = database.Customer(0);
+            // 230×200 logical sprite, centre pivot → lift half the height so the anchor is
+            // bottom-centre. Baked at 2x with PPU 100 → world scale 0.5 restores stage px.
+            go.transform.localScale = Vector3.one * 0.5f;
+            go.transform.localPosition = new Vector3(0f, 100f * 0.5f * StageCoords.PX, 0f);
+            go.SetActive(false);
         }
 
-        public void Arrive(int index, EntranceStyle entranceStyle, float entranceTime)
+        public void Arrive(float entranceTime)
         {
             if (!IsBuilt) return;
-            SetVisible(true);
-            if (database != null) sprite.sprite = database.Customer(index);
-            style = entranceStyle;
+            present = true;
+            bear.gameObject.SetActive(true);
             duration = Mathf.Max(0.05f, entranceTime);
             entranceStart = Time.time;
             happyStart = -1f;
@@ -118,25 +126,26 @@ namespace PanDulce.Runtime
 
         public void Leave()
         {
-            SetVisible(false);
+            present = false;
             entranceStart = -1f;
             happyStart = -1f;
+            if (bear != null) bear.gameObject.SetActive(false);
         }
 
         void Update()
         {
-            if (!IsBuilt || anchor == null) return;
+            if (!IsBuilt || bearAnchor == null || !present) return;
 
             if (happyStart >= 0f)
             {
-                // bounce played twice over 0.45s
+                // happy bounce, played twice over 0.45 s each
                 float k = (Time.time - happyStart) / 0.45f;
                 if (k <= 2f)
                 {
                     float p = Mathf.Repeat(k, 1f);
                     float s = Mathf.Sin(p * Mathf.PI);
-                    anchor.localPosition = Base() + new Vector3(0f, 14f * s * StageCoords.PX, 0f);
-                    anchor.localScale = new Vector3(1f + 0.02f * s, 1f - 0.02f * s, 1f);
+                    bearAnchor.localPosition = Base() + new Vector3(0f, 14f * s * StageCoords.PX, 0f);
+                    bearAnchor.localScale = new Vector3(1f + 0.02f * s, 1f - 0.02f * s, 1f);
                     return;
                 }
                 happyStart = -1f;
@@ -144,46 +153,21 @@ namespace PanDulce.Runtime
 
             if (entranceStart < 0f) return;
             float t = Mathf.Clamp01((Time.time - entranceStart) / duration);
-            // cubic-bezier(0.22, 0.9, 0.3, 1) ≈ a strong ease-out
-            float e = 1f - Mathf.Pow(1f - t, 3f);
-
-            Vector3 offset = Vector3.zero;
-            float scale = 1f, rot = 0f, alpha = 1f;
-
-            switch (style)
-            {
-                case EntranceStyle.Walk:
-                    offset.x = Mathf.Lerp(-200f, 0f, e) * StageCoords.PX;
-                    offset.y = Mathf.Sin(t * Mathf.PI * 3f) * 6f * (1f - t) * StageCoords.PX;
-                    alpha = Mathf.Clamp01(t / 0.12f);
-                    break;
-                case EntranceStyle.Hop:
-                    offset.y = -Mathf.Lerp(130f, 0f, e) * StageCoords.PX;
-                    alpha = Mathf.Clamp01(t / 0.3f);
-                    break;
-                case EntranceStyle.Pop:
-                    scale = Mathf.Lerp(0.18f, 1f, e);
-                    rot = Mathf.Lerp(-12f, 0f, e);
-                    break;
-                case EntranceStyle.Slide:
-                    offset.y = -Mathf.Lerp(96f, 0f, e) * StageCoords.PX;
-                    alpha = Mathf.Clamp01(t / 0.6f);
-                    break;
-            }
-
-            anchor.localPosition = Base() + offset;
-            anchor.localScale = Vector3.one * scale;
-            anchor.localRotation = Quaternion.Euler(0f, 0f, rot);
-            if (sprite != null) sprite.color = new Color(1f, 1f, 1f, alpha);
+            // back-out: rises past the resting spot ~10% then settles
+            const float c1 = 1.70158f, c3 = c1 + 1f;
+            float e = 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
+            float offset = (1f - e) * RisePx;                    // px still below the resting spot
+            bearAnchor.localPosition = Base() + new Vector3(0f, -offset * StageCoords.PX, 0f);
+            bearAnchor.localScale = Vector3.one;
         }
 
-        static Vector3 Base() => new Vector3(210f * StageCoords.PX, -342f * StageCoords.PX, 0f);
+        static Vector3 Base() => StageCoords.Stage(AnchorX, AnchorY);
     }
 
-    /// <summary>The pastry's arc from the cloth to the customer, ending at stage (182,224).</summary>
+    /// <summary>The pastry's arc from the cloth to the bear, ending at stage (215,330).</summary>
     public sealed class ServeFlightView : GeneratedView
     {
-        static readonly Vector2 Target = new Vector2(182f, 224f);
+        static readonly Vector2 Target = new Vector2(215f, 330f);
 
         SpriteRenderer sprite;
         Vector2 from;

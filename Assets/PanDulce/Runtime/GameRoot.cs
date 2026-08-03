@@ -310,7 +310,7 @@ namespace PanDulce.Runtime
         void OnCustomerArrived(int orderTier)
         {
             if (sfx != null) sfx.Play("chime");
-            if (customer != null) customer.Arrive(Shop.CustomerIndex, tuning.EntranceStyle, tuning.EntranceTime);
+            if (customer != null) customer.Arrive(tuning.EntranceTime);
             if (bubble != null) bubble.Show(orderTier, Time.time);
         }
 
