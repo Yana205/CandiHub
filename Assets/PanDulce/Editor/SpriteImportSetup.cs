@@ -17,11 +17,13 @@ namespace PanDulce.Editor
     {
         public const string PastryDir = "Assets/PanDulce/Art/Pastries";
         public const string CustomerDir = "Assets/PanDulce/Art/Customers";
+        public const string ShellDir = "Assets/PanDulce/Art/Shell";
+        public const string EffectsDir = "Assets/PanDulce/Art/Effects";
 
         [MenuItem("Pan Dulce/Apply Sprite Import Settings")]
         public static void ApplyAll()
         {
-            int n = Apply(PastryDir) + Apply(CustomerDir);
+            int n = Apply(PastryDir) + Apply(CustomerDir) + Apply(ShellDir) + Apply(EffectsDir);
             Debug.Log($"[PanDulce] sprite import settings applied to {n} textures");
         }
 

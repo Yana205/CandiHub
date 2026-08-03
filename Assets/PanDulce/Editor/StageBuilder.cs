@@ -199,6 +199,9 @@ namespace PanDulce.Editor
             var pastries = LoadSprites(SpriteImportSetup.PastryDir, "pastry_");
             var customers = LoadSprites(SpriteImportSetup.CustomerDir, "customer_");
             db.EditorAssign(pastries, customers);
+            db.EditorAssignShell(
+                AssetDatabase.LoadAssetAtPath<Sprite>(SpriteImportSetup.ShellDir + "/window_scene.png"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(SpriteImportSetup.ShellDir + "/counter_opening.png"));
 
             EditorUtility.SetDirty(db);
             AssetDatabase.SaveAssets();

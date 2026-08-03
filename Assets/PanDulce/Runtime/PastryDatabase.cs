@@ -18,11 +18,20 @@ namespace PanDulce.Runtime
         [Tooltip("3 regulars, cycled by served % 3.")]
         [SerializeField] Sprite[] customers = new Sprite[3];
 
+        [Tooltip("Baked window scenery, 378×206 stage px at 2x.")]
+        [SerializeField] Sprite windowScene;
+
+        [Tooltip("The red/white opening the bear pops through, 180×80 stage px at 2x.")]
+        [SerializeField] Sprite counterOpening;
+
         public Sprite Pastry(int tier)
             => (pastries != null && tier >= 0 && tier < pastries.Length) ? pastries[tier] : null;
 
         public Sprite Customer(int index)
             => (customers != null && customers.Length > 0) ? customers[index % customers.Length] : null;
+
+        public Sprite WindowScene => windowScene;
+        public Sprite CounterOpening => counterOpening;
 
         public string Name(int tier) => TierTable.Names[tier];
 
@@ -30,6 +39,7 @@ namespace PanDulce.Runtime
 
 #if UNITY_EDITOR
         public void EditorAssign(Sprite[] p, Sprite[] c) { pastries = p; customers = c; }
+        public void EditorAssignShell(Sprite window, Sprite opening) { windowScene = window; counterOpening = opening; }
 #endif
     }
 }
