@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PanDulce.Core;
 using UnityEngine;
 
@@ -52,16 +53,23 @@ namespace PanDulce.Runtime
         public BoostMeter Boost { get; private set; }
         public DayCycle Day { get; private set; }
         public ScoreKeeper Score { get; private set; }
+        public CoinPurse Purse { get; private set; }
         public TopOutWatch TopOut { get; private set; }
+
+        /// <summary>Day-old clearance pops tiers 0..this (spec 2026-08-04).</summary>
+        public const int ClearanceMaxTier = 1;
 
         public TuningConfig Tuning => tuning;
         public bool GameOver { get; private set; }
         public float PhysicsMs { get; private set; }
 
         readonly System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+        readonly List<(Vector2 pos, int tier)> clearedBuffer = new List<(Vector2, int)>(32);
         Body hovered;
         float serveTimeout = -1f;
         int flyingTier;
+        int pendingBubbleTier = -1;     // bubble waits for the walk-in to finish
+        float pendingBubbleAt;
 
         // ---------------------------------------------------------------- lifecycle
 
@@ -78,6 +86,7 @@ namespace PanDulce.Runtime
             Boost = new BoostMeter();
             Day = new DayCycle();
             Score = new ScoreKeeper();
+            Purse = new CoinPurse();
             TopOut = new TopOutWatch();
 
             Shop.Reset(tuning);
@@ -146,6 +155,12 @@ namespace PanDulce.Runtime
 
         void SyncViews()
         {
+            if (pendingBubbleTier >= 0 && Time.time >= pendingBubbleAt)
+            {
+                if (bubble != null) bubble.Show(pendingBubbleTier, Time.time);
+                pendingBubbleTier = -1;
+            }
+
             if (clothShakeRoot != null) clothShakeRoot.Sync(Sim.ShakeOffset());
             if (cloth != null) cloth.ClothColor = CurrentClothColor;
 
@@ -163,8 +178,13 @@ namespace PanDulce.Runtime
                                 TopOut.Blinking, Sim.Now);
 
             if (fold != null) fold.Sync(Day.CloseT, CurrentClothColor);
-            if (topBar != null) topBar.Sync(Shop.Served);
-            if (boostBar != null) boostBar.Sync(Boost.Charge, Boost.Ready, tuning.BoostsOn, Sim.Now);
+            if (topBar != null) topBar.Sync(Shop.Served, Purse.Coins);
+            if (boostBar != null)
+            {
+                boostBar.Sync(Boost.Charge, Boost.Ready, tuning.BoostsOn, Sim.Now);
+                boostBar.SyncClearance(Purse.Coins, tuning.ClearanceCost,
+                                       Sim.HasAnyUpToTier(ClearanceMaxTier), Sim.Now);
+            }
             if (sign != null) sign.Sync(Shop.State, Shop.SecondsShown);
             if (displayCase != null) displayCase.Sync(Sim);
             if (nextPlaque != null) nextPlaque.Sync(Sim.NextTier);
@@ -187,6 +207,12 @@ namespace PanDulce.Runtime
             if (boostBar != null && tuning.BoostsOn && HitStage(simPos, boostBar.ButtonRect))
             {
                 if (!TryShake()) boostBar.Deny(Sim.Now);
+                return;
+            }
+
+            if (boostBar != null && tuning.BoostsOn && HitStage(simPos, boostBar.ClearanceRect))
+            {
+                if (!TryClearance()) boostBar.DenyClearance(Sim.Now);
                 return;
             }
 
@@ -221,10 +247,33 @@ namespace PanDulce.Runtime
         /// <summary>Ignores charge and cooldown — for the Tweaks window's Fire shake button.</summary>
         public void ForceShake() => Sim.DoShake();
 
+        /// <summary>
+        /// Day-old clearance: pay coins, pop every tier-0/1 pastry. Denies without
+        /// spending when broke or when there is nothing to clear (spec 2026-08-04).
+        /// </summary>
+        public bool TryClearance()
+        {
+            if (!tuning.BoostsOn || !Day.CanShake || GameOver) return false;
+            if (!Sim.HasAnyUpToTier(ClearanceMaxTier)) return false;
+            if (!Purse.TrySpend(tuning.ClearanceCost)) return false;
+
+            clearedBuffer.Clear();
+            Sim.RemoveUpToTier(ClearanceMaxTier, clearedBuffer);
+            if (effects != null)
+                for (int i = 0; i < clearedBuffer.Count; i++)
+                    effects.MergeBurst(clearedBuffer[i].pos, clearedBuffer[i].tier,
+                                       TierTable.BaseRadius[clearedBuffer[i].tier], tuning.ParticleScale);
+            Sim.AddFloat(SimField.CX, 200f, "Day-old clearance!");
+            if (sfx != null) sfx.Play("serve");
+            return true;
+        }
+
         void Serve(Body b)
         {
             flyingTier = b.tier;
             Vector2 stage = StageCoords.SimToStage(new Vector2(b.x, b.y));
+            Sim.AddFloat(b.x, b.y - TierTable.Er(b, tuning.SizeScale) - 8f,
+                         $"+${CoinPurse.ServePay(tuning, b.tier)}");
             if (effects != null) effects.ServeBurst(new Vector2(b.x, b.y), b.tier, tuning.ParticleScale);
             Sim.RemoveForServe(b);
             Shop.ServeInFlight = true;
@@ -249,8 +298,10 @@ namespace PanDulce.Runtime
             int orderTier = Mathf.Max(0, Shop.OrderTier);
             Shop.CompleteServe(Sim.Now, tuning);
             Score.AddServe(orderTier);
+            Purse.Add(CoinPurse.ServePay(tuning, orderTier));
             if (sfx != null) sfx.Play("serve");
             if (customer != null) customer.Celebrate();
+            pendingBubbleTier = -1;
             if (bubble != null) bubble.Hide();
         }
 
@@ -283,11 +334,13 @@ namespace PanDulce.Runtime
         {
             GameOver = false;
             serveTimeout = -1f;
+            pendingBubbleTier = -1;
             Day.Reset();
             Sim.ResetRun();
             Shop.Reset(tuning);
             Boost.Reset();
             Score.ResetRun();
+            Purse.Reset();
             TopOut.Reset();
             if (gameOverCard != null) gameOverCard.Hide();
             if (bubble != null) bubble.Hide();
@@ -323,12 +376,14 @@ namespace PanDulce.Runtime
         {
             if (sfx != null) sfx.Play("chime");
             if (customer != null) customer.Arrive(tuning.EntranceTime);
-            if (bubble != null) bubble.Show(orderTier, Time.time);
+            pendingBubbleTier = orderTier;
+            pendingBubbleAt = Time.time + tuning.EntranceTime;
         }
 
         void OnShopStateChanged(ShopState state)
         {
             if (state != ShopState.Closed) return;
+            pendingBubbleTier = -1;
             if (bubble != null) bubble.Hide();
             if (customer != null) customer.Leave();
         }

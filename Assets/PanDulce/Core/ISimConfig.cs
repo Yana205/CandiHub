@@ -38,6 +38,11 @@ namespace PanDulce.Core
         int StartingBodies { get; }
         float ShakeDuration { get; }
 
+        // --- Economy: coins from serves buy boosts (spec 2026-08-04) ---
+        int CoinBase { get; }
+        int CoinPerTier { get; }
+        int ClearanceCost { get; }
+
         // --- Challenge layer, ported from Docs/web-reference (§13 decision) ---
         bool TopOut { get; }
         float TopOutLine { get; }

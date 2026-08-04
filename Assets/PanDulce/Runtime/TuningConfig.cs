@@ -50,6 +50,10 @@ namespace PanDulce.Runtime
         public int StartingBodies => data.StartingBodies;
         public float ShakeDuration => data.ShakeDuration;
 
+        public int CoinBase => data.CoinBase;
+        public int CoinPerTier => data.CoinPerTier;
+        public int ClearanceCost => data.ClearanceCost;
+
         public bool TopOut => data.TopOut;
         public float TopOutLine => data.TopOutLine;
         public float TopOutGrace => data.TopOutGrace;

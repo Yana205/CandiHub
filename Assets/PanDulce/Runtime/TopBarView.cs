@@ -10,12 +10,13 @@ namespace PanDulce.Runtime
     /// </summary>
     public sealed class TopBarView : GeneratedView
     {
-        TextMeshPro customersLabel;
-        int shownServed = -1;
+        TextMeshPro customersLabel, coinsLabel;
+        int shownServed = -1, shownCoins = -1;
 
         protected override void Build()
         {
             shownServed = -1;
+            shownCoins = -1;
             var t = Content;
 
             ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.89f),
@@ -33,12 +34,18 @@ namespace PanDulce.Runtime
             ViewFactory.Label(t, "Title", "Sweet Bakery", 115f, 30f, 200f, 22f,
                               Palette.Cream, "Overlay", 3);
             // The next-dessert preview lives on the play-area plaque only (NextPlaqueView).
+
+            // Coin chip on the right — serves pay in, the clearance boost draws out.
+            ViewFactory.Panel(t, "CoinChip", 326f, 14f, 94f, 28f, 10, Palette.ChipFill, "Overlay", 2);
+            coinsLabel = ViewFactory.Label(t, "CoinsLabel", "$0",
+                                           326f, 28f, 94f, 14f, Palette.Cream, "Overlay", 3);
         }
 
-        public void Sync(int served)
+        public void Sync(int served, int coins)
         {
             if (!IsBuilt) return;
             if (served != shownServed) { shownServed = served; customersLabel.text = $"Customers: {served}"; }
+            if (coins != shownCoins) { shownCoins = coins; coinsLabel.text = $"${coins}"; }
         }
     }
 }

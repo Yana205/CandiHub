@@ -306,6 +306,36 @@ namespace PanDulce.Core
             CompactDead();
         }
 
+        /// <summary>Any live body at or below this tier — the clearance boost's deny check.</summary>
+        public bool HasAnyUpToTier(int maxTier)
+        {
+            for (int i = 0; i < Bodies.Count; i++)
+                if (!Bodies[i].dead && Bodies[i].tier <= maxTier) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Day-old clearance: despawn every body of tier &lt;= maxTier. Deliberately a
+        /// despawn, NOT a merge — no Merged event fires, so no score and no boost charge
+        /// can come from a purchased clear (spec 2026-08-04). The held pastry is never in
+        /// Bodies, so it is exempt by construction. Fills <paramref name="removed"/> (when
+        /// given) with each body's position and tier for the view's pop effects.
+        /// </summary>
+        public int RemoveUpToTier(int maxTier, List<(Vector2 pos, int tier)> removed = null)
+        {
+            int count = 0;
+            for (int i = 0; i < Bodies.Count; i++)
+            {
+                Body b = Bodies[i];
+                if (b.dead || b.tier > maxTier) continue;
+                b.dead = true;
+                count++;
+                removed?.Add((new Vector2(b.x, b.y), b.tier));
+            }
+            if (count > 0) CompactDead();
+            return count;
+        }
+
         // ---------------------------------------------------------------- fx
 
         public void AddFloat(float x, float y, string text)

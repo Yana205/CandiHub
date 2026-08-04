@@ -21,7 +21,7 @@ MonoBehaviour:
     comboDelay: 0.5
     customerEverySec: 18
     entranceStyle: 0
-    entranceTime: 0.7
+    entranceTime: 1.3
     endOfDay: 0
     boostsOn: 1
     shakePower: 1

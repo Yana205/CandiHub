@@ -18,7 +18,7 @@ namespace PanDulce.Core
         public float mergeGrowTime = 0.85f;
         public float comboDelay = 0.5f;
         public int customerEverySec = 18;
-        public float entranceTime = 0.7f;
+        public float entranceTime = 1.3f;
         public bool endOfDay = false;
         public bool boostsOn = true;
         public float shakePower = 1f;
@@ -43,6 +43,12 @@ namespace PanDulce.Core
         public float happyMs = 1400f;
         public int startingBodies = 9;
         public float shakeDuration = 0.6f;
+
+        // Economy — coins from serves buy boosts (spec 2026-08-04). A tier-2..5 order
+        // pays 11..20, so the 30-coin clearance costs about two serves.
+        public int coinBase = 5;
+        public int coinPerTier = 3;
+        public int clearanceCost = 30;
 
         // Challenge — ported from Docs/web-reference (§13 decision).
         // topOutLine is re-anchored from the reference's 92: that was 14% down a
@@ -84,6 +90,10 @@ namespace PanDulce.Core
         public float HappyMs => happyMs;
         public int StartingBodies => startingBodies;
         public float ShakeDuration => shakeDuration;
+
+        public int CoinBase => coinBase;
+        public int CoinPerTier => coinPerTier;
+        public int ClearanceCost => clearanceCost;
 
         public bool TopOut => topOut;
         public float TopOutLine => topOutLine;
