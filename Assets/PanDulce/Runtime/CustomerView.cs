@@ -18,15 +18,6 @@ namespace PanDulce.Runtime
             present = false;
             var t = Content;
 
-            // the opening — always visible, in front of the case glass (Case > Customer)
-            var ring = ViewFactory.Rect(t, "CounterOpening",
-                                        database != null ? database.CounterOpening : null,
-                                        0f, 0f, 1f, 1f, Color.white, "Case", 20);
-            // Baked at 2x (360×160 px, PPU 100) → scale 0.5 restores the 180×80 stage-px size.
-            ring.drawMode = SpriteDrawMode.Simple;
-            ring.transform.localScale = Vector3.one * 0.5f;
-            ring.transform.localPosition = StageCoords.Stage(AnchorX, 330f);
-
             bearAnchor = ViewFactory.Node(t, "BearAnchor", AnchorX, AnchorY).transform;
             var go = new GameObject("Bear") { hideFlags = HideFlags.DontSave };
             go.transform.SetParent(bearAnchor, false);

@@ -16,8 +16,12 @@ namespace PanDulce.Runtime
         [SerializeField] int sortingOrder = 30;
 
         readonly List<SpriteRenderer> views = new List<SpriteRenderer>(64);
+        readonly List<SpriteRenderer> rings = new List<SpriteRenderer>(64);
         Material unlit;
         bool initialised;
+
+        // Ring sprite is baked at diameter 220 (radius 110 texture px, PPU 100).
+        const float RingBakedRadius = 110f;
 
         /// <summary>Pooled children are created at runtime so they never bloat Main.unity (§4).</summary>
         void Awake() => Init(database);
@@ -44,6 +48,17 @@ namespace PanDulce.Runtime
             if (unlit != null) sr.sharedMaterial = unlit;
             go.SetActive(false);
             views.Add(sr);
+
+            var ringGo = new GameObject($"OrderRing_{rings.Count:00}");
+            ringGo.transform.SetParent(transform, false);
+            var ring = ringGo.AddComponent<SpriteRenderer>();
+            ring.sprite = Shapes.Ring(220, 10);
+            ring.color = new Color(1f, 1f, 1f, 0.85f);
+            ring.sortingLayerName = sortingLayer;
+            ring.sortingOrder = sortingOrder - 1;   // just behind its pastry, so it coats the edge
+            if (unlit != null) ring.sharedMaterial = unlit;
+            ringGo.SetActive(false);
+            rings.Add(ring);
             return sr;
         }
 
@@ -71,15 +86,34 @@ namespace PanDulce.Runtime
                 sr.transform.localScale = new Vector3((1f + b.squish * 0.6f) * s * highlight,
                                                        (1f - b.squish) * s * highlight, 1f);
                 sr.color = Color.white;
+
+                // The wanted dessert wears a pulsing ring until it is tapped (§7.6).
+                SpriteRenderer ring = rings[i];
+                if (orderTier >= 0 && b.tier == orderTier)
+                {
+                    if (!ring.gameObject.activeSelf) ring.gameObject.SetActive(true);
+                    ring.transform.localPosition = sr.transform.localPosition;
+                    float pulse = 1.18f + 0.08f * Mathf.Sin(Time.time * (2f * Mathf.PI / 0.9f));
+                    float rs = er * pulse / RingBakedRadius;
+                    ring.transform.localScale = new Vector3(rs, rs, 1f);
+                }
+                else if (ring.gameObject.activeSelf) ring.gameObject.SetActive(false);
             }
 
             for (int i = bodies.Count; i < views.Count; i++)
+            {
                 if (views[i].gameObject.activeSelf) views[i].gameObject.SetActive(false);
+                if (rings[i].gameObject.activeSelf) rings[i].gameObject.SetActive(false);
+            }
         }
 
         public void HideAll()
         {
-            for (int i = 0; i < views.Count; i++) views[i].gameObject.SetActive(false);
+            for (int i = 0; i < views.Count; i++)
+            {
+                views[i].gameObject.SetActive(false);
+                rings[i].gameObject.SetActive(false);
+            }
         }
     }
 }

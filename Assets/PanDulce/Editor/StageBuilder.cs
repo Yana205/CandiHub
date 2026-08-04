@@ -70,10 +70,9 @@ namespace PanDulce.Editor
             var fitter = stage.AddComponent<StageFitter>();
             fitter.EditorAssign(cam);
 
-            // 21 · BACKDROP
-            var backdrop = Folder(stage.transform, "[ 21 · BACKDROP ]");
-            var backdropView = backdrop.AddComponent<BackdropView>();
-            backdropView.EditorAssign(db);
+            // 21 · BACKDROP — an empty art folder; the backdrop is hand-authored in the
+            // scene now, nothing is generated at runtime.
+            Folder(stage.transform, "[ 21 · BACKDROP ]");
 
             // 22 · CUSTOMER
             var customerFolder = Folder(stage.transform, "[ 22 · CUSTOMER ]");

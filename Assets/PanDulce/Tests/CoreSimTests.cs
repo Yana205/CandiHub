@@ -85,10 +85,30 @@ namespace PanDulce.Tests
             sim.Tick(0.016f);
             Assert.That(sim.Bodies.Count, Is.EqualTo(2), "must not merge before comboDelay elapses");
 
-            // Age past comboDelay, then let them touch again.
-            for (int i = 0; i < 40; i++) sim.Tick(0.016f);
+            // Age past comboDelay AND the start grace, then let them touch again.
+            for (int i = 0; i < 70; i++) sim.Tick(0.016f);
             Assert.That(sim.Bodies.Count, Is.EqualTo(1), "must merge once both are older than comboDelay");
             Assert.That(sim.Bodies[0].tier, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void MergeGate_HoldsDuringTheStartGrace()
+        {
+            var cfg = Cfg();
+            cfg.startingBodies = 0;
+            cfg.gravity = 0f;
+            cfg.comboDelay = 0f;       // isolate the grace from the per-body delay
+
+            var sim = new MergeSim(cfg, new System.Random(1));
+            sim.EmptyCloth();
+            sim.MakeBody(200f, 200f, 0, 1f);
+            sim.MakeBody(205f, 200f, 0, 1f);
+
+            for (int i = 0; i < 55; i++) sim.Tick(0.016f);   // 0.88s — inside the grace
+            Assert.That(sim.Bodies.Count, Is.EqualTo(2), "must not merge during the start grace");
+
+            for (int i = 0; i < 15; i++) sim.Tick(0.016f);   // 1.12s — past it
+            Assert.That(sim.Bodies.Count, Is.EqualTo(1), "must merge after the start grace");
         }
 
         // ---------------------------------------------------------------- the curved floor

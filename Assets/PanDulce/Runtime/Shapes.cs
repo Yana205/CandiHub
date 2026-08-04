@@ -87,6 +87,30 @@ namespace PanDulce.Runtime
             return Store(key, tex);
         }
 
+        /// <summary>An antialiased circle outline, for the order-match ring around pastries.</summary>
+        public static Sprite Ring(int diameter, int thickness)
+        {
+            string key = $"ring:{diameter}:{thickness}";
+            if (cache.TryGetValue(key, out var cached) && cached != null) return cached;
+
+            int d = Mathf.Max(4, diameter);
+            var tex = NewTexture(d, d);
+            var px = new Color32[d * d];
+            float r = d * 0.5f;
+            float inner = r - Mathf.Max(1, thickness);
+            for (int y = 0; y < d; y++)
+            for (int x = 0; x < d; x++)
+            {
+                float dx = x + 0.5f - r, dy = y + 0.5f - r;
+                float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                float a = Mathf.Clamp01(r - dist + 0.5f) * Mathf.Clamp01(dist - inner + 0.5f);
+                px[y * d + x] = new Color32(255, 255, 255, (byte)(a * 255f));
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            return Store(key, tex);
+        }
+
         /// <summary>A vertical two-stop gradient, tinted white→black so callers can multiply.</summary>
         public static Sprite VerticalGradient(int h, float topLuma, float bottomLuma)
         {

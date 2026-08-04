@@ -43,6 +43,10 @@ namespace PanDulce.Core
 
         float lastMergeT = -999f;
         float canDropAt;
+        float mergeLockUntil;
+
+        /// <summary>The starting desserts settle for this long before any merge can fire.</summary>
+        public const float StartMergeGraceSec = 1f;
 
         public MergeSim(ISimConfig config, System.Random random = null)
         {
@@ -110,8 +114,10 @@ namespace PanDulce.Core
                     if (d < 0.01f) { d = 0.01f; dx = 0.01f; dy = 0f; }
                     float nx = dx / d, ny = dy / d;
 
-                    // merge gate — BOTH grown past 0.55 AND older than comboDelay
+                    // merge gate — past the start grace, BOTH grown past 0.55 AND older
+                    // than comboDelay
                     if (a.tier == c.tier && a.tier < TierTable.Max &&
+                        Now >= mergeLockUntil &&
                         a.spawnT > 0.55f && c.spawnT > 0.55f &&
                         Now - a.bornAt > cfg.ComboDelay && Now - c.bornAt > cfg.ComboDelay)
                     {
@@ -356,6 +362,7 @@ namespace PanDulce.Core
             lastMergeT = -999f;
             canDropAt = 0f;
             ShakeUntil = 0f;
+            mergeLockUntil = StartMergeGraceSec;
             HighestDiscovered = 3;
 
             for (int t = 0; t < TierTable.Count; t++) discovered[t] = t <= 3;   // tiers 0–3 start discovered

@@ -11,12 +11,11 @@ namespace PanDulce.Runtime
     public sealed class TopBarView : GeneratedView
     {
         TextMeshPro customersLabel;
-        SpriteRenderer nextIcon;
-        int shownServed = -1, shownNext = -1;
+        int shownServed = -1;
 
         protected override void Build()
         {
-            shownServed = shownNext = -1;
+            shownServed = -1;
             var t = Content;
 
             ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.89f),
@@ -33,21 +32,13 @@ namespace PanDulce.Runtime
                               Palette.Hex("#6f4a2c"), "Overlay", 2);
             ViewFactory.Label(t, "Title", "Sweet Bakery", 115f, 30f, 200f, 22f,
                               Palette.Cream, "Overlay", 3);
-
-            ViewFactory.Panel(t, "NextChip", 316f, 10f, 104f, 36f, 10, Palette.ChipFill, "Overlay", 2);
-            ViewFactory.Label(t, "NextLabel", "Next", 322f, 30f, 40f, 13f, Palette.Cream, "Overlay", 3);
-            nextIcon = ViewFactory.Icon(t, "NextIcon", database, 0, 396f, 28f, 14f, "Overlay", 3);
+            // The next-dessert preview lives on the play-area plaque only (NextPlaqueView).
         }
 
-        public void Sync(int served, int nextTier)
+        public void Sync(int served)
         {
             if (!IsBuilt) return;
             if (served != shownServed) { shownServed = served; customersLabel.text = $"Customers: {served}"; }
-            if (nextTier != shownNext && database != null)
-            {
-                shownNext = nextTier;
-                nextIcon.sprite = database.Pastry(nextTier);
-            }
         }
     }
 }

@@ -12,11 +12,14 @@ namespace PanDulce.Runtime
         SpriteRenderer button, chargeFill;
         TextMeshPro label, badgeLabel;
         Transform buttonRoot;
-        float shownCharge;
+        float shownCharge, denyAt;
+        bool shownReady;
 
         protected override void Build()
         {
             shownCharge = -1f;
+            denyAt = -1f;
+            shownReady = false;
             var t = Content;
 
             ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.85f),
@@ -46,7 +49,8 @@ namespace PanDulce.Runtime
             ViewFactory.Rect(buttonRoot, "Dash2", Shapes.White, 122f, 858f, 7f, 2.5f,
                              Palette.WithAlpha(Palette.Cream, 0.85f), "Overlay", 33);
 
-            label = ViewFactory.Label(buttonRoot, "Label", "Shake the furoshiki!",
+            // Starts on the hint text; Sync swaps it once the meter is ready.
+            label = ViewFactory.Label(buttonRoot, "Label", "Merge desserts to charge!",
                                       107f, 851f, 234f, 15f, Palette.DarkCrust, "Overlay", 34);
 
             ViewFactory.Rect(buttonRoot, "ChargeTrack", Shapes.RoundedRect(12, 12, 4),
@@ -80,15 +84,29 @@ namespace PanDulce.Runtime
                 badgeLabel.text = ready ? "READY!" : $"{Mathf.RoundToInt(charge * 100f)}%";
             }
 
+            if (ready != shownReady)
+            {
+                shownReady = ready;
+                label.text = ready ? "Shake the furoshiki!" : "Merge desserts to charge!";
+            }
+
             // Charging reads at 0.72 opacity; ready pulses over 1.15s (§8.7).
             float alpha = ready ? 1f : 0.72f;
             button.color = Palette.WithAlpha(ready ? Palette.Amber : Palette.AmberDeep, alpha);
             label.alpha = alpha;
 
+            // Deny wiggle: a decaying side-shake after a tap on the uncharged button.
+            float denyK = denyAt >= 0f ? (now - denyAt) / 0.35f : 2f;
+            float wiggle = denyK < 1f ? Mathf.Sin(denyK * Mathf.PI * 4f) * (1f - denyK) * 4f : 0f;
+
             float pulse = ready ? Mathf.Sin(now / 1.15f * Mathf.PI * 2f) : 0f;
-            buttonRoot.localPosition = new Vector3(0f, pulse * 2f * StageCoords.PX, 0f);
+            buttonRoot.localPosition = new Vector3(wiggle * StageCoords.PX,
+                                                   pulse * 2f * StageCoords.PX, 0f);
             buttonRoot.localScale = Vector3.one * (1f + Mathf.Max(0f, pulse) * 0.035f);
         }
+
+        /// <summary>Tap landed on the button while it was not ready — shake the head.</summary>
+        public void Deny(float now) => denyAt = now;
 
         /// <summary>Stage-px rect of the button face, for hit testing without a Canvas.</summary>
         public Rect ButtonRect => new Rect(89f, 833f, 252f, 46f);

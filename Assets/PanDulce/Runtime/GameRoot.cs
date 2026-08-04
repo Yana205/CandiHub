@@ -149,7 +149,9 @@ namespace PanDulce.Runtime
             if (clothShakeRoot != null) clothShakeRoot.Sync(Sim.ShakeOffset());
             if (cloth != null) cloth.ClothColor = CurrentClothColor;
 
-            if (bodies != null) bodies.Sync(Sim, tuning.SizeScale, Shop.OrderTier, hovered);
+            // Order tier only while servable — rings drop the moment the serve launches.
+            if (bodies != null) bodies.Sync(Sim, tuning.SizeScale,
+                                            Shop.OrderActive ? Shop.OrderTier : -1, hovered);
             if (floats != null) floats.Sync(Sim);
 
             bool canDrop = Day.CanDrop && Sim.CanDropNow && !GameOver;
@@ -161,7 +163,7 @@ namespace PanDulce.Runtime
                                 TopOut.Blinking, Sim.Now);
 
             if (fold != null) fold.Sync(Day.CloseT, CurrentClothColor);
-            if (topBar != null) topBar.Sync(Shop.Served, Sim.NextTier);
+            if (topBar != null) topBar.Sync(Shop.Served);
             if (boostBar != null) boostBar.Sync(Boost.Charge, Boost.Ready, tuning.BoostsOn, Sim.Now);
             if (sign != null) sign.Sync(Shop.State, Shop.SecondsShown);
             if (displayCase != null) displayCase.Sync(Sim);
@@ -184,7 +186,7 @@ namespace PanDulce.Runtime
 
             if (boostBar != null && tuning.BoostsOn && HitStage(simPos, boostBar.ButtonRect))
             {
-                TryShake();
+                if (!TryShake()) boostBar.Deny(Sim.Now);
                 return;
             }
 
@@ -208,11 +210,12 @@ namespace PanDulce.Runtime
 
         // ---------------------------------------------------------------- actions
 
-        public void TryShake()
+        public bool TryShake()
         {
-            if (!tuning.BoostsOn || !Boost.Ready || !Day.CanShake || GameOver) return;
+            if (!tuning.BoostsOn || !Boost.Ready || !Day.CanShake || GameOver) return false;
             Boost.Spend();
             Sim.DoShake();
+            return true;
         }
 
         /// <summary>Ignores charge and cooldown — for the Tweaks window's Fire shake button.</summary>

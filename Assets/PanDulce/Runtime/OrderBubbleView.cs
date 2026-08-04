@@ -11,6 +11,7 @@ namespace PanDulce.Runtime
         TextMeshPro nameLabel;
         float shownAt;
         int shownTier;
+        float iconBaseScale;
 
         protected override void Build()
         {
@@ -26,6 +27,7 @@ namespace PanDulce.Runtime
             tail.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
 
             icon = ViewFactory.Icon(t, "Icon", database, 2, 170f, 195f, 16f, "Overlay", 12);
+            iconBaseScale = icon.transform.localScale.x;
             nameLabel = ViewFactory.Label(t, "Name", "", 192f, 188f, 180f, 15f,
                                           Palette.Hex("#6b4a2e"), "Overlay", 12,
                                           TextAlignmentOptions.Left);
@@ -61,6 +63,12 @@ namespace PanDulce.Runtime
             const float c1 = 1.70158f, c3 = c1 + 1f;
             float e = 1f + c3 * Mathf.Pow(k - 1f, 3f) + c1 * Mathf.Pow(k - 1f, 2f);
             Content.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, e);
+
+            // once the pop settles, the wanted dessert breathes ±8% to pull the eye
+            float s = iconBaseScale;
+            if (k >= 1f)
+                s *= 1f + 0.08f * Mathf.Sin((Time.time - shownAt - 0.35f) * (2f * Mathf.PI / 1.1f));
+            icon.transform.localScale = new Vector3(s, s, 1f);
         }
     }
 }
