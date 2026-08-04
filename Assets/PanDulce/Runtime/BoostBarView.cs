@@ -11,6 +11,16 @@ namespace PanDulce.Runtime
     /// </summary>
     public sealed class BoostBarView : GeneratedView
     {
+        /// <summary>Seconds per breath of the ready pulse. §8.7 specifies 1.15; slowed so
+        /// the charged button breathes instead of bouncing.</summary>
+        const float ReadyPulsePeriod = 1.4f;
+
+        /// <summary>Vertical travel of the ready pulse, in stage px (§8.7 specifies 2).</summary>
+        const float ReadyPulseBobPx = 1f;
+
+        /// <summary>Peak scale-up of the ready pulse (§8.7 specifies 0.035).</summary>
+        const float ReadyPulseScale = 0.015f;
+
         SpriteRenderer button, chargeFill, clearFace;
         TextMeshPro label, badgeLabel, clearLabel, priceLabel;
         Transform buttonRoot, clearRoot;
@@ -124,7 +134,7 @@ namespace PanDulce.Runtime
                 label.text = ready ? "Shake the furoshiki!" : "Merge desserts to charge!";
             }
 
-            // Charging reads at 0.72 opacity; ready pulses over 1.15s (§8.7).
+            // Charging reads at 0.72 opacity; ready breathes over ReadyPulsePeriod (§8.7).
             float alpha = ready ? 1f : 0.72f;
             button.color = Palette.WithAlpha(ready ? Palette.Amber : Palette.AmberDeep, alpha);
             label.alpha = alpha;
@@ -133,10 +143,11 @@ namespace PanDulce.Runtime
             float denyK = denyAt >= 0f ? (now - denyAt) / 0.35f : 2f;
             float wiggle = denyK < 1f ? Mathf.Sin(denyK * Mathf.PI * 4f) * (1f - denyK) * 4f : 0f;
 
-            float pulse = ready ? Mathf.Sin(now / 1.15f * Mathf.PI * 2f) : 0f;
+            // Ready breathe: composes with the wiggle above — wiggle owns x, pulse owns y.
+            float pulse = ready ? Mathf.Sin(now / ReadyPulsePeriod * Mathf.PI * 2f) : 0f;
             buttonRoot.localPosition = new Vector3(wiggle * StageCoords.PX,
-                                                   pulse * 2f * StageCoords.PX, 0f);
-            buttonRoot.localScale = Vector3.one * (1f + Mathf.Max(0f, pulse) * 0.035f);
+                                                   pulse * ReadyPulseBobPx * StageCoords.PX, 0f);
+            buttonRoot.localScale = Vector3.one * (1f + Mathf.Max(0f, pulse) * ReadyPulseScale);
         }
 
         /// <summary>Affordability + availability drive the clearance button's read.</summary>
