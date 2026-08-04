@@ -140,10 +140,13 @@ namespace PanDulce.Editor
             topBar.EditorAssign(db);
             topBarGo.AddComponent<SafeAreaInset>();   // defaults to the Top edge
 
+            // Authored placement (Yana, 2026-08-04): the bar is hand-positioned beneath the
+            // pile's minimum line, stage offset (+11, -18). Deliberately NO SafeAreaInset —
+            // the bar must stay exactly where it was placed, never moved at runtime.
+            // BoostBarView's hit rects follow this transform offset.
             var boostGo = Child(ui.transform, "BoostBar");
+            boostGo.transform.localPosition = StageCoords.Stage(11f, -18f);
             var boostBar = boostGo.AddComponent<BoostBarView>();
-            var bottomInset = boostGo.AddComponent<SafeAreaInset>();
-            SetPrivate(bottomInset, "edge", SafeAreaInset.Edge.Bottom);
 
             var bubbleGo = Child(ui.transform, "OrderBubble");
             var bubble = bubbleGo.AddComponent<OrderBubbleView>();

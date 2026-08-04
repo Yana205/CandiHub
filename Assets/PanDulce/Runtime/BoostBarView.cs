@@ -171,10 +171,25 @@ namespace PanDulce.Runtime
         /// <summary>Clearance tap that could not go through — broke, or nothing to clear.</summary>
         public void DenyClearance(float now) => clearDenyAt = now;
 
+        /// <summary>
+        /// The bar's authored scene offset in stage px. The node is hand-positioned in the
+        /// scene (no SafeAreaInset), so the hit rects must follow the transform or taps
+        /// would land where the bar used to be drawn.
+        /// </summary>
+        Vector2 StageOffset
+            => new Vector2(transform.localPosition.x / StageCoords.PX,
+                           -transform.localPosition.y / StageCoords.PX);
+
         /// <summary>Stage-px rect of the shake button face, for hit testing without a Canvas.</summary>
-        public Rect ButtonRect => new Rect(12f, 833f, 226f, 46f);
+        public Rect ButtonRect
+        {
+            get { Vector2 o = StageOffset; return new Rect(12f + o.x, 833f + o.y, 226f, 46f); }
+        }
 
         /// <summary>Stage-px rect of the clearance button face.</summary>
-        public Rect ClearanceRect => new Rect(250f, 833f, 168f, 46f);
+        public Rect ClearanceRect
+        {
+            get { Vector2 o = StageOffset; return new Rect(250f + o.x, 833f + o.y, 168f, 46f); }
+        }
     }
 }
