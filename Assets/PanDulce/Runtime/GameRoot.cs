@@ -70,6 +70,7 @@ namespace PanDulce.Runtime
         int flyingTier;
         int pendingBubbleTier = -1;     // bubble waits for the walk-in to finish
         float pendingBubbleAt;
+        bool heldShown;                 // last frame's aim-guide visibility, for the spawn cue
 
         // ---------------------------------------------------------------- lifecycle
 
@@ -172,6 +173,14 @@ namespace PanDulce.Runtime
             bool canDrop = Day.CanDrop && Sim.CanDropNow && !GameOver;
             if (aim != null) aim.Sync(canDrop, pointer != null ? pointer.AimX : SimField.CX,
                                       Sim.CurTier, tuning.SizeScale);
+
+            // "Here it comes": the held pastry is HIDDEN for the whole drop cooldown, so the
+            // moment it visually appears above the cloth is this rising edge — not the Drop()
+            // that queued it. Firing from the edge also covers the start-of-day grace, the
+            // fold reopening and Restart, which Drop() never sees.
+            if (canDrop && !heldShown && aim != null && effects != null)
+                effects.NextReady(aim.HeldSimPos, Sim.CurTier, tuning.ParticleScale);
+            heldShown = canDrop;
 
             if (dangerLine != null)
                 dangerLine.Sync(tuning.TopOut, tuning.ShowDangerLine, tuning.TopOutLine,
@@ -335,6 +344,7 @@ namespace PanDulce.Runtime
             GameOver = false;
             serveTimeout = -1f;
             pendingBubbleTier = -1;
+            heldShown = false;          // the first pastry of the new run gets its cue
             Day.Reset();
             Sim.ResetRun();
             Shop.Reset(tuning);

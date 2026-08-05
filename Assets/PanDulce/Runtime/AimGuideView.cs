@@ -9,6 +9,12 @@ namespace PanDulce.Runtime
         SpriteRenderer line, held;
         int shownTier;
 
+        /// <summary>Sim px, y-down: where the held pastry currently sits. Stale while hidden.</summary>
+        public Vector2 HeldSimPos { get; private set; } = new Vector2(SimField.CX, HeldY);
+
+        /// <summary>The held icon's centre line above the cloth.</summary>
+        public const float HeldY = 42f;
+
         protected override void Build()
         {
             shownTier = -1;
@@ -17,7 +23,7 @@ namespace PanDulce.Runtime
             line = ViewFactory.Rect(Content, "AimLine", Shapes.Dashes(4, 10, 3),
                                     SimField.CX, 66f, 3f, 306f,
                                     new Color(1f, 1f, 1f, 0.8f), "PlayArea", 20);
-            held = ViewFactory.Icon(Content, "HeldPastry", database, 0, SimField.CX, 42f, 20f,
+            held = ViewFactory.Icon(Content, "HeldPastry", database, 0, SimField.CX, HeldY, 20f,
                                     "PlayArea", 21);
         }
 
@@ -31,7 +37,8 @@ namespace PanDulce.Runtime
             float x = Mathf.Clamp(aimX, SimField.WL + r, SimField.WR - r);
 
             line.transform.localPosition = new Vector3(x * StageCoords.PX, -(66f + 153f) * StageCoords.PX, 0f);
-            held.transform.localPosition = new Vector3(x * StageCoords.PX, -42f * StageCoords.PX, 0f);
+            held.transform.localPosition = new Vector3(x * StageCoords.PX, -HeldY * StageCoords.PX, 0f);
+            HeldSimPos = new Vector2(x, HeldY);
 
             if (tier == shownTier) return;
             shownTier = tier;

@@ -119,7 +119,7 @@ namespace PanDulce.Editor
             var fx = EnsureEffectAssets();
             var effectsGo = Child(shakeRootGo.transform, "Effects");
             var effects = effectsGo.AddComponent<EffectsView>();
-            effects.EditorAssign(fx.merge, fx.sparkle, fx.serve, fx.dust);
+            effects.EditorAssign(fx.merge, fx.sparkle, fx.serve, fx.dust, fx.spawn);
 
             var floatsGo = Child(shakeRootGo.transform, "FloatingText");
             var floats = floatsGo.AddComponent<FloatingTextPool>();
@@ -194,7 +194,8 @@ namespace PanDulce.Editor
         /// Creates the effect materials and prefabs only when missing — the prefabs are the
         /// designer-editable surface, so an existing asset always wins over the defaults here.
         /// </summary>
-        static (GameObject merge, GameObject sparkle, GameObject serve, GameObject dust) EnsureEffectAssets()
+        static (GameObject merge, GameObject sparkle, GameObject serve, GameObject dust,
+                GameObject spawn) EnsureEffectAssets()
         {
             Directory.CreateDirectory(EffectsPrefabDir);
 
@@ -252,7 +253,23 @@ namespace PanDulce.Editor
                 shape.shapeType = ParticleSystemShapeType.SingleSidedEdge;      // a line along the floor
                 shape.radius = 1.7f;                                            // half the cloth width in units
             });
-            return (merge, sparkle, serve, dust);
+            // The "here it comes" cue for the next held pastry. Deliberately the quietest of
+            // the set — shorter-lived, slower and smaller than MergeBurst, so it reads as a
+            // hint rather than a celebration.
+            var spawn = EnsureEffectPrefab("SpawnPuff", puffMat, ps =>
+            {
+                var main = ps.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 0.7f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.15f, 0.5f);   // 15–50 px/s, a drift
+                main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.09f);
+                main.startColor = Palette.Cream;
+                main.gravityModifier = -0.02f;                                   // barely lifts
+                var shape = ps.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Circle;
+                shape.radius = 0.1f;                                             // ring around the icon
+            });
+            return (merge, sparkle, serve, dust, spawn);
         }
 
         static Material EnsureEffectMaterial(string name, string texPath)
