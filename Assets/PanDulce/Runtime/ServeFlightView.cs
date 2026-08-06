@@ -38,6 +38,7 @@ namespace PanDulce.Runtime
             onArrive = arrived;
             sprite.gameObject.SetActive(true);
             if (database != null) sprite.sprite = database.Pastry(tier);
+            Pose(0f);           // the trail reads this scale the moment it starts following
         }
 
         public void Cancel()
@@ -51,13 +52,7 @@ namespace PanDulce.Runtime
         {
             if (startTime < 0f || !IsBuilt) return;
             float t = Mathf.Clamp01((Time.time - startTime) / duration);
-
-            // position eased with a slight undershoot, scale eased smoothly (§7.6)
-            Vector2 p = Vector2.LerpUnclamped(from, Target, EaseUndershoot(t));
-            float s = Mathf.Lerp(1f, 0.6f, Mathf.SmoothStep(0f, 1f, t));
-
-            sprite.transform.localPosition = StageCoords.Stage(p.x, p.y);
-            ViewFactory.SetIcon(sprite, 26f * s);
+            Pose(t);
 
             if (t < 1f) return;
 
@@ -67,6 +62,17 @@ namespace PanDulce.Runtime
             var cb = onArrive;
             onArrive = null;
             cb?.Invoke();
+        }
+
+        /// <summary>Places the flyer at normalised flight time t.</summary>
+        void Pose(float t)
+        {
+            // position eased with a slight undershoot, scale eased smoothly (§7.6)
+            Vector2 p = Vector2.LerpUnclamped(from, Target, EaseUndershoot(t));
+            float s = Mathf.Lerp(1f, 0.6f, Mathf.SmoothStep(0f, 1f, t));
+
+            sprite.transform.localPosition = StageCoords.Stage(p.x, p.y);
+            ViewFactory.SetIcon(sprite, 26f * s);
         }
 
         /// <summary>Approximates cubic-bezier(0.35, -0.15, 0.35, 1).</summary>

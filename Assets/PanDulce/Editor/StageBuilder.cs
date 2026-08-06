@@ -119,7 +119,7 @@ namespace PanDulce.Editor
             var fx = EnsureEffectAssets();
             var effectsGo = Child(shakeRootGo.transform, "Effects");
             var effects = effectsGo.AddComponent<EffectsView>();
-            effects.EditorAssign(fx.merge, fx.sparkle, fx.serve, fx.dust);
+            effects.EditorAssign(fx.merge, fx.sparkle, fx.serve, fx.dust, fx.spawn);
 
             var floatsGo = Child(shakeRootGo.transform, "FloatingText");
             var floats = floatsGo.AddComponent<FloatingTextPool>();
@@ -194,7 +194,8 @@ namespace PanDulce.Editor
         /// Creates the effect materials and prefabs only when missing — the prefabs are the
         /// designer-editable surface, so an existing asset always wins over the defaults here.
         /// </summary>
-        static (GameObject merge, GameObject sparkle, GameObject serve, GameObject dust) EnsureEffectAssets()
+        static (GameObject merge, GameObject sparkle, GameObject serve, GameObject dust,
+                GameObject spawn) EnsureEffectAssets()
         {
             Directory.CreateDirectory(EffectsPrefabDir);
 
@@ -228,16 +229,55 @@ namespace PanDulce.Editor
                 shape.shapeType = ParticleSystemShapeType.Circle;
                 shape.radius = 0.05f;
             });
+            // The only system that simulates in world space: the puffs have to stay where
+            // they were dropped so the flyer pulls away from them. Everything is tuned for
+            // a continuous plume rather than a scatter — barely any speed, a shape narrower
+            // than the puff spacing, and a ribbon threaded through the live particles.
+            // EffectsView narrows and thins it as the flyer shrinks, so the plume tapers
+            // toward the bear (see EffectsView.Taper).
             var serve = EnsureEffectPrefab("ServePoof", puffMat, ps =>
             {
                 var main = ps.main;
-                main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.6f);
-                main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.4f);
-                main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
+                main.simulationSpace = ParticleSystemSimulationSpace.World;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 0.8f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0f, 0.12f);      // barely drifts off the path
+                main.startSize = new ParticleSystem.MinMaxCurve(0.10f, 0.26f);
                 main.startColor = Palette.Cream;
                 var em = ps.emission;                                            // trail while following
                 em.rateOverTime = 0f;
-                em.rateOverDistance = 8f;
+                em.rateOverDistance = 28f;
+                var shape = ps.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Circle;
+                shape.radius = 0.012f;                                           // ~1 px of jitter, under the spacing
+                shape.radiusThickness = 1f;
+                var sol = ps.sizeOverLifetime;                                   // settle, do not collapse
+                sol.enabled = true;
+                sol.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
+                    new Keyframe(0f, 0.9f), new Keyframe(0.25f, 1f), new Keyframe(1f, 0.6f)));
+                var col = ps.colorOverLifetime;                                  // a longer fade than the bursts
+                var grad = new Gradient();
+                grad.SetKeys(
+                    new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                    new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.18f), new GradientAlphaKey(0f, 1f) });
+                col.color = grad;
+                var tr = ps.trails;                                              // one ribbon along the whole path
+                tr.enabled = true;
+                tr.mode = ParticleSystemTrailMode.Ribbon;
+                tr.ribbonCount = 1;
+                tr.worldSpace = true;
+                tr.dieWithParticles = true;
+                tr.sizeAffectsWidth = true;
+                tr.inheritParticleColor = true;
+                tr.minVertexDistance = 0.02f;
+                tr.textureMode = ParticleSystemTrailTextureMode.Stretch;
+                tr.widthOverTrail = new ParticleSystem.MinMaxCurve(0.4f);
+                var ribbon = new Gradient();
+                ribbon.SetKeys(
+                    new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                    new[] { new GradientAlphaKey(0.5f, 0f), new GradientAlphaKey(0.5f, 1f) });
+                tr.colorOverTrail = new ParticleSystem.MinMaxGradient(ribbon);
+                ps.GetComponent<ParticleSystemRenderer>().trailMaterial = puffMat;
             });
             var dust = EnsureEffectPrefab("ShakeDust", puffMat, ps =>
             {
@@ -252,7 +292,23 @@ namespace PanDulce.Editor
                 shape.shapeType = ParticleSystemShapeType.SingleSidedEdge;      // a line along the floor
                 shape.radius = 1.7f;                                            // half the cloth width in units
             });
-            return (merge, sparkle, serve, dust);
+            // The "here it comes" cue for the next held pastry. Deliberately the quietest of
+            // the set — shorter-lived, slower and smaller than MergeBurst, so it reads as a
+            // hint rather than a celebration.
+            var spawn = EnsureEffectPrefab("SpawnPuff", puffMat, ps =>
+            {
+                var main = ps.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 0.7f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.15f, 0.5f);   // 15–50 px/s, a drift
+                main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.09f);
+                main.startColor = Palette.Cream;
+                main.gravityModifier = -0.02f;                                   // barely lifts
+                var shape = ps.shape;
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Circle;
+                shape.radius = 0.1f;                                             // ring around the icon
+            });
+            return (merge, sparkle, serve, dust, spawn);
         }
 
         static Material EnsureEffectMaterial(string name, string texPath)

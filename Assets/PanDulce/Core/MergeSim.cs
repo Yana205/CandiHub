@@ -48,6 +48,72 @@ namespace PanDulce.Core
         /// <summary>The starting desserts settle for this long before any merge can fire.</summary>
         public const float StartMergeGraceSec = 1f;
 
+        // --- coming to rest -----------------------------------------------------------
+        // A settled pastry has THREE things still feeding it spin, and all three have to be
+        // shut off or the pile turns forever:
+        //   · the floor's rolling coupling, fed by the centre pull's permanent drift
+        //     (friction and pull balance at ≈ CenterPull/GroundFriction, never at zero),
+        //   · the tangential impulse from resting neighbours leaning on each other,
+        //   · the wall's `vrot = ±vy/r` — an assignment, so it overwrites any damping.
+        // The 0.99 per-substep decay swallows none of it. Bodies resting on OTHER bodies
+        // never touch the floor branch at all, which is most of a real pile.
+
+        /// <summary>Below this |vy| a floor contact counts as settled and vy is zeroed.</summary>
+        const float FloorSleepVy = 20f;
+
+        // Rest is judged on DISPLACEMENT, not velocity. A body wedged in a pile never has
+        // a small vy — gravity adds and the contact cancels it every substep, and the
+        // deeper the pile the harder that hums (36–54 px/s measured, going nowhere). Any
+        // velocity threshold is therefore either too tight for a deep pile or too loose to
+        // be safe. Where the body actually IS after a moment has neither problem.
+
+        /// <summary>How long a window the settle test measures movement over.</summary>
+        const float RestSampleSec = 0.15f;
+
+        /// <summary>
+        /// Move less than this (sim px) within a sample window and the body is going
+        /// nowhere. 1.5 px per 0.15 s ≈ 10 px/s — well above the centre pull's endless
+        /// creep, well below anything that reads as a roll.
+        /// </summary>
+        const float RestMoveEps = 1.5f;
+
+        /// <summary>
+        /// Contact approach speed that counts as a real hit rather than the pile leaning on
+        /// itself; a hit wakes both bodies on the spot. Ten substeps of gravity ≈ 80 px/s —
+        /// clear of settling chatter, far under a landing drop (300+ px/s).
+        /// </summary>
+        const float ImpactSubsteps = 10f;
+
+        /// <summary>Spin decay rate per second once resting (≈0.3 s to a visual stop).</summary>
+        const float RestSpinDamping = 12f;
+
+        /// <summary>|vrot| under this (rad/s, ≈1°/s) is snapped to a dead stop.</summary>
+        const float RestSpinSnap = 0.02f;
+
+        /// <summary>
+        /// A contact normal with at least this much downward component counts as support
+        /// (±75° of straight down). Loose on purpose: a body bridging the V between two
+        /// neighbours is held by two shallow contacts and nothing steeper. Marking a body
+        /// supported cannot make it rest on its own — it still has to be going nowhere,
+        /// and anything actually falling covers ground fast.
+        /// </summary>
+        const float SupportNormalY = 0.25f;
+
+        /// <summary>
+        /// Support has to lapse for this long before a body stops counting as resting.
+        /// Neighbours lever each other a hair off their contacts constantly, and without
+        /// the grace that chatter flickers the rest flag and lets the spin back in. Far
+        /// shorter than a fall, which covers ground long before the grace runs out.
+        /// </summary>
+        const float RestSupportGrace = 0.12f;
+
+        /// <summary>Only ease to upright from within this much rot error (rad). Wider and a
+        /// body that stopped mid-tumble would creep around — the very thing being fixed.</summary>
+        const float RestAlignWindow = 0.25f;
+
+        /// <summary>How fast that last bit of tilt eases out, per second.</summary>
+        const float RestAlignRate = 4f;
+
         public MergeSim(ISimConfig config, System.Random random = null)
         {
             cfg = config;
@@ -81,10 +147,28 @@ namespace PanDulce.Core
             float e = cfg.Bounciness;
             float sizeScale = cfg.SizeScale;
 
+            // Approach speed that separates a real hit from the pile leaning on itself.
+            float impactV = cfg.Gravity * dt * ImpactSubsteps;
+
             // 1 — integrate
             for (int i = 0; i < Bodies.Count; i++)
             {
                 Body b = Bodies[i];
+
+                // Rest is judged on the contacts found last substep: contacts persist, and
+                // the answer is needed before the contact/wall/floor code that feeds spin.
+                if (b.supported) b.sinceSupport = 0f; else b.sinceSupport += dt;
+                b.supported = false;
+
+                b.restSampleT += dt;
+                if (b.restSampleT >= RestSampleSec)
+                {
+                    float mx = b.x - b.restAnchorX, my = b.y - b.restAnchorY;
+                    b.wentNowhere = mx * mx + my * my < RestMoveEps * RestMoveEps;
+                    b.restAnchorX = b.x; b.restAnchorY = b.y; b.restSampleT = 0f;
+                }
+                b.atRest = b.wentNowhere && b.sinceSupport < RestSupportGrace;
+
                 b.vy += cfg.Gravity * dt;
                 b.x += b.vx * dt;
                 b.y += b.vy * dt;
@@ -130,6 +214,10 @@ namespace PanDulce.Core
                     a.x -= nx * ov * (mc / tm); a.y -= ny * ov * (mc / tm);
                     c.x += nx * ov * (ma / tm); c.y += ny * ov * (ma / tm);
 
+                    // n runs a→c and +y is down, so a positive ny puts c underneath a.
+                    if (ny > SupportNormalY) a.supported = true;
+                    else if (ny < -SupportNormalY) c.supported = true;
+
                     float rvx = c.vx - a.vx, rvy = c.vy - a.vy;
                     float vn = rvx * nx + rvy * ny;
                     if (vn < 0f)
@@ -139,8 +227,15 @@ namespace PanDulce.Core
                         c.vx += jm * nx / mc; c.vy += jm * ny / mc;
                         float q = Mathf.Min(0.28f, Mathf.Abs(vn) / 1500f) * cfg.SquishAmount;
                         if (q > 0.05f) { a.squish = Mathf.Max(a.squish, q); c.squish = Mathf.Max(c.squish, q); }
+                        // Spin from the tangential impulse — but a settled body leaning on
+                        // its neighbours re-approaches by a gravity nibble every substep,
+                        // and that trickle is enough to keep the whole pile turning. A real
+                        // hit wakes both bodies on the spot so the spin lands immediately;
+                        // the pile's own chatter is ignored.
+                        if (-vn > impactV) { a.Wake(); c.Wake(); }
                         float vt = rvx * -ny + rvy * nx, rk = 0.15f * rotAmt;
-                        a.vrot += (vt / ra) * rk; c.vrot += (vt / rc) * rk;
+                        if (!a.atRest) a.vrot += (vt / ra) * rk;
+                        if (!c.atRest) c.vrot += (vt / rc) * rk;
                     }
                 }
             }
@@ -152,17 +247,19 @@ namespace PanDulce.Core
                 if (b.dead) continue;
                 float r = TierTable.Er(b, sizeScale);
 
+                // The wall spin is an assignment, not an impulse — left ungated it would
+                // overwrite the rest damping every substep for anything leaning on a wall.
                 if (b.x - r < SimField.WL)
                 {
                     b.x = SimField.WL + r;
                     b.vx = Mathf.Abs(b.vx) * e;
-                    b.vrot = -b.vy / r * 0.4f * rotAmt;
+                    if (!b.atRest) b.vrot = -b.vy / r * 0.4f * rotAmt;
                 }
                 if (b.x + r > SimField.WR)
                 {
                     b.x = SimField.WR - r;
                     b.vx = -Mathf.Abs(b.vx) * e;
-                    b.vrot = b.vy / r * 0.4f * rotAmt;
+                    if (!b.atRest) b.vrot = b.vy / r * 0.4f * rotAmt;
                 }
 
                 float fy = SimField.FloorAt(b.x, cfg.FloorSag);
@@ -171,13 +268,37 @@ namespace PanDulce.Core
                     float vi = b.vy;
                     b.y = fy - r;
                     b.vy = -Mathf.Abs(b.vy) * e * 0.6f;
-                    if (Mathf.Abs(b.vy) < 20f) b.vy = 0f;
+                    if (Mathf.Abs(b.vy) < FloorSleepVy) b.vy = 0f;
                     b.vx *= (1f - cfg.GroundFriction * dt);                              // friction
                     b.vx -= ((b.x - SimField.CX) / SimField.HW) * cfg.CenterPull * dt;   // roll to the middle
-                    b.vrot += (b.vx / r - b.vrot) * Mathf.Min(0.4f, 0.05f + 0.5f * rotAmt);
+                    b.supported = true;
+
+                    // Only couple spin to travel when the body is actually travelling. The
+                    // centre pull never stops, so a settled body keeps a few px/s of drift
+                    // forever, and coupling that is what re-span the pile every substep.
+                    if (!b.atRest)
+                        b.vrot += (b.vx / r - b.vrot) * Mathf.Min(0.4f, 0.05f + 0.5f * rotAmt);
+
                     if (vi > 180f)
                         b.squish = Mathf.Max(b.squish, Mathf.Min(0.3f, vi / 1600f) * cfg.SquishAmount);
                 }
+            }
+
+            // 3.5 — bring settled bodies to a stop. Covers the whole pile, not just the
+            // bottom layer: a body held up by other bodies never reaches the floor branch.
+            for (int i = 0; i < Bodies.Count; i++)
+            {
+                Body b = Bodies[i];
+                if (b.dead || !b.atRest) continue;
+
+                b.vrot -= b.vrot * Mathf.Min(1f, RestSpinDamping * dt);
+                if (Mathf.Abs(b.vrot) >= RestSpinSnap) continue;
+
+                b.vrot = 0f;
+                float turn = 2f * Mathf.PI;
+                float off = Mathf.Round(b.rot / turn) * turn - b.rot;   // nearest upright
+                if (Mathf.Abs(off) < RestAlignWindow)
+                    b.rot += off * Mathf.Min(1f, RestAlignRate * dt);
             }
 
             // 4 — apply merges, drop dead bodies, age floating text
@@ -263,6 +384,7 @@ namespace PanDulce.Core
             b.bornAt = Now;
             b.rot = RandRange(-0.15f, 0.15f);
             b.vrot = (Rand01() - 0.5f) * 2.4f * cfg.RotationAmount;
+            b.Wake();                      // anchor the settle sample at the spawn point
             Bodies.Add(b);
             return b;
         }
@@ -358,6 +480,7 @@ namespace PanDulce.Core
                 b.vx = (Rand01() - 0.5f) * 350f * p;
                 b.vrot += (Rand01() - 0.5f) * 3.2f * cfg.RotationAmount;
                 b.squish = 0.2f;
+                b.Wake();                  // the whole pile is in the air — none of it rests
             }
             ShakeUntil = Now + cfg.ShakeDuration;
             AddFloat(SimField.CX, 176f, "Shake!");
