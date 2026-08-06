@@ -17,6 +17,12 @@ namespace PanDulce.Runtime
         int dustEmitPerBurst;
         float nextDustAt;
 
+        // The serve trail, while it is following the flyer. trail* hold the prefab's own
+        // values so the designer stays in charge of the look and StopFollow can restore it.
+        Transform flyer;
+        float flyerScale0, trailRate, trailSize;
+        Color trailColor;
+
         public void EditorAssign(GameObject mergeP, GameObject sparkleP, GameObject serveP,
                                  GameObject dustP, GameObject spawnP)
         {
@@ -33,6 +39,12 @@ namespace PanDulce.Runtime
             spawn = Spawn(spawnPrefab);
             if (dust != null)
                 dust.transform.localPosition = StageCoords.Stage(SimField.CX, SimField.FY);
+            if (serve != null)
+            {
+                trailRate = serve.emission.rateOverDistanceMultiplier;
+                trailSize = serve.main.startSizeMultiplier;
+                trailColor = serve.main.startColor.color;
+            }
         }
 
         ParticleSystem Spawn(GameObject prefab)
@@ -99,10 +111,20 @@ namespace PanDulce.Runtime
             spawn.Emit(ep, Count(3f, intensity));
         }
 
-        /// <summary>Parents the serve system to the flyer so rateOverDistance leaves a trail.</summary>
-        public void FollowFlyer(Transform flyer)
+        /// <summary>
+        /// Parents the serve system to the flyer so rateOverDistance leaves a trail. The
+        /// system simulates in world space, so the puffs stay where they were dropped and
+        /// the flyer pulls away from them. Density scales with intensity for the same
+        /// reason every Emit() count goes through <see cref="Count"/>.
+        /// </summary>
+        public void FollowFlyer(Transform flyerTransform, float intensity)
         {
-            if (serve == null || flyer == null) return;
+            if (serve == null || flyerTransform == null) return;
+            flyer = flyerTransform;
+            flyerScale0 = Mathf.Max(1e-4f, flyer.localScale.x);
+            var em = serve.emission;
+            em.rateOverDistance = trailRate * Mathf.Max(0f, intensity);
+            Taper();
             serve.transform.SetParent(flyer, false);
             serve.transform.localPosition = Vector3.zero;
             serve.Play();
@@ -111,8 +133,26 @@ namespace PanDulce.Runtime
         public void StopFollow()
         {
             if (serve == null) return;
+            flyer = null;
+            var main = serve.main;                          // back to the prefab's own look
+            main.startSizeMultiplier = trailSize;
+            main.startColor = trailColor;
             serve.Stop(false, ParticleSystemStopBehavior.StopEmitting);
             serve.transform.SetParent(transform, false);
+        }
+
+        /// <summary>
+        /// The flyer shrinks 1 → 0.6 on its way to the bear (§7.6). Narrowing and thinning
+        /// the puffs by the same measure makes the trail taper toward the customer instead
+        /// of ending in a wall of full-size poofs.
+        /// </summary>
+        void Taper()
+        {
+            float shrink = Mathf.Clamp01(flyer.localScale.x / flyerScale0);
+            float taper = shrink * shrink;                  // 1 → ~0.36 across the flight
+            var main = serve.main;
+            main.startSizeMultiplier = trailSize * taper;
+            main.startColor = Palette.WithAlpha(trailColor, trailColor.a * Mathf.Lerp(0.4f, 1f, taper));
         }
 
         public void ShakeDust(float duration, float intensity)
@@ -124,6 +164,8 @@ namespace PanDulce.Runtime
 
         void Update()
         {
+            if (flyer != null) Taper();
+
             if (dust == null || Time.time >= dustUntil || Time.time < nextDustAt) return;
             dust.Emit(dustEmitPerBurst);
             nextDustAt = Time.time + 0.05f;

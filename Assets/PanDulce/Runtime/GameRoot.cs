@@ -293,7 +293,7 @@ namespace PanDulce.Runtime
             if (serveFlight != null)
             {
                 serveFlight.Launch(flyingTier, stage, tuning.FlySec, CompleteServe);
-                if (effects != null) effects.FollowFlyer(serveFlight.FlyerTransform);
+                if (effects != null) effects.FollowFlyer(serveFlight.FlyerTransform, tuning.ParticleScale);
             }
             else
                 CompleteServe();
