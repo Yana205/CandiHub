@@ -70,41 +70,45 @@ namespace PanDulce.Editor
             var fitter = stage.AddComponent<StageFitter>();
             fitter.EditorAssign(cam);
 
-            // 21 · BACKDROP
+            // 21 · BACKDROP — just the paper ground behind the lineart
             var backdrop = Folder(stage.transform, "[ 21 · BACKDROP ]");
             var backdropView = backdrop.AddComponent<BackdropView>();
             backdropView.EditorAssign(db);
 
-            // 22 · CUSTOMER
-            var customerFolder = Folder(stage.transform, "[ 22 · CUSTOMER ]");
+            // 22 · LAYOUT ART — the hand-drawn v2 layout. The prefab is the designer
+            // surface (Version2ArtImport creates it once; hand edits win), so the rebuild
+            // only re-instantiates it.
+            var artFolder = Folder(stage.transform, "[ 22 · LAYOUT ART ]");
+            var layoutArt = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/PanDulce/Prefabs/LayoutArt.prefab");
+            if (layoutArt != null)
+            {
+                var inst = (GameObject)PrefabUtility.InstantiatePrefab(layoutArt);
+                inst.transform.SetParent(artFolder.transform, false);
+            }
+
+            // 23 · CUSTOMER
+            var customerFolder = Folder(stage.transform, "[ 23 · CUSTOMER ]");
             var customer = customerFolder.AddComponent<CustomerView>();
             customer.EditorAssign(db);
 
-            // 23 · FURNITURE
-            var furniture = Folder(stage.transform, "[ 23 · FURNITURE ]");
+            // 24 · FURNITURE
+            var furniture = Folder(stage.transform, "[ 24 · FURNITURE ]");
             var signGo = Child(furniture.transform, "HangingSign");
             var sign = signGo.AddComponent<SignView>();
 
-            // 24 · DISPLAY CASE
-            var caseFolder = Folder(stage.transform, "[ 24 · DISPLAY CASE ]");
+            // 25 · DISPLAY CASE
+            var caseFolder = Folder(stage.transform, "[ 25 · DISPLAY CASE ]");
             var displayCase = caseFolder.AddComponent<DisplayCaseView>();
             displayCase.EditorAssign(db);
 
-            // 25 · PLAY AREA — the sim origin sits at stage (6, 424)
-            var play = Folder(stage.transform, "[ 25 · PLAY AREA ]");
+            // 26 · PLAY AREA — the sim origin sits at stage (6, 424)
+            var play = Folder(stage.transform, "[ 26 · PLAY AREA ]");
             play.transform.localPosition = StageCoords.Stage(StageCoords.PlayOriginX,
                                                              StageCoords.PlayOriginY);
 
-            var deskGo = Child(play.transform, "Desk");
-            var desk = deskGo.AddComponent<DeskView>();
-
-            var shakeRootGo = Child(play.transform, "ClothShakeRoot");
+            var shakeRootGo = Child(play.transform, "ShakeRoot");
             var shaker = shakeRootGo.AddComponent<ClothShaker>();
-
-            var clothGo = Child(shakeRootGo.transform, "Cloth");
-            clothGo.AddComponent<MeshFilter>();
-            clothGo.AddComponent<MeshRenderer>();
-            var cloth = clothGo.AddComponent<ClothView>();
 
             var aimGo = Child(shakeRootGo.transform, "AimGuide");
             var aim = aimGo.AddComponent<AimGuideView>();
@@ -132,20 +136,15 @@ namespace PanDulce.Editor
             var plaque = plaqueGo.AddComponent<NextPlaqueView>();
             plaque.EditorAssign(db);
 
-            // 27 · LAYOUT ART — the hand-drawn v2 layout. The prefab is the designer
-            // surface (Version2ArtImport creates it once; hand edits win), so the rebuild
-            // only re-instantiates it.
-            var artFolder = Folder(stage.transform, "[ 27 · LAYOUT ART ]");
-            var layoutArt = AssetDatabase.LoadAssetAtPath<GameObject>(
-                "Assets/PanDulce/Prefabs/LayoutArt.prefab");
-            if (layoutArt != null)
-            {
-                var inst = (GameObject)PrefabUtility.InstantiatePrefab(layoutArt);
-                inst.transform.SetParent(artFolder.transform, false);
-            }
+            // Scene-view-only gizmo guides for the fall area (walls, floor curve, spawn
+            // and top-out lines). Uncheck the object to hide them; they never render in
+            // the Game view or in builds.
+            var guidesGo = Child(play.transform, "Guides");
+            var guide = guidesGo.AddComponent<PlayAreaGuide>();
+            guide.EditorAssign(tuning);
 
-            // 26 · UI
-            var ui = Folder(stage.transform, "[ 26 · UI ]");
+            // 27 · UI
+            var ui = Folder(stage.transform, "[ 27 · UI ]");
 
             var topBarGo = Child(ui.transform, "TopBar");
             var topBar = topBarGo.AddComponent<TopBarView>();
@@ -177,21 +176,22 @@ namespace PanDulce.Editor
             bodies.EditorAssign(db);
             pointer.Init(cam, play.transform);
 
-            gameRoot.EditorWire(tuning, db, cam, play.transform, shaker, cloth, bodies,
+            gameRoot.EditorWire(tuning, db, cam, play.transform, shaker, bodies,
                                 floats, aim, danger, fold, topBar, boostBar,
                                 bubble, sign, displayCase, customer, flight, card, plaque,
                                 effects, pointer, sfx);
 
+            // Hand-tuned placement captured from play mode wins over the defaults above.
+            PlayLayoutTool.Apply();
+
             // Strip generated content, save a clean scene, then put the preview back.
             var views = Object.FindObjectsByType<GeneratedView>(FindObjectsInactive.Include);
             foreach (var v in views) v.ClearForSave();
-            if (cloth != null) cloth.ClearForSave();
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             foreach (var v in views) v.Rebuild();
-            if (cloth != null) cloth.Build();
 
             var info = new FileInfo(ScenePath);
             Debug.Log($"[PanDulce] stage rebuilt, saved to {ScenePath} ({info.Length / 1024f:F1} KB)");

@@ -31,6 +31,9 @@ namespace PanDulce.Core
         // Tier B — "Beyond the mock" (§6.3)
         public int substeps = 3;
         public float floorSag = 26f;
+        // v2 layout: raised from SimField.FY (372) so the pile rests inside the drawn
+        // candy box (Yana's play-mode placement, 2026-08-07).
+        public float floorY = 250f;
         public float centerPull = 34f;
         public float groundFriction = 9f;
         public float comboWindow = 1.4f;
@@ -78,6 +81,7 @@ namespace PanDulce.Core
 
         public int Substeps => substeps;
         public float FloorSag => floorSag;
+        public float FloorY => floorY;
         public float CenterPull => centerPull;
         public float GroundFriction => groundFriction;
         public float ComboWindow => comboWindow;
