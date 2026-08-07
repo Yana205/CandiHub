@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 480940aa3a6b342c7ab5fefe34d9a68a
+guid: d9f59174875f5480cb9bd650f0051d77
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7417236152243976561
-    second: pastry_02_kiss-cookie_0
+      213: 4838543598531023044
+    second: pastry_05_matcha-donut_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pastry_02_kiss-cookie_0
+      name: pastry_05_matcha-donut_0
       rect:
         serializedVersion: 2
-        x: 85
-        y: 66
-        width: 342
-        height: 390
+        x: 55
+        y: 82
+        width: 402
+        height: 348
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f86005a840fa01990800000000000000
-      internalID: -7417236152243976561
+      spriteID: 4c09ea464c5f52340800000000000000
+      internalID: 4838543598531023044
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pastry_02_kiss-cookie_0: -7417236152243976561
+      pastry_05_matcha-donut_0: 4838543598531023044
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -13,8 +13,8 @@ namespace PanDulce.Core
 
         public static readonly string[] Names =
         {
-            "Mochi", "Muffin", "Kiss Cookie", "Biscuit", "Turnover", "Bread Roll",
-            "Roll Cake", "Melon Pan", "Piggy Cookie", "Purin", "Donut"
+            "Mochi", "Matcha Mochi", "Mango Mochi", "Purin", "Berry Donut", "Matcha Donut",
+            "Choco Donut", "Roll Cake", "Sakura Pan", "Honey Pan", "Melon Pan"
         };
 
         public static readonly float[] BaseRadius =

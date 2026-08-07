@@ -5,7 +5,8 @@ namespace PanDulce.Runtime
     /// <summary>The bear, waddling in from the left behind the counter.</summary>
     public sealed class CustomerView : GeneratedView
     {
-        const float AnchorX = 215f, AnchorY = 355f;
+        // Public so the Studio window's edit-mode bear preview stands exactly here.
+        public const float AnchorX = 215f, AnchorY = 355f;
 
         // Entrance walk. StartX puts the bear's leading edge past the widest letterbox the
         // fitter can show (left visible edge bottoms out at -122, half the bear is 115).

@@ -43,7 +43,7 @@ namespace PanDulce.Runtime
             if (tier == shownTier) return;
             shownTier = tier;
             if (database != null) held.sprite = database.Pastry(tier);
-            ViewFactory.SetIcon(held, r);
+            ViewFactory.SetIcon(held, r, database != null ? database.ArtScale(tier) : 1f);
         }
     }
 }

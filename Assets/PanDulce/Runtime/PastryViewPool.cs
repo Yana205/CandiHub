@@ -80,8 +80,10 @@ namespace PanDulce.Runtime
                 sr.transform.localEulerAngles = new Vector3(0f, 0f, StageCoords.RotationDegrees(b.rot));
 
                 // Sprites are authored at radius 200, so scale is simply Er / 200.
+                // artScale is visual-only: the sim's radius (er) is untouched by it.
                 float er = TierTable.Er(b, sizeScale);
-                float s = er / TierTable.CanonicalSpriteRadius;
+                float art = database != null ? database.ArtScale(b.tier) : 1f;
+                float s = er * art / TierTable.CanonicalSpriteRadius;
                 float highlight = (b == hovered) ? 1.14f : 1f;
                 sr.transform.localScale = new Vector3((1f + b.squish * 0.6f) * s * highlight,
                                                        (1f - b.squish) * s * highlight, 1f);
@@ -94,7 +96,7 @@ namespace PanDulce.Runtime
                     if (!ring.gameObject.activeSelf) ring.gameObject.SetActive(true);
                     ring.transform.localPosition = sr.transform.localPosition;
                     float pulse = 1.18f + 0.08f * Mathf.Sin(Time.time * (2f * Mathf.PI / 0.9f));
-                    float rs = er * pulse / RingBakedRadius;
+                    float rs = er * art * pulse / RingBakedRadius;   // hugs the drawn edge, not the physics circle
                     ring.transform.localScale = new Vector3(rs, rs, 1f);
                 }
                 else if (ring.gameObject.activeSelf) ring.gameObject.SetActive(false);

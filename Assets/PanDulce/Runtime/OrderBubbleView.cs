@@ -44,8 +44,14 @@ namespace PanDulce.Runtime
             shownAt = now;
             if (tier == shownTier) return;
             shownTier = tier;
-            if (database != null) icon.sprite = database.Pastry(tier);
-            nameLabel.text = $"{TierTable.Names[tier]}, please!";
+            if (database != null)
+            {
+                icon.sprite = database.Pastry(tier);
+                // Re-apply the per-dessert art scale; the breathing in Update pulses around it.
+                ViewFactory.SetIcon(icon, 16f, database.ArtScale(tier));
+                iconBaseScale = icon.transform.localScale.x;
+            }
+            nameLabel.text = $"{(database != null ? database.Name(tier) : TierTable.Names[tier])}, please!";
         }
 
         public void Hide()

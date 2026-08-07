@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 326f769420af84eac969a38dfb5082c7
+guid: 189a6037ad0e44fdc950a59d0afed248
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7614177693806421463
-    second: pastry_06_rollcake_0
+      213: -1540022443671949797
+    second: pastry_10_melonpan_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pastry_06_rollcake_0
+      name: pastry_10_melonpan_0
       rect:
         serializedVersion: 2
         x: 55
-        y: 71
+        y: 100
         width: 402
-        height: 370
+        height: 312
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 92a17f7aab1055690800000000000000
-      internalID: -7614177693806421463
+      spriteID: b1eedc23fbdb0aae0800000000000000
+      internalID: -1540022443671949797
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pastry_06_rollcake_0: -7614177693806421463
+      pastry_10_melonpan_0: -1540022443671949797
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
