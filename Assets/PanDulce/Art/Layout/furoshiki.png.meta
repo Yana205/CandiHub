@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c09ea3d9e935b42ceab335423c96a36b
+guid: a54fdf10498514fc7a873355b125e6cd
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6366455402719872956
-    second: pastry_06_cinnamon-roll_0
+      213: 7694572244375863882
+    second: furoshiki_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 200
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
@@ -111,7 +111,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: Android
-    maxTextureSize: 512
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 0
@@ -124,7 +124,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: iOS
-    maxTextureSize: 512
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 0
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pastry_06_cinnamon-roll_0
+      name: furoshiki_0
       rect:
         serializedVersion: 2
-        x: 46
-        y: 46
-        width: 420
-        height: 420
+        x: 0
+        y: 0
+        width: 860
+        height: 1600
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cb70c7535713a5850800000000000000
-      internalID: 6366455402719872956
+      spriteID: a428a9c40bc98ca60800000000000000
+      internalID: 7694572244375863882
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pastry_06_cinnamon-roll_0: 6366455402719872956
+      furoshiki_0: 7694572244375863882
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -18,6 +18,9 @@ namespace PanDulce.Runtime
         const int SamplesPerSegment = 20;
         const float BottomY = 440f;     // sim px, below the hem so the drape reads as fabric
 
+        /// <summary>Flip to bring the procedural drape back if the v2 art goes away.</summary>
+        static readonly bool DrawProceduralDrape = false;
+
         [SerializeField] Color clothColor = new Color(0.81f, 0.42f, 0.36f);
 
         MeshFilter filter;
@@ -45,6 +48,19 @@ namespace PanDulce.Runtime
             ClearGenerated();
             filter = GetComponent<MeshFilter>();
             meshRenderer = GetComponent<MeshRenderer>();
+
+            // V2 layout: the furoshiki is drawn by the LayoutArt prefab. The procedural
+            // drape stays dormant — an empty mesh and no children — so the cloth-color and
+            // shake wiring through GameRoot keeps working untouched.
+            if (!DrawProceduralDrape)
+            {
+                mesh = new Mesh { name = "Furoshiki (dormant)" };
+                filter.sharedMesh = mesh;
+                meshRenderer.enabled = false;
+                var oldOutline = GetComponent<LineRenderer>();
+                if (oldOutline != null) oldOutline.enabled = false;
+                return;
+            }
 
             mesh = new Mesh { name = "Furoshiki" };
             mesh.MarkDynamic();
@@ -220,6 +236,8 @@ namespace PanDulce.Runtime
         void Repaint()
         {
             if (mesh == null) return;
+            // Dormant drape: nothing was built, so there is nothing to tint.
+            if (outline == null) { lastColor = clothColor; return; }
 
             var colors = new Color[mesh.vertexCount];
             // Slight vertical shading keeps the drape from reading flat, still derived from C.

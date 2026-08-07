@@ -13,8 +13,8 @@ namespace PanDulce.Core
 
         public static readonly string[] Names =
         {
-            "Cookie", "Muffin", "Kiss Cookie", "Biscuit", "Turnover", "Bread Roll",
-            "Cinnamon Roll", "Shell Bun", "Piggy Cookie", "Flan", "Ring Cake"
+            "Mochi", "Muffin", "Kiss Cookie", "Biscuit", "Turnover", "Bread Roll",
+            "Roll Cake", "Melon Pan", "Piggy Cookie", "Purin", "Donut"
         };
 
         public static readonly float[] BaseRadius =

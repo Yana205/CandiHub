@@ -132,6 +132,18 @@ namespace PanDulce.Editor
             var plaque = plaqueGo.AddComponent<NextPlaqueView>();
             plaque.EditorAssign(db);
 
+            // 27 · LAYOUT ART — the hand-drawn v2 layout. The prefab is the designer
+            // surface (Version2ArtImport creates it once; hand edits win), so the rebuild
+            // only re-instantiates it.
+            var artFolder = Folder(stage.transform, "[ 27 · LAYOUT ART ]");
+            var layoutArt = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/PanDulce/Prefabs/LayoutArt.prefab");
+            if (layoutArt != null)
+            {
+                var inst = (GameObject)PrefabUtility.InstantiatePrefab(layoutArt);
+                inst.transform.SetParent(artFolder.transform, false);
+            }
+
             // 26 · UI
             var ui = Folder(stage.transform, "[ 26 · UI ]");
 
