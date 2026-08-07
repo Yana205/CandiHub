@@ -262,7 +262,7 @@ namespace PanDulce.Core
                     if (!b.atRest) b.vrot = b.vy / r * 0.4f * rotAmt;
                 }
 
-                float fy = SimField.FloorAt(b.x, cfg.FloorSag);
+                float fy = SimField.FloorAt(b.x, cfg.FloorSag, cfg.FloorY);
                 if (b.y + r > fy)
                 {
                     float vi = b.vy;

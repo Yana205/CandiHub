@@ -25,6 +25,7 @@ namespace PanDulce.Core
         // --- Tier B: hard-coded in the mock, exposed here (§6.3) ---
         int Substeps { get; }
         float FloorSag { get; }
+        float FloorY { get; }
         float CenterPull { get; }
         float GroundFriction { get; }
         float ComboWindow { get; }

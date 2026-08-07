@@ -28,7 +28,6 @@ namespace PanDulce.Runtime
         [SerializeField] Camera cam;
         [SerializeField] Transform playRoot;
         [SerializeField] ClothShaker clothShakeRoot;
-        [SerializeField] ClothView cloth;
         [SerializeField] PastryViewPool bodies;
         [SerializeField] FloatingTextPool floats;
         [SerializeField] AimGuideView aim;
@@ -163,7 +162,6 @@ namespace PanDulce.Runtime
             }
 
             if (clothShakeRoot != null) clothShakeRoot.Sync(Sim.ShakeOffset());
-            if (cloth != null) cloth.ClothColor = CurrentClothColor;
 
             // Order tier only while servable — rings drop the moment the serve launches.
             if (bodies != null) bodies.Sync(Sim, tuning.SizeScale,
@@ -401,7 +399,7 @@ namespace PanDulce.Runtime
         // ---------------------------------------------------------------- editor hooks
 
         public void EditorWire(TuningConfig cfg, PastryDatabase db, Camera camera, Transform play,
-                               ClothShaker shaker, ClothView clothView, PastryViewPool pastryPool,
+                               ClothShaker shaker, PastryViewPool pastryPool,
                                FloatingTextPool textPool,
                                AimGuideView aimGuide, DangerLineView danger, FoldView foldView,
                                TopBarView top, BoostBarView boost, OrderBubbleView orderBubble,
@@ -410,7 +408,7 @@ namespace PanDulce.Runtime
                                EffectsView effectsView, PointerInput input, SfxPlayer audio)
         {
             tuning = cfg; database = db; cam = camera; playRoot = play;
-            clothShakeRoot = shaker; cloth = clothView; bodies = pastryPool;
+            clothShakeRoot = shaker; bodies = pastryPool;
             floats = textPool; aim = aimGuide;
             dangerLine = danger; fold = foldView; topBar = top; boostBar = boost;
             bubble = orderBubble; sign = signView; displayCase = caseView;
