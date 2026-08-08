@@ -1,0 +1,326 @@
+{
+    "entries": [
+        {
+            "path": "[ 20 · STAGE ]/[ 21 · BACKDROP ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.5099999904632568,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/Backdrop",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/Backdrop/StreetWindow",
+            "pos": {
+                "x": 2.1499998569488525,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/Backdrop/HangingEntrance",
+            "pos": {
+                "x": 2.1499998569488525,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/GlassDisplay",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/GlassDisplay/GlassContainer",
+            "pos": {
+                "x": 2.1499998569488525,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/PlayAreaArt",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/PlayAreaArt/DeskLine",
+            "pos": {
+                "x": 2.1499998569488525,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/PlayAreaArt/Furoshiki",
+            "pos": {
+                "x": 2.1499998569488525,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/PlayAreaArt/CandyBox",
+            "pos": {
+                "x": 2.1499998569488525,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 23 · CUSTOMER ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.8899999856948853,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 24 · DISPLAY CASE ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 25 · PLAY AREA ]",
+            "pos": {
+                "x": 0.11999999731779099,
+                "y": -4.269999980926514,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 25 · PLAY AREA ]/ShakeRoot/AimGuide",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 25 · PLAY AREA ]/ShakeRoot/DangerLine",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 25 · PLAY AREA ]/FoldFlaps",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 25 · PLAY AREA ]/NextPlaque",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 26 · UI ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 26 · UI ]/BoostBar",
+            "pos": {
+                "x": 0.10999999940395355,
+                "y": 0.17999999225139618,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 23 · CUSTOMER ]/OrderBubble",
+            "pos": {
+                "x": 0.8600000143051147,
+                "y": 0.12000000476837158,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 23 · CUSTOMER ]/ServeFlight",
+            "pos": {
+                "x": 0.0,
+                "y": -0.8899999856948853,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 26 · UI ]/GameOverCard",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        }
+    ]
+}

@@ -33,7 +33,8 @@ namespace PanDulce.Runtime
             SetVisible(visible);
             if (!visible) return;
 
-            float r = TierTable.EffectiveRadius(tier, sizeScale);
+            float r = TierTable.EffectiveRadius(tier, sizeScale,
+                                                database != null ? database.TierSize(tier) : 1f);
             float x = Mathf.Clamp(aimX, SimField.WL + r, SimField.WR - r);
 
             line.transform.localPosition = new Vector3(x * StageCoords.PX, -(66f + 153f) * StageCoords.PX, 0f);
@@ -43,7 +44,7 @@ namespace PanDulce.Runtime
             if (tier == shownTier) return;
             shownTier = tier;
             if (database != null) held.sprite = database.Pastry(tier);
-            ViewFactory.SetIcon(held, r);
+            ViewFactory.SetIcon(held, r);   // r already carries the dessert's size
         }
     }
 }

@@ -27,6 +27,13 @@ namespace PanDulce.Core
         public event Action<ShopState> StateChanged;
         public event Action<int> CustomerArrived;   // orderTier
 
+        /// <summary>
+        /// Which tiers a customer may ask for — wired to MergeSim.IsDiscovered by GameRoot,
+        /// so the bear never orders a dessert the player has not merged into existence yet.
+        /// Null (tests, bare setups) keeps the classic unfiltered 2..5 roll.
+        /// </summary>
+        public Func<int, bool> Orderable;
+
         readonly System.Random rng;
         float happyUntil;
 
@@ -62,10 +69,30 @@ namespace PanDulce.Core
         /// <summary>A customer arrives and asks for a tier in 2..5 inclusive.</summary>
         public void OpenWindow()
         {
-            OrderTier = rng.Next(2, 6);
+            OrderTier = PickOrder();
             CustomerIndex = Served % 3;
             SetState(ShopState.Open);
             CustomerArrived?.Invoke(OrderTier);
+        }
+
+        /// <summary>
+        /// A roll over the upper half of the chain (2..Max), filtered to discovered tiers so
+        /// every order is servable. If the whole band is still silhouettes, ask for the best
+        /// dessert the player CAN make — never an impossible one.
+        /// </summary>
+        int PickOrder()
+        {
+            if (Orderable == null) return rng.Next(2, TierTable.Max + 1);
+
+            int n = 0;
+            Span<int> band = stackalloc int[TierTable.Count];
+            for (int t = 2; t <= TierTable.Max; t++)
+                if (Orderable(t)) band[n++] = t;
+            if (n > 0) return band[rng.Next(0, n)];
+
+            for (int t = TierTable.Max; t >= 0; t--)
+                if (Orderable(t)) return t;
+            return rng.Next(2, TierTable.Max + 1);
         }
 
         public void ForceOrder(int tier)
@@ -108,7 +135,9 @@ namespace PanDulce.Core
             Served = 0;
             ServeInFlight = false;
             happyUntil = 0f;
-            TimeLeft = CustomerEverySec(cfg);
+            // The start delay pads ONLY this first countdown — a few calm moments to read
+            // the shop before the bear shows up. Every later visit uses the plain cadence.
+            TimeLeft = CustomerEverySec(cfg) + Mathf.Max(0f, cfg.StartDelaySec);
             SecondsShown = Mathf.CeilToInt(TimeLeft);
             StateChanged?.Invoke(State);
         }

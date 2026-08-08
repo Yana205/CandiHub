@@ -31,12 +31,13 @@ namespace PanDulce.Core
         /// <summary>
         /// The sagging cloth floor: rises by floorSag at the edges, flat at the centre.
         /// This curve is the signature of the design — it makes the pile settle into a
-        /// bowl instead of a stack.
+        /// bowl instead of a stack. floorY lets tuning raise or lower the whole line
+        /// (v2 layout: the pile rests inside the drawn candy box, not at FY).
         /// </summary>
-        public static float FloorAt(float x, float floorSag)
+        public static float FloorAt(float x, float floorSag, float floorY = FY)
         {
             float k = UnityEngine.Mathf.Min(1f, UnityEngine.Mathf.Abs(x - CX) / HW);
-            return FY - floorSag * k * k;
+            return floorY - floorSag * k * k;
         }
     }
 }

@@ -26,7 +26,11 @@ namespace PanDulce.Runtime
         {
             if (!IsBuilt || nextTier == shownTier) return;
             shownTier = nextTier;
-            if (database != null) icon.sprite = database.Pastry(nextTier);
+            if (database != null)
+            {
+                icon.sprite = database.Pastry(nextTier);
+                ViewFactory.SetIcon(icon, 13f, database.DisplaySize(nextTier));
+            }
         }
     }
 }

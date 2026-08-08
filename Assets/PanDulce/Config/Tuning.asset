@@ -15,35 +15,46 @@ MonoBehaviour:
   data:
     gravity: 1500
     bounciness: 0.08
-    sizeScale: 1.3000001
+    sizeScale: 1.5899999
     rotationAmount: 0.2
-    mergeGrowTime: 0.85
+    mergeGrowTime: 1.09
     comboDelay: 0.5
-    customerEverySec: 18
-    entranceStyle: 0
+    customerEverySec: 10
+    startDelaySec: 4
+    startDiscovered: 3
     entranceTime: 1.3
     endOfDay: 0
     boostsOn: 1
     shakePower: 1
     chargePerMerge: 0.14
     soundOn: 1
+    clothColorIndex: 0
     substeps: 3
     floorSag: 26
+    floorY: 250
     centerPull: 34
     groundFriction: 9
     comboWindow: 1.4
     mergePopVy: -70
     squishAmount: 1
     particleScale: 1
-    dropCooldown: 0.5
+    dropCooldown: 0.616
     dropVy: 60
     flySec: 0.9
     happyMs: 1400
     startingBodies: 9
     shakeDuration: 0.6
+    mergeOverlapPct: 0
+    mergeTouchSec: 0
+    kinPull: 0
+    coinBase: 5
+    coinPerTier: 3
+    clearanceCost: 30
     topOut: 1
     topOutLine: 82
     topOutGrace: 2.2
     showDangerLine: 1
     timeScale: 1
     paused: 0
+    tierSize: []
+  pastries: {fileID: 11400000, guid: 3ce582e93a8fe4a2ca564fb805711878, type: 2}

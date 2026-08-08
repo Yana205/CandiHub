@@ -114,6 +114,28 @@ namespace PanDulce.Core
         /// <summary>How fast that last bit of tilt eases out, per second.</summary>
         const float RestAlignRate = 4f;
 
+        // --- rhythm knobs (cfg.MergeOverlapPct / MergeTouchSec / KinPull) ---------------
+
+        /// <summary>KinPull reaches this many times the touching distance — roughly a
+        /// diameter and a half of clearance before matching desserts feel each other.</summary>
+        const float KinPullRange = 2.5f;
+
+        /// <summary>
+        /// A same-tier pair within this many sim px of touching still counts as "in
+        /// contact" for the touch timer. Resting neighbours chatter between a hair of
+        /// penetration and exact separation every substep; without the slack the timer
+        /// would reset mid-hug and MergeTouchSec would never be reached on the floor.
+        /// </summary>
+        const float KinTouchSlack = 1.5f;
+
+        /// <summary>
+        /// Tolerance on the merge overlap requirement (sim px). The solver parks settled
+        /// pairs at exact contact, where float error puts min−d on either side of zero;
+        /// without a hair of give, a pair whose touch timer is served could sit forever
+        /// at 0% squeeze waiting for a penetration that never comes.
+        /// </summary>
+        const float MergeContactEps = 0.05f;
+
         public MergeSim(ISimConfig config, System.Random random = null)
         {
             cfg = config;
@@ -145,7 +167,9 @@ namespace PanDulce.Core
         {
             float rotAmt = cfg.RotationAmount;
             float e = cfg.Bounciness;
-            float sizeScale = cfg.SizeScale;
+            float pull = cfg.KinPull;
+            float touchSec = cfg.MergeTouchSec;
+            float overlapPct = cfg.MergeOverlapPct;
 
             // Approach speed that separates a real hit from the pile leaning on itself.
             float impactV = cfg.Gravity * dt * ImpactSubsteps;
@@ -159,6 +183,10 @@ namespace PanDulce.Core
                 // the answer is needed before the contact/wall/floor code that feeds spin.
                 if (b.supported) b.sinceSupport = 0f; else b.sinceSupport += dt;
                 b.supported = false;
+
+                // Same-tier contact time, fed by the pair loop last substep.
+                if (b.kinTouch) b.kinTouchT += dt; else b.kinTouchT = 0f;
+                b.kinTouch = false;
 
                 b.restSampleT += dt;
                 if (b.restSampleT >= RestSampleSec)
@@ -190,25 +218,54 @@ namespace PanDulce.Core
                     Body c = Bodies[j];
                     if (a.dead || c.dead) continue;
 
-                    float ra = TierTable.Er(a, sizeScale), rc = TierTable.Er(c, sizeScale);
+                    float ra = TierTable.Er(a, cfg), rc = TierTable.Er(c, cfg);
                     float dx = c.x - a.x, dy = c.y - a.y;
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
                     float min = ra + rc;
-                    if (d >= min) continue;
-                    if (d < 0.01f) { d = 0.01f; dx = 0.01f; dy = 0f; }
-                    float nx = dx / d, ny = dy / d;
 
-                    // merge gate — past the start grace, BOTH grown past 0.55 AND older
-                    // than comboDelay
-                    if (a.tier == c.tier && a.tier < TierTable.Max &&
-                        Now >= mergeLockUntil &&
-                        a.spawnT > 0.55f && c.spawnT > 0.55f &&
-                        Now - a.bornAt > cfg.ComboDelay && Now - c.bornAt > cfg.ComboDelay)
+                    bool kin = a.tier == c.tier && a.tier < TierTable.Max;
+
+                    if (kin && d < min + KinTouchSlack)
                     {
-                        a.dead = true; c.dead = true;
-                        mergeBuffer.Add((a, c));
+                        // The touch timer counts inside a small slack band, not just at true
+                        // penetration — resting neighbours chatter around exact contact.
+                        a.kinTouch = true; c.kinTouch = true;
+
+                        // merge gate — past the start grace, BOTH grown past 0.55, older
+                        // than comboDelay, pressed deep enough, and touching long enough.
+                        // Evaluated in the slack band because the solver parks settled
+                        // neighbours at EXACT contact: demanding true penetration here would
+                        // let a fully-served touch timer wait forever. The overlap condition
+                        // (with a hair of tolerance) still does the distance discrimination,
+                        // so a 0% squeeze remains "touching means merging" — the classic.
+                        if (Now >= mergeLockUntil &&
+                            a.spawnT > 0.55f && c.spawnT > 0.55f &&
+                            Now - a.bornAt > cfg.ComboDelay && Now - c.bornAt > cfg.ComboDelay &&
+                            min - d >= overlapPct * Mathf.Min(ra, rc) - MergeContactEps &&
+                            a.kinTouchT >= touchSec && c.kinTouchT >= touchSec)
+                        {
+                            a.dead = true; c.dead = true;
+                            mergeBuffer.Add((a, c));
+                            continue;
+                        }
+                    }
+
+                    if (d >= min)
+                    {
+                        // Courtship: matching desserts inside the pull range drift toward
+                        // each other. An acceleration, so the slider reads as approach
+                        // speed; gated on grow-in so a merge pop cannot yank its parents.
+                        if (kin && pull > 0f && d < min * KinPullRange && d > 0.01f &&
+                            a.spawnT > 0.55f && c.spawnT > 0.55f)
+                        {
+                            float g = pull * dt, ux = dx / d, uy = dy / d;
+                            a.vx += ux * g; a.vy += uy * g;
+                            c.vx -= ux * g; c.vy -= uy * g;
+                        }
                         continue;
                     }
+                    if (d < 0.01f) { d = 0.01f; dx = 0.01f; dy = 0f; }
+                    float nx = dx / d, ny = dy / d;
 
                     float ma = ra * ra, mc = rc * rc, tm = ma + mc, ov = min - d;   // mass = r²
                     a.x -= nx * ov * (mc / tm); a.y -= ny * ov * (mc / tm);
@@ -245,7 +302,7 @@ namespace PanDulce.Core
             {
                 Body b = Bodies[i];
                 if (b.dead) continue;
-                float r = TierTable.Er(b, sizeScale);
+                float r = TierTable.Er(b, cfg);
 
                 // The wall spin is an assignment, not an impulse — left ungated it would
                 // overwrite the rest damping every substep for anything leaning on a wall.
@@ -262,7 +319,7 @@ namespace PanDulce.Core
                     if (!b.atRest) b.vrot = b.vy / r * 0.4f * rotAmt;
                 }
 
-                float fy = SimField.FloorAt(b.x, cfg.FloorSag);
+                float fy = SimField.FloorAt(b.x, cfg.FloorSag, cfg.FloorY);
                 if (b.y + r > fy)
                 {
                     float vi = b.vy;
@@ -337,8 +394,7 @@ namespace PanDulce.Core
         void ApplyMerge(Body a, Body c)
         {
             int t2 = a.tier + 1;
-            float sizeScale = cfg.SizeScale;
-            float ra = TierTable.Er(a, sizeScale), rc = TierTable.Er(c, sizeScale);
+            float ra = TierTable.Er(a, cfg), rc = TierTable.Er(c, cfg);
             float x = (a.x * ra + c.x * rc) / (ra + rc);      // radius-weighted midpoint
             float y = (a.y * ra + c.y * rc) / (ra + rc);
 
@@ -348,7 +404,9 @@ namespace PanDulce.Core
 
             ComboN = (Now - lastMergeT < cfg.ComboWindow) ? ComboN + 1 : 1;
             lastMergeT = Now;
-            if (ComboN >= 2) AddFloat(x, y - TierTable.BaseRadius[t2] - 8f, $"Combo {ComboN}!");
+            // Clears the dessert it belongs to, so the label stays legible at any size.
+            float r2 = TierTable.EffectiveRadius(t2, cfg);
+            if (ComboN >= 2) AddFloat(x, y - r2 - 8f, $"Combo {ComboN}!");
 
             Merged?.Invoke(t2, new Vector2(x, y), ComboN);
 
@@ -356,21 +414,51 @@ namespace PanDulce.Core
             {
                 discovered[t2] = true;
                 if (t2 > HighestDiscovered) HighestDiscovered = t2;
-                AddFloat(x, y - TierTable.BaseRadius[t2] - 26f, "New in the case!");
+                AddFloat(x, y - r2 - 26f, "New in the case!");
                 TierDiscovered?.Invoke(t2, new Vector2(x, y));
             }
         }
 
         // ---------------------------------------------------------------- spawn
 
-        /// <summary>Spawn pick is always weighted 4:3:2:1 over tiers 0–3 only (§6.1).</summary>
+        /// <summary>
+        /// The authored glass-case seat order, doubling as the spawn menu (Yana, 2026-08-08):
+        /// seat 1 spawns most often, seat 5 least. Only DISCOVERED seats spawn, so a
+        /// silhouette stays a tease until the player merges up to it — and unlocking a seat
+        /// literally puts it on the menu. Null = classic 4:3:2:1 over tiers 0–3.
+        /// </summary>
+        int[] spawnPool;
+
+        public void SetSpawnPool(int[] pool) => spawnPool = pool;
+
+        bool SpawnReady(int tier) => tier >= 0 && tier < TierTable.Count && discovered[tier];
+
+        /// <summary>Spawn pick: descending weights over the case seats when a seat order is
+        /// authored, otherwise the mock's 4:3:2:1 over tiers 0–3 (§6.1).</summary>
         public int Pick()
         {
-            int roll = rng.Next(0, 10);          // 0..9
-            if (roll < 4) return 0;
-            if (roll < 7) return 1;
-            if (roll < 9) return 2;
-            return 3;
+            if (spawnPool != null && spawnPool.Length > 0)
+            {
+                int n = spawnPool.Length, total = 0;
+                for (int i = 0; i < n; i++)
+                    if (SpawnReady(spawnPool[i])) total += n - i;   // seat 1 of 5 weighs 5, seat 5 weighs 1
+                if (total > 0)
+                {
+                    int roll = rng.Next(0, total);
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (!SpawnReady(spawnPool[i])) continue;
+                        roll -= n - i;
+                        if (roll < 0) return spawnPool[i];
+                    }
+                }
+                // Nothing in the pool discovered yet — fall through to the classic pick.
+            }
+
+            int r = rng.Next(0, 10);          // 0..9
+            int pick = r < 4 ? 0 : r < 7 ? 1 : r < 9 ? 2 : 3;
+            while (pick > 0 && !SpawnReady(pick)) pick--;   // never spawn an undiscovered tease
+            return pick;
         }
 
         public Body MakeBody(float x, float y, int tier, float spawnT)
@@ -395,7 +483,7 @@ namespace PanDulce.Core
         public bool Drop(float aimX, bool canDrop)
         {
             if (!canDrop || Now < canDropAt) return false;
-            float r = TierTable.EffectiveRadius(CurTier, cfg.SizeScale);
+            float r = TierTable.EffectiveRadius(CurTier, cfg);
             Body b = MakeBody(Mathf.Clamp(aimX, SimField.WL + r, SimField.WR - r),
                               SimField.DropY, CurTier, 1f);
             b.vy = cfg.DropVy;
@@ -417,7 +505,7 @@ namespace PanDulce.Core
                 if (b.dead || b.tier != orderTier) continue;
                 float dx = b.x - x, dy = b.y - y;
                 float d = Mathf.Sqrt(dx * dx + dy * dy);
-                if (d < TierTable.Er(b, cfg.SizeScale) + tolerance && d < bd) { bd = d; best = b; }
+                if (d < TierTable.Er(b, cfg) + tolerance && d < bd) { bd = d; best = b; }
             }
             return best;
         }
@@ -516,9 +604,12 @@ namespace PanDulce.Core
             canDropAt = 0f;
             ShakeUntil = 0f;
             mergeLockUntil = StartMergeGraceSec;
-            HighestDiscovered = 3;
 
-            for (int t = 0; t < TierTable.Count; t++) discovered[t] = t <= 3;   // tiers 0–3 start discovered
+            // How much of the chain is known from the first frame is a tuning knob now —
+            // everything past it starts as a silhouette: not spawnable, not orderable.
+            int known = Mathf.Clamp(cfg != null ? cfg.StartDiscovered : 4, 1, TierTable.Count);
+            HighestDiscovered = known - 1;
+            for (int t = 0; t < TierTable.Count; t++) discovered[t] = t < known;
 
             CurTier = Pick();
             NextTier = Pick();
@@ -544,8 +635,9 @@ namespace PanDulce.Core
 
         public void RelockCase()
         {
-            for (int t = 0; t < TierTable.Count; t++) discovered[t] = t <= 3;
-            HighestDiscovered = 3;
+            int known = Mathf.Clamp(cfg != null ? cfg.StartDiscovered : 4, 1, TierTable.Count);
+            for (int t = 0; t < TierTable.Count; t++) discovered[t] = t < known;
+            HighestDiscovered = known - 1;
         }
     }
 }
