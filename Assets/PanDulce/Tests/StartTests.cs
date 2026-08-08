@@ -44,7 +44,7 @@ namespace PanDulce.Tests
             var sim = new MergeSim(cfg, new System.Random(2));
 
             Assert.That(sim.IsDiscovered(2), Is.True);
-            Assert.That(sim.IsDiscovered(3), Is.False, "Purin must start as a silhouette");
+            Assert.That(sim.IsDiscovered(3), Is.False, "Choco Donut must start as a silhouette");
             Assert.That(sim.HighestDiscovered, Is.EqualTo(2));
         }
 
@@ -55,8 +55,8 @@ namespace PanDulce.Tests
             cfg.startDiscovered = 3;
             var sim = new MergeSim(cfg, new System.Random(3));
 
-            // Authored seat menu including undiscovered seats (Purin tier 3, Melon Pan 10).
-            sim.SetSpawnPool(new[] { 0, 1, 3, 4, 10 });
+            // Authored seat menu including undiscovered seats (Choco Donut tier 3, Roll Cake 4).
+            sim.SetSpawnPool(new[] { 0, 1, 3, 4 });
             for (int i = 0; i < 200; i++)
                 Assert.That(sim.Pick(), Is.LessThan(3));
 
@@ -75,7 +75,7 @@ namespace PanDulce.Tests
             {
                 shop.OpenWindow();
                 Assert.That(shop.OrderTier, Is.EqualTo(2),
-                            "band 2..5 filtered by discovery leaves only tier 2");
+                            "band 2..Max filtered by discovery leaves only tier 2");
             }
         }
 

@@ -14,11 +14,38 @@ namespace PanDulce.Runtime
     [CreateAssetMenu(fileName = "Pastries", menuName = "Pan Dulce/Pastry Database")]
     public sealed class PastryDatabase : ScriptableObject
     {
-        [Tooltip("11 sprites, tier 0..10, each authored at radius 200 in a 512² texture.")]
+        /// <summary>
+        /// One parallel art track for the whole chain: a color variant per tier. An empty
+        /// sprite slot means "this tier has no variant here" and falls back to the Original
+        /// track — that is how Purin and Roll Cake are shared by every skin. Sizes are NOT
+        /// per-track on purpose: a skin can never change gameplay.
+        /// </summary>
+        [System.Serializable]
+        public sealed class SkinTrack
+        {
+            public string trackName = "Skin";
+
+            [Tooltip("Per-tier variant sprite; empty = use the Original track's sprite.")]
+            public Sprite[] sprites = new Sprite[TierTable.Count];
+
+            [Tooltip("Per-tier display name; empty = the Original track's name.")]
+            public string[] names = new string[TierTable.Count];
+        }
+
+        [Tooltip("The Original track: one sprite per tier 0..4, each authored at radius 200 " +
+                 "in a 512² texture.")]
         [SerializeField] Sprite[] pastries = new Sprite[TierTable.Count];
 
-        [Tooltip("Display names, tier 0..10 — reordered together with the sprites by Studio.")]
+        [Tooltip("Original display names, tier 0..4 — reordered together with the sprites by Studio.")]
         [SerializeField] string[] names = new string[0];
+
+        [Tooltip("Parallel skin tracks — same 5 tiers, alternate colors. Blank slots fall " +
+                 "back to the Original sprite/name above.")]
+        [SerializeField] List<SkinTrack> skins = new List<SkinTrack>();
+
+        [Tooltip("Which track the game draws right now: 0 = Original, 1.. = skins. " +
+                 "Presentation only — sizes and physics never change with it.")]
+        [SerializeField] int activeSkin;
 
         // Serialized name stays `artScale` so existing Pastries.asset values survive the rename
         // to TierSize — the meaning widened from "art only" to "art and physics".
@@ -51,7 +78,32 @@ namespace PanDulce.Runtime
         [SerializeField] Sprite counterOpening;
 
         public Sprite Pastry(int tier)
-            => (pastries != null && tier >= 0 && tier < pastries.Length) ? pastries[tier] : null;
+        {
+            var skin = ActiveTrack;
+            if (skin != null && tier >= 0 && tier < skin.sprites.Length && skin.sprites[tier] != null)
+                return skin.sprites[tier];
+            return (pastries != null && tier >= 0 && tier < pastries.Length) ? pastries[tier] : null;
+        }
+
+        // ---------------------------------------------------------------- skin tracks
+
+        /// <summary>Track count including Original, so valid ActiveSkin values are 0..SkinCount-1.</summary>
+        public int SkinCount => 1 + (skins?.Count ?? 0);
+
+        /// <summary>0 = Original, 1.. = skin tracks. Clamped; presentation only.</summary>
+        public int ActiveSkin
+        {
+            get => Mathf.Clamp(activeSkin, 0, SkinCount - 1);
+            set => activeSkin = Mathf.Clamp(value, 0, SkinCount - 1);
+        }
+
+        public string SkinName(int track)
+            => track <= 0 || skins == null || track > skins.Count
+               ? "Original"
+               : string.IsNullOrEmpty(skins[track - 1].trackName) ? $"Skin {track}" : skins[track - 1].trackName;
+
+        SkinTrack ActiveTrack
+            => skins != null && ActiveSkin > 0 && ActiveSkin <= skins.Count ? skins[ActiveSkin - 1] : null;
 
         public Sprite Customer(int index)
             => (customers != null && customers.Length > 0) ? customers[index % customers.Length] : null;
@@ -61,6 +113,10 @@ namespace PanDulce.Runtime
 
         public string Name(int tier)
         {
+            var skin = ActiveTrack;
+            if (skin != null && tier >= 0 && tier < skin.names.Length
+                && skin.sprites[tier] != null && !string.IsNullOrEmpty(skin.names[tier]))
+                return skin.names[tier];
             if (names != null && tier >= 0 && tier < names.Length && !string.IsNullOrEmpty(names[tier]))
                 return names[tier];
             return (tier >= 0 && tier < TierTable.Count) ? TierTable.Names[tier] : "?";
@@ -107,9 +163,24 @@ namespace PanDulce.Runtime
         void OnEnable() => EnsureArrays();
         void OnValidate() => EnsureArrays();
 
-        /// <summary>Keeps names/artScale sized to the tier count without clobbering edits.</summary>
+        /// <summary>Keeps every per-tier array sized to the tier count without clobbering edits.</summary>
         void EnsureArrays()
         {
+            if (pastries == null || pastries.Length != TierTable.Count)
+            {
+                var p = new Sprite[TierTable.Count];
+                for (int i = 0; i < p.Length && pastries != null && i < pastries.Length; i++)
+                    p[i] = pastries[i];
+                pastries = p;
+            }
+            if (skins != null)
+                foreach (var t in skins)
+                {
+                    if (t.sprites == null || t.sprites.Length != TierTable.Count)
+                        System.Array.Resize(ref t.sprites, TierTable.Count);
+                    if (t.names == null || t.names.Length != TierTable.Count)
+                        System.Array.Resize(ref t.names, TierTable.Count);
+                }
             if (names == null || names.Length != TierTable.Count)
             {
                 var n = new string[TierTable.Count];
@@ -138,37 +209,45 @@ namespace PanDulce.Runtime
 
 #if UNITY_EDITOR
         /// <summary>
-        /// Rebinds baked sprites while preserving a Studio-authored chain order: incoming
-        /// sprites that match current entries by name keep their tier, new ones append in
-        /// filename order. A fresh database just takes the incoming order.
+        /// Rebinds baked sprites while preserving the authored layout: every incoming sprite
+        /// that already lives somewhere (Original slot or a skin slot, matched by name) is
+        /// refreshed in place; leftovers fill empty Original slots in filename order. Sprites
+        /// with no home left are reported, never silently dropped — park them in a skin slot
+        /// via Studio.
         /// </summary>
         public void EditorAssign(Sprite[] p, Sprite[] c)
         {
-            pastries = ReorderLikeExisting(pastries, p);
             customers = c;
             EnsureArrays();
+
+            var pool = new List<Sprite>();
+            if (p != null) foreach (var s in p) if (s != null) pool.Add(s);
+
+            Reclaim(pastries, pool);
+            if (skins != null) foreach (var t in skins) Reclaim(t.sprites, pool);
+
+            for (int i = 0; i < pastries.Length && pool.Count > 0; i++)
+                if (pastries[i] == null) { pastries[i] = pool[0]; pool.RemoveAt(0); }
+
+            if (pool.Count > 0)
+                Debug.LogWarning("[PanDulce] baked sprites with no chain or skin slot: " +
+                                 string.Join(", ", pool.ConvertAll(s => s.name)) +
+                                 " — assign them to a skin track in Studio, or delete the files.");
+        }
+
+        /// <summary>Swap each already-placed sprite for its same-named incoming twin.</summary>
+        static void Reclaim(Sprite[] slots, List<Sprite> pool)
+        {
+            if (slots == null) return;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] == null) continue;
+                int idx = pool.FindIndex(s => s.name == slots[i].name);
+                if (idx >= 0) { slots[i] = pool[idx]; pool.RemoveAt(idx); }
+            }
         }
 
         public void EditorAssignShell(Sprite window, Sprite opening) { windowScene = window; counterOpening = opening; }
-
-        static Sprite[] ReorderLikeExisting(Sprite[] existing, Sprite[] incoming)
-        {
-            if (existing == null || incoming == null) return incoming;
-            bool hasAny = false;
-            foreach (var e in existing) if (e != null) { hasAny = true; break; }
-            if (!hasAny) return incoming;
-
-            var pool = new List<Sprite>(incoming);
-            var result = new List<Sprite>(incoming.Length);
-            foreach (var e in existing)
-            {
-                if (e == null) continue;
-                int idx = pool.FindIndex(s => s != null && s.name == e.name);
-                if (idx >= 0) { result.Add(pool[idx]); pool.RemoveAt(idx); }
-            }
-            result.AddRange(pool);
-            return result.ToArray();
-        }
 #endif
     }
 }

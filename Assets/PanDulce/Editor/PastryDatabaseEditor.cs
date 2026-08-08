@@ -22,7 +22,8 @@ namespace PanDulce.Editor
             EditorGUILayout.LabelField("Other art", EditorStyles.boldLabel);
             serializedObject.Update();
             DrawPropertiesExcluding(serializedObject, "m_Script", "pastries", "names",
-                                    "artScale", "caseScale", "mergeGrowth", "mergeGrowthTolerance");
+                                    "artScale", "caseScale", "mergeGrowth", "mergeGrowthTolerance",
+                                    "skins", "activeSkin");
             serializedObject.ApplyModifiedProperties();
         }
     }

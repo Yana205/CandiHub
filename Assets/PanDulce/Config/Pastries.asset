@@ -14,54 +14,58 @@ MonoBehaviour:
   m_EditorClassIdentifier: PanDulce.Runtime::PanDulce.Runtime.PastryDatabase
   pastries:
   - {fileID: 21300000, guid: 0098222ab31dc432f8f1e1b2408104bd, type: 3}
-  - {fileID: 21300000, guid: b28ba3e07d57b4925aff3bb0c83841a8, type: 3}
-  - {fileID: 21300000, guid: d924a760554ae4ccfbc33494361a1cca, type: 3}
-  - {fileID: 21300000, guid: d9f59174875f5480cb9bd650f0051d77, type: 3}
-  - {fileID: 21300000, guid: 879ae8901ccd049e9914995a5f528574, type: 3}
-  - {fileID: 21300000, guid: 5bd8516eceb5f4ba48f0b49aeaa8823d, type: 3}
   - {fileID: 21300000, guid: 7f1c9de6f9007434bb10499894816c80, type: 3}
-  - {fileID: 21300000, guid: 51659b8ca95dd44168603e6c8e12eda8, type: 3}
-  - {fileID: 21300000, guid: 8665526dcea174b3b9856d42a68546b2, type: 3}
-  - {fileID: 21300000, guid: 2e32dc4a1d06045c5afbdb540017cfe8, type: 3}
   - {fileID: 21300000, guid: 189a6037ad0e44fdc950a59d0afed248, type: 3}
+  - {fileID: 21300000, guid: 51659b8ca95dd44168603e6c8e12eda8, type: 3}
+  - {fileID: 21300000, guid: 879ae8901ccd049e9914995a5f528574, type: 3}
   names:
   - Mochi
-  - Berry Donut
-  - Matcha Mochi
-  - Matcha Donut
-  - Roll Cake
-  - Honey Pan
   - Purin
-  - Choco Donut
-  - Mango Mochi
-  - Sakura Pan
   - Melon Pan
+  - Choco Donut
+  - Roll Cake
+  skins:
+  - trackName: Matcha
+    sprites:
+    - {fileID: 21300000, guid: d924a760554ae4ccfbc33494361a1cca, type: 3}
+    - {fileID: 0}
+    - {fileID: 21300000, guid: 5bd8516eceb5f4ba48f0b49aeaa8823d, type: 3}
+    - {fileID: 21300000, guid: d9f59174875f5480cb9bd650f0051d77, type: 3}
+    - {fileID: 0}
+    names:
+    - Matcha Mochi
+    - 
+    - Honey Pan
+    - Matcha Donut
+    - 
+  - trackName: Berry
+    sprites:
+    - {fileID: 21300000, guid: 8665526dcea174b3b9856d42a68546b2, type: 3}
+    - {fileID: 0}
+    - {fileID: 21300000, guid: 2e32dc4a1d06045c5afbdb540017cfe8, type: 3}
+    - {fileID: 21300000, guid: b28ba3e07d57b4925aff3bb0c83841a8, type: 3}
+    - {fileID: 0}
+    names:
+    - Mango Mochi
+    - 
+    - Sakura Pan
+    - Berry Donut
+    - 
+  activeSkin: 0
   artScale:
-  - 1.04
-  - 0.88
-  - 0.96
-  - 0.88
-  - 0.9
-  - 0.96
-  - 0.89
-  - 0.88
-  - 0.9
-  - 0.93
-  - 0.48
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
   caseScale:
   - 1
   - 1
   - 1
   - 1
   - 1
-  - 1
-  - 1
-  - 1
-  - 1
-  - 1
-  - 1
-  mergeGrowth: 0.21
-  mergeGrowthTolerance: 0.049999993
+  mergeGrowth: 0.35
+  mergeGrowthTolerance: 0.05
   customers:
   - {fileID: 21300000, guid: e3ec8d36237694453806bd816892f27d, type: 3}
   windowScene: {fileID: 21300000, guid: 93298f06f4a364349af47b325cdb1f96, type: 3}

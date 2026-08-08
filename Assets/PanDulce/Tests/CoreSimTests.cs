@@ -18,8 +18,8 @@ namespace PanDulce.Tests
         public void Er_AtSpawnZero_IsThirtyFivePercent()
         {
             var cfg = Cfg();
-            var b = new Body { tier = 5, spawnT = 0f };
-            float full = TierTable.BaseRadius[5] * cfg.SizeScale;
+            var b = new Body { tier = 4, spawnT = 0f };
+            float full = TierTable.BaseRadius[4] * cfg.SizeScale;
             Assert.That(TierTable.Er(b, cfg.SizeScale), Is.EqualTo(full * 0.35f).Within(0.001f));
         }
 
@@ -27,8 +27,8 @@ namespace PanDulce.Tests
         public void Er_AtSpawnOne_IsFullRadius()
         {
             var cfg = Cfg();
-            var b = new Body { tier = 5, spawnT = 1f };
-            float full = TierTable.BaseRadius[5] * cfg.SizeScale;
+            var b = new Body { tier = 4, spawnT = 1f };
+            float full = TierTable.BaseRadius[4] * cfg.SizeScale;
             Assert.That(TierTable.Er(b, cfg.SizeScale), Is.EqualTo(full).Within(0.001f));
         }
 
@@ -39,8 +39,8 @@ namespace PanDulce.Tests
             // larger than full size. This is why the merge gate uses spawnT > 0.55 —
             // it is the point where a newborn is visually "real".
             var cfg = Cfg();
-            var b = new Body { tier = 5, spawnT = 0.55f };
-            float full = TierTable.BaseRadius[5] * cfg.SizeScale;
+            var b = new Body { tier = 4, spawnT = 0.55f };
+            float full = TierTable.BaseRadius[4] * cfg.SizeScale;
             float er = TierTable.Er(b, cfg.SizeScale);
             Assert.That(er, Is.GreaterThan(full * 0.9f));
             Assert.That(er, Is.LessThan(full * 1.2f));
@@ -54,12 +54,12 @@ namespace PanDulce.Tests
             var cfg = Cfg();
             cfg.tierSize = new float[TierTable.Count];
             for (int i = 0; i < cfg.tierSize.Length; i++) cfg.tierSize[i] = 1f;
-            cfg.tierSize[5] = 1.5f;
+            cfg.tierSize[4] = 1.5f;
 
-            Assert.That(TierTable.EffectiveRadius(5, cfg),
-                        Is.EqualTo(TierTable.BaseRadius[5] * cfg.SizeScale * 1.5f).Within(0.001f));
             Assert.That(TierTable.EffectiveRadius(4, cfg),
-                        Is.EqualTo(TierTable.BaseRadius[4] * cfg.SizeScale).Within(0.001f),
+                        Is.EqualTo(TierTable.BaseRadius[4] * cfg.SizeScale * 1.5f).Within(0.001f));
+            Assert.That(TierTable.EffectiveRadius(3, cfg),
+                        Is.EqualTo(TierTable.BaseRadius[3] * cfg.SizeScale).Within(0.001f),
                         "an untouched tier keeps its authored size");
         }
 
@@ -68,8 +68,8 @@ namespace PanDulce.Tests
         {
             var cfg = Cfg();      // tierSize left null — the mock's sizing, unchanged
             Assert.That(cfg.TierSize(0), Is.EqualTo(1f));
-            Assert.That(TierTable.EffectiveRadius(5, cfg),
-                        Is.EqualTo(TierTable.EffectiveRadius(5, cfg.SizeScale)).Within(0.001f));
+            Assert.That(TierTable.EffectiveRadius(4, cfg),
+                        Is.EqualTo(TierTable.EffectiveRadius(4, cfg.SizeScale)).Within(0.001f));
         }
 
         [Test]
@@ -259,11 +259,14 @@ namespace PanDulce.Tests
         }
 
         [TestCase(12)]
-        [TestCase(40)]
+        [TestCase(14)]
         public void SettledPile_ComesToACompleteStop(int drops)
         {
             // The regression that matters: most of a pile rests on OTHER pastries, never
             // on the cloth, and every one of them used to turn forever.
+            // 14 is the ceiling for the 5-tier chain: more drops saturate into un-mergeable
+            // top-tier boulders stacked past the top-out line — a lost game, where the pile
+            // legitimately cannot rest and TopOutWatch is what handles it.
             var cfg = Cfg();
             var sim = SettledPile(cfg, drops);
 

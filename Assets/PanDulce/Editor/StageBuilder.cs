@@ -408,9 +408,9 @@ namespace PanDulce.Editor
             EditorUtility.SetDirty(db);
             AssetDatabase.SaveAssets();
 
-            if (pastries.Length != Core.TierTable.Count)
-                Debug.LogWarning($"[PanDulce] expected {Core.TierTable.Count} pastry sprites, found {pastries.Length}. " +
-                                 "Run: node Docs/tools/bake-sprites.js");
+            if (pastries.Length < Core.TierTable.Count)
+                Debug.LogWarning($"[PanDulce] expected at least {Core.TierTable.Count} pastry sprites " +
+                                 $"(chain), found {pastries.Length}. Run: node Docs/tools/bake-sprites.js");
             return db;
         }
 

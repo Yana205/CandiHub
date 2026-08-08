@@ -76,23 +76,23 @@ namespace PanDulce.Core
         }
 
         /// <summary>
-        /// The classic 2..5 roll, filtered to discovered tiers so every order is servable.
-        /// If the whole band is still silhouettes, ask for the best dessert the player CAN
-        /// make — never an impossible one.
+        /// A roll over the upper half of the chain (2..Max), filtered to discovered tiers so
+        /// every order is servable. If the whole band is still silhouettes, ask for the best
+        /// dessert the player CAN make — never an impossible one.
         /// </summary>
         int PickOrder()
         {
-            if (Orderable == null) return rng.Next(2, 6);
+            if (Orderable == null) return rng.Next(2, TierTable.Max + 1);
 
             int n = 0;
-            Span<int> band = stackalloc int[4];
-            for (int t = 2; t <= 5; t++)
+            Span<int> band = stackalloc int[TierTable.Count];
+            for (int t = 2; t <= TierTable.Max; t++)
                 if (Orderable(t)) band[n++] = t;
             if (n > 0) return band[rng.Next(0, n)];
 
             for (int t = TierTable.Max; t >= 0; t--)
                 if (Orderable(t)) return t;
-            return rng.Next(2, 6);
+            return rng.Next(2, TierTable.Max + 1);
         }
 
         public void ForceOrder(int tier)

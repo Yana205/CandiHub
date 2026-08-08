@@ -22,15 +22,19 @@ namespace PanDulce.Editor
         public static void Draw(SerializedObject so, PastryDatabase db, System.Action<bool> onChanged)
         {
             Help("The merge chain, top = tier 0 (smallest). ▲▼ move a dessert to another tier " +
-                 "— sprite, name and sizes travel together, and gameplay follows this order. " +
-                 "The two sizes are isolated: Play scales the pile art AND the physics circle " +
-                 "(stacking on Designer ▸ Pile size); Case scales only the chrome icon — glass " +
-                 "case, order bubble, next plaque, serve flight — and never touches gameplay.");
+                 "— sprite, name, sizes and every skin variant travel together, and gameplay " +
+                 "follows this order. The two sizes are isolated: Play scales the pile art AND " +
+                 "the physics circle (stacking on Designer ▸ Pile size); Case scales only the " +
+                 "chrome icon — glass case, order bubble, next plaque, serve flight — and " +
+                 "never touches gameplay. Skin columns: a sprite + name per tier; blank = " +
+                 "shares the Original (Purin and Roll Cake stay blank on purpose).");
 
             var pSprites = so.FindProperty("pastries");
             var pNames = so.FindProperty("names");
             var pScales = so.FindProperty("artScale");
             var pCase = so.FindProperty("caseScale");
+            var pSkins = so.FindProperty("skins");
+            var pActive = so.FindProperty("activeSkin");
             if (pCase.arraySize != TierTable.Count)
             {
                 pCase.arraySize = TierTable.Count;
@@ -48,6 +52,10 @@ namespace PanDulce.Editor
                 return;
             }
 
+            SkinBar(so, db, pSkins, pActive, onChanged);
+            TrackHeader(pSkins);
+
+            bool skinEdited = false;
             int moveFrom = -1, moveTo = -1;
             for (int i = 0; i < TierTable.Count; i++)
             {
@@ -71,6 +79,8 @@ namespace PanDulce.Editor
                         if (i > 0) GrowthLabel(pScales, db, i);
                     }
 
+                    skinEdited |= SkinCells(pSkins, i);
+
                     using (new EditorGUI.DisabledScope(i == 0))
                         if (GUILayout.Button("▲", GUILayout.Width(24f))) { moveFrom = i; moveTo = i - 1; }
                     using (new EditorGUI.DisabledScope(i == TierTable.Count - 1))
@@ -85,10 +95,18 @@ namespace PanDulce.Editor
                 pNames.MoveArrayElement(moveFrom, moveTo);
                 pScales.MoveArrayElement(moveFrom, moveTo);
                 pCase.MoveArrayElement(moveFrom, moveTo);
+                for (int t = 0; t < pSkins.arraySize; t++)
+                {
+                    var track = pSkins.GetArrayElementAtIndex(t);
+                    track.FindPropertyRelative("sprites").MoveArrayElement(moveFrom, moveTo);
+                    track.FindPropertyRelative("names").MoveArrayElement(moveFrom, moveTo);
+                }
                 reordered = true;
             }
 
-            if (so.ApplyModifiedProperties()) Changed(reordered, onChanged);
+            // A skin-art edit rebuilds the generated views too, so the pile preview and the
+            // glass case repaint with the sprite that was just dropped in.
+            if (so.ApplyModifiedProperties()) Changed(reordered || skinEdited, onChanged);
 
             GrowthSection(so, pScales, db, onChanged);
             WarnIfChainShrinks(db);
@@ -109,6 +127,114 @@ namespace PanDulce.Editor
                     AssetDatabase.SaveAssets();
             }
             Help("Changes live in Pastries.asset (undo works). \"Save asset\" writes it to disk now.");
+        }
+
+        const float SkinCellW = 68f;
+
+        /// <summary>
+        /// The skin controls above the chain: which track the game draws right now, plus
+        /// add/rename/delete for the tracks themselves. The preview is a real asset field
+        /// (activeSkin), so Play mode, builds and the case all follow it — it is the skin
+        /// switch, not an editor-only toggle.
+        /// </summary>
+        static void SkinBar(SerializedObject so, PastryDatabase db, SerializedProperty pSkins,
+                            SerializedProperty pActive, System.Action<bool> onChanged)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                var options = new string[db.SkinCount];
+                for (int i = 0; i < options.Length; i++) options[i] = db.SkinName(i);
+                int now = Mathf.Clamp(pActive.intValue, 0, options.Length - 1);
+                int picked = EditorGUILayout.Popup("Skin", now, options);
+                if (picked != now) pActive.intValue = picked;
+
+                if (GUILayout.Button("+ track", GUILayout.Width(60f)))
+                {
+                    int t = pSkins.arraySize;
+                    pSkins.InsertArrayElementAtIndex(t);
+                    var track = pSkins.GetArrayElementAtIndex(t);
+                    track.FindPropertyRelative("trackName").stringValue = $"Skin {t + 1}";
+                    var spr = track.FindPropertyRelative("sprites");
+                    var nam = track.FindPropertyRelative("names");
+                    spr.arraySize = TierTable.Count;
+                    nam.arraySize = TierTable.Count;
+                    for (int i = 0; i < TierTable.Count; i++)
+                    {
+                        spr.GetArrayElementAtIndex(i).objectReferenceValue = null;
+                        nam.GetArrayElementAtIndex(i).stringValue = "";
+                    }
+                }
+            }
+
+            for (int t = 0; t < pSkins.arraySize; t++)
+            {
+                var track = pSkins.GetArrayElementAtIndex(t);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Space(18f);
+                    var pName = track.FindPropertyRelative("trackName");
+                    pName.stringValue = EditorGUILayout.TextField($"Track {t + 1}", pName.stringValue);
+                    if (GUILayout.Button("✕", GUILayout.Width(22f))
+                        && EditorUtility.DisplayDialog("Delete skin track",
+                               $"Delete \"{pName.stringValue}\" and its sprite assignments? " +
+                               "The sprite files themselves are untouched.", "Delete", "Cancel"))
+                    {
+                        pSkins.DeleteArrayElementAtIndex(t);
+                        pActive.intValue = Mathf.Clamp(pActive.intValue, 0, pSkins.arraySize);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>Column labels so the per-row skin cells read as tracks.</summary>
+        static void TrackHeader(SerializedProperty pSkins)
+        {
+            if (pSkins.arraySize == 0) return;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.FlexibleSpace();
+                for (int t = 0; t < pSkins.arraySize; t++)
+                {
+                    var name = pSkins.GetArrayElementAtIndex(t).FindPropertyRelative("trackName").stringValue;
+                    GUILayout.Label(name, EditorStyles.miniBoldLabel, GUILayout.Width(SkinCellW));
+                }
+                GUILayout.Space(52f);   // over the ▲▼ column
+            }
+        }
+
+        /// <summary>
+        /// One row's skin cells: thumbnail, sprite slot, name override per track. Returns
+        /// true when any cell changed so the caller can rebuild previews.
+        /// </summary>
+        static bool SkinCells(SerializedProperty pSkins, int tier)
+        {
+            bool changed = false;
+            for (int t = 0; t < pSkins.arraySize; t++)
+            {
+                var track = pSkins.GetArrayElementAtIndex(t);
+                var spr = track.FindPropertyRelative("sprites");
+                var nam = track.FindPropertyRelative("names");
+                if (spr.arraySize != TierTable.Count) spr.arraySize = TierTable.Count;
+                if (nam.arraySize != TierTable.Count) nam.arraySize = TierTable.Count;
+
+                using (new EditorGUILayout.VerticalScope(GUILayout.Width(SkinCellW)))
+                {
+                    var pSprite = spr.GetArrayElementAtIndex(tier);
+                    var sprite = pSprite.objectReferenceValue as Sprite;
+                    var thumb = sprite != null ? AssetPreview.GetAssetPreview(sprite) : null;
+                    GUILayout.Label(thumb, GUILayout.Width(30f), GUILayout.Height(30f));
+
+                    EditorGUI.BeginChangeCheck();
+                    pSprite.objectReferenceValue = EditorGUILayout.ObjectField(
+                        GUIContent.none, sprite, typeof(Sprite), false, GUILayout.Width(SkinCellW));
+                    var pName = nam.GetArrayElementAtIndex(tier);
+                    pName.stringValue = EditorGUILayout.TextField(pName.stringValue,
+                                                                  GUILayout.Width(SkinCellW));
+                    changed |= EditorGUI.EndChangeCheck();
+                }
+            }
+            return changed;
         }
 
         /// <summary>
@@ -183,8 +309,10 @@ namespace PanDulce.Editor
 
             var pTarget = so.FindProperty("mergeGrowth");
             var pTol = so.FindProperty("mergeGrowthTolerance");
+            // The 5-tier chain runs ~+35% per merge at 100% Play sizes; leave slider room
+            // above that for experiments.
             pTarget.floatValue = EditorGUILayout.Slider("Target growth per merge %",
-                                                        pTarget.floatValue * 100f, 5f, 60f) * 0.01f;
+                                                        pTarget.floatValue * 100f, 5f, 100f) * 0.01f;
             pTol.floatValue = EditorGUILayout.Slider("Tolerance ±%",
                                                      pTol.floatValue * 100f, 0f, 20f) * 0.01f;
             so.ApplyModifiedProperties();

@@ -3,7 +3,11 @@ using UnityEngine;
 namespace PanDulce.Core
 {
     /// <summary>
-    /// The 11 tiers: names and base radii (§6.1).
+    /// The 5 gameplay tiers: names and base radii (§6.1, v2 chain).
+    ///
+    /// Color variants (Matcha Mochi, Berry Donut, …) are NOT tiers — they are skin tracks
+    /// inside PastryDatabase that swap a tier's art without touching its radius. Names here
+    /// are the Original track's fallbacks; PastryDatabase.Name() may override per skin.
     ///
     /// Effective radius = BaseRadius × sizeScale × tierSize. Both multipliers are fractions of
     /// the authored size, never absolute pixel counts: BaseRadius keeps the chain's proportions,
@@ -15,18 +19,20 @@ namespace PanDulce.Core
     /// </summary>
     public static class TierTable
     {
-        public const int Count = 11;
+        public const int Count = 5;
         public const int Max = Count - 1;
 
         public static readonly string[] Names =
         {
-            "Mochi", "Matcha Mochi", "Mango Mochi", "Purin", "Berry Donut", "Matcha Donut",
-            "Choco Donut", "Roll Cake", "Sakura Pan", "Honey Pan", "Melon Pan"
+            "Mochi", "Purin", "Melon Pan", "Choco Donut", "Roll Cake"
         };
 
+        // Geometric 13 → 43.2 over 4 merges (×1.35 each). The top matches the footprint the
+        // old chain's hand-tuned Melon Pan actually used on screen (~69 px effective at the
+        // live sizeScale 1.59) — the 350 px field cannot rest a pile of anything much bigger.
         public static readonly float[] BaseRadius =
         {
-            13f, 17f, 22f, 27f, 33f, 40f, 48f, 57f, 67f, 78f, 90f
+            13f, 17.6f, 23.7f, 32f, 43.2f
         };
 
         /// <summary>The canonical author radius for sprites — see §8.1.</summary>
