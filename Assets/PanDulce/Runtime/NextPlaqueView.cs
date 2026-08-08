@@ -7,7 +7,7 @@ namespace PanDulce.Runtime
     public sealed class NextPlaqueView : GeneratedView
     {
         SpriteRenderer icon;
-        int shownTier = -1;
+        int shownTier = -1, shownSkin = -1;
 
         protected override void Build()
         {
@@ -22,13 +22,14 @@ namespace PanDulce.Runtime
             icon = ViewFactory.Icon(t, "Icon", database, 0, x + 32f, y + 34f, 13f, "PlayArea", 64);
         }
 
-        public void Sync(int nextTier)
+        public void Sync(int nextTier, int nextSkin)
         {
-            if (!IsBuilt || nextTier == shownTier) return;
+            if (!IsBuilt || (nextTier == shownTier && nextSkin == shownSkin)) return;
             shownTier = nextTier;
+            shownSkin = nextSkin;
             if (database != null)
             {
-                icon.sprite = database.Pastry(nextTier);
+                icon.sprite = database.Pastry(nextTier, nextSkin);
                 ViewFactory.SetIcon(icon, 13f, database.DisplaySize(nextTier));
             }
         }

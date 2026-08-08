@@ -37,6 +37,10 @@ namespace PanDulce.Core
         public float Now { get; private set; }
         public int CurTier { get; private set; }
         public int NextTier { get; private set; }
+
+        /// <summary>Color track of the held / next pastry — see <see cref="Body.skin"/>.</summary>
+        public int CurSkin { get; private set; }
+        public int NextSkin { get; private set; }
         public int ComboN { get; private set; }
         public float ShakeUntil { get; private set; }
         public int HighestDiscovered { get; private set; }
@@ -47,6 +51,34 @@ namespace PanDulce.Core
 
         /// <summary>The starting desserts settle for this long before any merge can fire.</summary>
         public const float StartMergeGraceSec = 1f;
+
+        // --- skin tracks (Yana, 2026-08-08) --------------------------------------------
+        // Once the run reaches the donut, the bakery's full menu opens: spawns roll a color
+        // track (even thirds), same-color-only merging, colors converge at shared tiers.
+
+        /// <summary>Colored variants start spawning once this tier is discovered (Choco Donut).</summary>
+        public const int SkinUnlockTier = 3;
+
+        /// <summary>Track count including Original — GameRoot mirrors PastryDatabase.SkinCount.
+        /// 1 (the default) means no color rolls ever, which keeps bare/test sims classic.</summary>
+        public int SkinTrackCount = 1;
+
+        /// <summary>(tier, track) → does that track have its own art for the tier? Tiers
+        /// without variant art collapse to Original (Purin and Roll Cake are shared).
+        /// Null (tests, bare setups) = no track has variant art.</summary>
+        public Func<int, int, bool> SkinHasArt;
+
+        /// <summary>Colored spawns are live once the donut has been made this run.</summary>
+        public bool SkinsLive => discovered[SkinUnlockTier];
+
+        int NormalizeSkin(int tier, int skin)
+            => skin > 0 && SkinHasArt != null && SkinHasArt(tier, skin) ? skin : 0;
+
+        /// <summary>Even roll over all tracks for a fresh spawn — or Original before the
+        /// donut milestone / for tiers with no variant art.</summary>
+        int RollSkin(int tier)
+            => !SkinsLive || SkinTrackCount <= 1 ? 0
+             : NormalizeSkin(tier, rng.Next(0, SkinTrackCount));
 
         // --- coming to rest -----------------------------------------------------------
         // A settled pastry has THREE things still feeding it spin, and all three have to be
@@ -223,7 +255,9 @@ namespace PanDulce.Core
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
                     float min = ra + rc;
 
-                    bool kin = a.tier == c.tier && a.tier < TierTable.Max;
+                    // Kin = mergeable partners: same tier AND same color. A matcha mochi
+                    // courts and merges only another matcha mochi (Yana, 2026-08-08).
+                    bool kin = a.tier == c.tier && a.skin == c.skin && a.tier < TierTable.Max;
 
                     if (kin && d < min + KinTouchSlack)
                     {
@@ -306,15 +340,15 @@ namespace PanDulce.Core
 
                 // The wall spin is an assignment, not an impulse — left ungated it would
                 // overwrite the rest damping every substep for anything leaning on a wall.
-                if (b.x - r < SimField.WL)
+                if (b.x - r < cfg.WallLeft)
                 {
-                    b.x = SimField.WL + r;
+                    b.x = cfg.WallLeft + r;
                     b.vx = Mathf.Abs(b.vx) * e;
                     if (!b.atRest) b.vrot = -b.vy / r * 0.4f * rotAmt;
                 }
-                if (b.x + r > SimField.WR)
+                if (b.x + r > cfg.WallRight)
                 {
-                    b.x = SimField.WR - r;
+                    b.x = cfg.WallRight - r;
                     b.vx = -Mathf.Abs(b.vx) * e;
                     if (!b.atRest) b.vrot = b.vy / r * 0.4f * rotAmt;
                 }
@@ -399,6 +433,9 @@ namespace PanDulce.Core
             float y = (a.y * ra + c.y * rc) / (ra + rc);
 
             Body nb = MakeBody(x, y, t2, 0f);
+            // The child keeps its parents' color where the next tier has variant art;
+            // shared tiers (Purin, Roll Cake) fold every color back to Original.
+            nb.skin = NormalizeSkin(t2, a.skin);
             nb.vy = cfg.MergePopVy;
             nb.vx = (a.vx + c.vx) * 0.3f;
 
@@ -484,12 +521,15 @@ namespace PanDulce.Core
         {
             if (!canDrop || Now < canDropAt) return false;
             float r = TierTable.EffectiveRadius(CurTier, cfg);
-            Body b = MakeBody(Mathf.Clamp(aimX, SimField.WL + r, SimField.WR - r),
+            Body b = MakeBody(Mathf.Clamp(aimX, cfg.WallLeft + r, cfg.WallRight - r),
                               SimField.DropY, CurTier, 1f);
+            b.skin = CurSkin;
             b.vy = cfg.DropVy;
             canDropAt = Now + cfg.DropCooldown;
             CurTier = NextTier;
+            CurSkin = NextSkin;
             NextTier = Pick();
+            NextSkin = RollSkin(NextTier);
             return true;
         }
 
@@ -612,11 +652,16 @@ namespace PanDulce.Core
             for (int t = 0; t < TierTable.Count; t++) discovered[t] = t < known;
 
             CurTier = Pick();
+            CurSkin = RollSkin(CurTier);
             NextTier = Pick();
+            NextSkin = RollSkin(NextTier);
 
             int n = Mathf.Max(0, cfg.StartingBodies);
             for (int i = 0; i < n; i++)
-                MakeBody(60f + Rand01() * 300f, 300f - i * 34f, Pick(), 1f);
+            {
+                Body b = MakeBody(60f + Rand01() * 300f, 300f - i * 34f, Pick(), 1f);
+                b.skin = RollSkin(b.tier);
+            }
         }
 
         public void EmptyCloth()

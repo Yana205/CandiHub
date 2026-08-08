@@ -303,7 +303,9 @@ namespace PanDulce.Editor
             for (int i = 0; i < bottom.Length; i++)
             {
                 cursor += r[i];
-                x[i] = Mathf.Clamp(cursor, SimField.WL + r[i], SimField.WR - r[i]);
+                x[i] = Mathf.Clamp(cursor,
+                                   (Tuning != null ? Tuning.WallLeft : SimField.WL) + r[i],
+                                   (Tuning != null ? Tuning.WallRight : SimField.WR) - r[i]);
                 y[i] = SimField.FloorAt(x[i], sag, floorY) - r[i];
                 Spawn(pile.transform, bottom[i], x[i], y[i], sizeScale, 30 + i);
                 cursor += r[i];

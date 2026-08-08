@@ -34,6 +34,7 @@ namespace PanDulce.Runtime
 
         LineRenderer floorLr, containerLr, frameLr, spawnLr, topOutLr;
         float lastSag = float.NaN, lastTopOut = float.NaN, lastFloorY = float.NaN;
+        float lastWL = float.NaN, lastWR = float.NaN;
 
         public void EditorAssign(TuningConfig cfg)
         {
@@ -44,6 +45,8 @@ namespace PanDulce.Runtime
         float FloorSag => tuning != null ? tuning.FloorSag : 26f;
         float FloorY => tuning != null ? tuning.FloorY : SimField.FY;
         float TopOutY => tuning != null ? tuning.TopOutLine : 82f;
+        float WallL => tuning != null ? tuning.WallLeft : SimField.WL;
+        float WallR => tuning != null ? tuning.WallRight : SimField.WR;
 
         protected override void Build()
         {
@@ -60,44 +63,46 @@ namespace PanDulce.Runtime
             frameLr.SetPosition(2, P(SimField.CW, SimField.CH));
             frameLr.SetPosition(3, P(0f, SimField.CH));
 
-            spawnLr.positionCount = 2;
-            spawnLr.SetPosition(0, P(SimField.WL, SimField.DropY));
-            spawnLr.SetPosition(1, P(SimField.WR, SimField.DropY));
-
             lastSag = lastTopOut = float.NaN;   // force the first Resample
             Resample();
             ApplyToggles();
         }
 
-        /// <summary>Rebuilds the tuning-dependent shapes: floor curve, container, top-out.</summary>
+        /// <summary>Rebuilds the tuning-dependent shapes: floor curve, container, spawn, top-out.</summary>
         void Resample()
         {
-            float sag = FloorSag, fy = FloorY;
+            float sag = FloorSag, fy = FloorY, wl = WallL, wr = WallR;
 
             floorLr.positionCount = FloorSamples + 1;
             for (int i = 0; i <= FloorSamples; i++)
             {
-                float x = Mathf.Lerp(SimField.WL, SimField.WR, i / (float)FloorSamples);
+                float x = Mathf.Lerp(wl, wr, i / (float)FloorSamples);
                 floorLr.SetPosition(i, P(x, SimField.FloorAt(x, sag, fy)));
             }
 
             // Walls down into the floor curve and out again — the holding box, one stroke.
             containerLr.positionCount = FloorSamples + 3;
-            containerLr.SetPosition(0, P(SimField.WL, 0f));
+            containerLr.SetPosition(0, P(wl, 0f));
             for (int i = 0; i <= FloorSamples; i++)
             {
-                float x = Mathf.Lerp(SimField.WL, SimField.WR, i / (float)FloorSamples);
+                float x = Mathf.Lerp(wl, wr, i / (float)FloorSamples);
                 containerLr.SetPosition(i + 1, P(x, SimField.FloorAt(x, sag, fy)));
             }
-            containerLr.SetPosition(FloorSamples + 2, P(SimField.WR, 0f));
+            containerLr.SetPosition(FloorSamples + 2, P(wr, 0f));
+
+            spawnLr.positionCount = 2;
+            spawnLr.SetPosition(0, P(wl, SimField.DropY));
+            spawnLr.SetPosition(1, P(wr, SimField.DropY));
 
             topOutLr.positionCount = 2;
-            topOutLr.SetPosition(0, P(SimField.WL, TopOutY));
-            topOutLr.SetPosition(1, P(SimField.WR, TopOutY));
+            topOutLr.SetPosition(0, P(wl, TopOutY));
+            topOutLr.SetPosition(1, P(wr, TopOutY));
 
             lastSag = sag;
             lastFloorY = fy;
             lastTopOut = TopOutY;
+            lastWL = wl;
+            lastWR = wr;
         }
 
         void ApplyToggles()
@@ -117,7 +122,9 @@ namespace PanDulce.Runtime
             if (!IsBuilt || floorLr == null) return;
             if (!Mathf.Approximately(lastSag, FloorSag) ||
                 !Mathf.Approximately(lastFloorY, FloorY) ||
-                !Mathf.Approximately(lastTopOut, TopOutY)) Resample();
+                !Mathf.Approximately(lastTopOut, TopOutY) ||
+                !Mathf.Approximately(lastWL, WallL) ||
+                !Mathf.Approximately(lastWR, WallR)) Resample();
             ApplyToggles();
         }
 
