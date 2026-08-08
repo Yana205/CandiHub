@@ -65,7 +65,7 @@ MonoBehaviour:
   - 1
   - 1
   mergeGrowth: 0.35
-  mergeGrowthTolerance: 0.05
+  mergeGrowthTolerance: 0.049999993
   customers:
   - {fileID: 21300000, guid: e3ec8d36237694453806bd816892f27d, type: 3}
   windowScene: {fileID: 21300000, guid: 93298f06f4a364349af47b325cdb1f96, type: 3}
