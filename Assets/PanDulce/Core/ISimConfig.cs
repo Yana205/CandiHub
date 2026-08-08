@@ -36,6 +36,11 @@ namespace PanDulce.Core
         int Substeps { get; }
         float FloorSag { get; }
         float FloorY { get; }
+        /// <summary>Left play wall in sim px — where desserts stop. Tunable so the walls can
+        /// sit on the drawn candy box's straight edges (v2 layout), like FloorY.</summary>
+        float WallLeft { get; }
+        /// <summary>Right play wall in sim px — see <see cref="WallLeft"/>.</summary>
+        float WallRight { get; }
         float CenterPull { get; }
         float GroundFriction { get; }
         float ComboWindow { get; }

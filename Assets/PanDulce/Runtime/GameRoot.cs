@@ -235,7 +235,8 @@ namespace PanDulce.Runtime
 
             bool canDrop = Day.CanDrop && Sim.CanDropNow && !GameOver;
             if (aim != null) aim.Sync(canDrop, pointer != null ? pointer.AimX : SimField.CX,
-                                      Sim.CurTier, Sim.CurSkin, tuning.SizeScale);
+                                      Sim.CurTier, Sim.CurSkin, tuning.SizeScale,
+                                      tuning.WallLeft, tuning.WallRight);
 
             // "Here it comes": the held pastry is HIDDEN for the whole drop cooldown, so the
             // moment it visually appears above the cloth is this rising edge — not the Drop()

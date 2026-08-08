@@ -340,15 +340,15 @@ namespace PanDulce.Core
 
                 // The wall spin is an assignment, not an impulse — left ungated it would
                 // overwrite the rest damping every substep for anything leaning on a wall.
-                if (b.x - r < SimField.WL)
+                if (b.x - r < cfg.WallLeft)
                 {
-                    b.x = SimField.WL + r;
+                    b.x = cfg.WallLeft + r;
                     b.vx = Mathf.Abs(b.vx) * e;
                     if (!b.atRest) b.vrot = -b.vy / r * 0.4f * rotAmt;
                 }
-                if (b.x + r > SimField.WR)
+                if (b.x + r > cfg.WallRight)
                 {
-                    b.x = SimField.WR - r;
+                    b.x = cfg.WallRight - r;
                     b.vx = -Mathf.Abs(b.vx) * e;
                     if (!b.atRest) b.vrot = b.vy / r * 0.4f * rotAmt;
                 }
@@ -521,7 +521,7 @@ namespace PanDulce.Core
         {
             if (!canDrop || Now < canDropAt) return false;
             float r = TierTable.EffectiveRadius(CurTier, cfg);
-            Body b = MakeBody(Mathf.Clamp(aimX, SimField.WL + r, SimField.WR - r),
+            Body b = MakeBody(Mathf.Clamp(aimX, cfg.WallLeft + r, cfg.WallRight - r),
                               SimField.DropY, CurTier, 1f);
             b.skin = CurSkin;
             b.vy = cfg.DropVy;

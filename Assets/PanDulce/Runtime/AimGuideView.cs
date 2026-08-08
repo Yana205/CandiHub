@@ -27,7 +27,8 @@ namespace PanDulce.Runtime
                                     "PlayArea", 21);
         }
 
-        public void Sync(bool visible, float aimX, int tier, int skin, float sizeScale)
+        public void Sync(bool visible, float aimX, int tier, int skin, float sizeScale,
+                         float wallL = SimField.WL, float wallR = SimField.WR)
         {
             if (!IsBuilt) return;
             SetVisible(visible);
@@ -35,7 +36,7 @@ namespace PanDulce.Runtime
 
             float r = TierTable.EffectiveRadius(tier, sizeScale,
                                                 database != null ? database.TierSize(tier) : 1f);
-            float x = Mathf.Clamp(aimX, SimField.WL + r, SimField.WR - r);
+            float x = Mathf.Clamp(aimX, wallL + r, wallR - r);
 
             line.transform.localPosition = new Vector3(x * StageCoords.PX, -(66f + 153f) * StageCoords.PX, 0f);
             held.transform.localPosition = new Vector3(x * StageCoords.PX, -HeldY * StageCoords.PX, 0f);

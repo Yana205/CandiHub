@@ -34,6 +34,8 @@ MonoBehaviour:
     substeps: 3
     floorSag: 26
     floorY: 250
+    wallLeft: 72
+    wallRight: 338
     centerPull: 34
     groundFriction: 9
     comboWindow: 1.4

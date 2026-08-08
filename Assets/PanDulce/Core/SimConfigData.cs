@@ -40,6 +40,10 @@ namespace PanDulce.Core
         // v2 layout: raised from SimField.FY (372) so the pile rests inside the drawn
         // candy box (Yana's play-mode placement, 2026-08-07).
         public float floorY = 250f;
+        // Defaults are the mock's walls (SimField.WL/WR) so tests reproduce it exactly;
+        // the v2 values that hug the drawn candy box live in Tuning.asset.
+        public float wallLeft = SimField.WL;
+        public float wallRight = SimField.WR;
         public float centerPull = 34f;
         public float groundFriction = 9f;
         public float comboWindow = 1.4f;
@@ -105,6 +109,8 @@ namespace PanDulce.Core
         public int Substeps => substeps;
         public float FloorSag => floorSag;
         public float FloorY => floorY;
+        public float WallLeft => wallLeft;
+        public float WallRight => wallRight;
         public float CenterPull => centerPull;
         public float GroundFriction => groundFriction;
         public float ComboWindow => comboWindow;

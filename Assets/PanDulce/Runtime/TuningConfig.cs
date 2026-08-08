@@ -49,6 +49,8 @@ namespace PanDulce.Runtime
         public int Substeps => data.Substeps;
         public float FloorSag => data.FloorSag;
         public float FloorY => data.FloorY;
+        public float WallLeft => data.WallLeft;
+        public float WallRight => data.WallRight;
         public float CenterPull => data.CenterPull;
         public float GroundFriction => data.GroundFriction;
         public float ComboWindow => data.ComboWindow;
