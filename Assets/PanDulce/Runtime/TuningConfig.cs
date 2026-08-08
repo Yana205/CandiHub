@@ -35,6 +35,8 @@ namespace PanDulce.Runtime
         public float ComboDelay => data.ComboDelay;
         public int CustomerEverySec => data.CustomerEverySec;
         public float StartDelaySec => data.StartDelaySec;
+        public float StartCalmSec => data.StartCalmSec;
+        public float StartCalmScale => data.StartCalmScale;
         public int StartDiscovered => data.StartDiscovered;
         public float EntranceTime => data.EntranceTime;
         public bool EndOfDay => data.EndOfDay;

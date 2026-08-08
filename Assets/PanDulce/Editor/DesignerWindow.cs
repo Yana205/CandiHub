@@ -113,9 +113,22 @@ namespace PanDulce.Editor
             Slider(cfg, "Start delay (s)", "Extra calm seconds before the FIRST customer of " +
                    "a run only — a few moments to read the shop. Later visits use the plain cadence.",
                    d.startDelaySec, 0f, 20f, v => d.startDelaySec = v);
+            Slider(cfg, "Opening calm (s)",
+                   "The run's first seconds play in gentle slow motion, easing up to full " +
+                   "speed — the starting pile settles dreamily while the case silhouettes " +
+                   "tease what can come next. 0 = off.",
+                   d.startCalmSec, 0f, 20f, v => d.startCalmSec = v);
+            PercentSlider(cfg, "Opening tempo",
+                          "How slow the very first moment of the calm runs, as a share of " +
+                          "full speed. Eases back to 100% over the opening calm.",
+                          d.startCalmScale, 20f, 100f, v => d.startCalmScale = v);
             IntSlider(cfg, "Known at start", "How many desserts begin discovered — in colour, " +
                       "spawnable, orderable. 3 keeps Purin a silhouette until first merged.",
                       d.startDiscovered, 1, 6, v => d.startDiscovered = v);
+            IntSlider(cfg, "Starting pastries", "How many desserts already sit in the box when " +
+                      "the day opens. 0 = an empty box; more = a head start to merge into. " +
+                      "Takes effect on the next Restart run.",
+                      d.startingBodies, 0, 20, v => d.startingBodies = v);
             Slider(cfg, "Rise time", "How long the bear takes to pop up behind the counter.",
                    d.entranceTime, 0.3f, 2f, v => d.entranceTime = v);
 

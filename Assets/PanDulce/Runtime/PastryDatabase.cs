@@ -85,6 +85,20 @@ namespace PanDulce.Runtime
             return (pastries != null && tier >= 0 && tier < pastries.Length) ? pastries[tier] : null;
         }
 
+        /// <summary>Art for an explicit track (0 = Original), ignoring ActiveSkin — the
+        /// per-body color the pile wears. Blank slots fall back to the Original sprite.</summary>
+        public Sprite Pastry(int tier, int track)
+            => HasVariant(tier, track)
+               ? skins[track - 1].sprites[tier]
+               : (pastries != null && tier >= 0 && tier < pastries.Length) ? pastries[tier] : null;
+
+        /// <summary>Does this track carry its own art for the tier? Feeds MergeSim.SkinHasArt,
+        /// so which colors exist per tier is decided by the painted sprites alone.</summary>
+        public bool HasVariant(int tier, int track)
+            => track > 0 && skins != null && track <= skins.Count
+               && tier >= 0 && tier < skins[track - 1].sprites.Length
+               && skins[track - 1].sprites[tier] != null;
+
         // ---------------------------------------------------------------- skin tracks
 
         /// <summary>Track count including Original, so valid ActiveSkin values are 0..SkinCount-1.</summary>

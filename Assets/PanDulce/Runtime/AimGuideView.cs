@@ -7,7 +7,7 @@ namespace PanDulce.Runtime
     public sealed class AimGuideView : GeneratedView
     {
         SpriteRenderer line, held;
-        int shownTier;
+        int shownTier, shownSkin;
 
         /// <summary>Sim px, y-down: where the held pastry currently sits. Stale while hidden.</summary>
         public Vector2 HeldSimPos { get; private set; } = new Vector2(SimField.CX, HeldY);
@@ -17,7 +17,7 @@ namespace PanDulce.Runtime
 
         protected override void Build()
         {
-            shownTier = -1;
+            shownTier = shownSkin = -1;
             // Defaults to the cloth centre so the guide reads correctly in the Editor too,
             // before PointerInput has ever run.
             line = ViewFactory.Rect(Content, "AimLine", Shapes.Dashes(4, 10, 3),
@@ -27,7 +27,7 @@ namespace PanDulce.Runtime
                                     "PlayArea", 21);
         }
 
-        public void Sync(bool visible, float aimX, int tier, float sizeScale)
+        public void Sync(bool visible, float aimX, int tier, int skin, float sizeScale)
         {
             if (!IsBuilt) return;
             SetVisible(visible);
@@ -41,9 +41,10 @@ namespace PanDulce.Runtime
             held.transform.localPosition = new Vector3(x * StageCoords.PX, -HeldY * StageCoords.PX, 0f);
             HeldSimPos = new Vector2(x, HeldY);
 
-            if (tier == shownTier) return;
+            if (tier == shownTier && skin == shownSkin) return;
             shownTier = tier;
-            if (database != null) held.sprite = database.Pastry(tier);
+            shownSkin = skin;
+            if (database != null) held.sprite = database.Pastry(tier, skin);
             ViewFactory.SetIcon(held, r);   // r already carries the dessert's size
         }
     }

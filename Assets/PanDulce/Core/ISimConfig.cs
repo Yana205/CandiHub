@@ -17,6 +17,12 @@ namespace PanDulce.Core
         int CustomerEverySec { get; }
         /// <summary>Extra calm seconds added before the FIRST customer of a run only.</summary>
         float StartDelaySec { get; }
+        /// <summary>How long the opening calm lasts: the run's first seconds play slowed,
+        /// easing back to full tempo. 0 = off.</summary>
+        float StartCalmSec { get; }
+        /// <summary>Tempo at the very first moment of the calm, as a fraction of full
+        /// speed (0.55 = 55%). Eases to 1 over StartCalmSec.</summary>
+        float StartCalmScale { get; }
         /// <summary>How many tiers begin discovered — in colour, spawnable, orderable.</summary>
         int StartDiscovered { get; }
         float EntranceTime { get; }

@@ -19,9 +19,11 @@ MonoBehaviour:
     rotationAmount: 0.2
     mergeGrowTime: 1.09
     comboDelay: 0.5
-    customerEverySec: 10
-    startDelaySec: 4
-    startDiscovered: 3
+    customerEverySec: 11
+    startDelaySec: 0
+    startCalmSec: 10
+    startCalmScale: 0.55
+    startDiscovered: 1
     entranceTime: 1.3
     endOfDay: 0
     boostsOn: 1
@@ -42,11 +44,11 @@ MonoBehaviour:
     dropVy: 60
     flySec: 0.9
     happyMs: 1400
-    startingBodies: 9
+    startingBodies: 6
     shakeDuration: 0.6
     mergeOverlapPct: 0
-    mergeTouchSec: 0
-    kinPull: 0
+    mergeTouchSec: 0.18
+    kinPull: 3
     coinBase: 5
     coinPerTier: 3
     clearanceCost: 30

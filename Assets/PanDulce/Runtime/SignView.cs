@@ -6,7 +6,8 @@ namespace PanDulce.Runtime
 {
     /// <summary>
     /// The hanging sign (§8.4). Reads "next customer in / {n}s" when closed,
-    /// "now serving / ♥" when open.
+    /// "here they come!" while the bear is still walking in, "now serving / ♥" once
+    /// they reach the counter — the sign never gets ahead of the scene.
     /// </summary>
     public sealed class SignView : GeneratedView
     {
@@ -37,11 +38,13 @@ namespace PanDulce.Runtime
                                         Palette.Crust, "Furniture", 13);
         }
 
-        public void Sync(ShopState state, int secondsShown)
+        public void Sync(ShopState state, int secondsShown, bool arriving)
         {
             if (!IsBuilt) return;
-            string top = state == ShopState.Closed ? "next customer in" : "now serving";
-            string big = state == ShopState.Closed ? $"{secondsShown}s" : "♥";
+            string top = state == ShopState.Closed ? "next customer in"
+                       : arriving                  ? "here they come!" : "now serving";
+            string big = state == ShopState.Closed ? $"{secondsShown}s"
+                       : arriving                  ? "…" : "♥";
             if (top != shownTop) { shownTop = top; topLine.text = top; }
             if (big != shownBig) { shownBig = big; bigLine.text = big; }
         }

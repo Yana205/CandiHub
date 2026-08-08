@@ -21,6 +21,8 @@ namespace PanDulce.Core
         // Both start knobs default to the mock's behaviour (no delay, tiers 0–3 known) so
         // bare configs and tests are unaffected; the shipped values live in Tuning.asset.
         public float startDelaySec = 0f;
+        public float startCalmSec = 0f;
+        public float startCalmScale = 0.55f;
         public int startDiscovered = 4;
         public float entranceTime = 1.3f;
         public bool endOfDay = false;
@@ -90,6 +92,8 @@ namespace PanDulce.Core
         public float ComboDelay => comboDelay;
         public int CustomerEverySec => customerEverySec;
         public float StartDelaySec => startDelaySec;
+        public float StartCalmSec => startCalmSec;
+        public float StartCalmScale => startCalmScale;
         public int StartDiscovered => startDiscovered;
         public float EntranceTime => entranceTime;
         public bool EndOfDay => endOfDay;

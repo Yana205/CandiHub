@@ -10,6 +10,7 @@ namespace PanDulce.Runtime
         SpriteRenderer sprite;
         Vector2 from;
         int tier;
+        int skin;
         float startTime, duration = 0.9f;
         System.Action onArrive;
 
@@ -30,16 +31,17 @@ namespace PanDulce.Runtime
             go.SetActive(false);
         }
 
-        public void Launch(int tier, Vector2 stageFrom, float flySec, System.Action arrived)
+        public void Launch(int tier, int skin, Vector2 stageFrom, float flySec, System.Action arrived)
         {
             if (!IsBuilt) { arrived?.Invoke(); return; }
             this.tier = tier;
+            this.skin = skin;
             from = stageFrom;
             duration = Mathf.Max(0.05f, flySec);
             startTime = Time.time;
             onArrive = arrived;
             sprite.gameObject.SetActive(true);
-            if (database != null) sprite.sprite = database.Pastry(tier);
+            if (database != null) sprite.sprite = database.Pastry(tier, skin);
             Pose(0f);           // the trail reads this scale the moment it starts following
         }
 

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PanDulce.Runtime
 {
     /// <summary>
-    /// The six procedural cues (§9.1), baked once at startup with AudioClip.Create.
+    /// The procedural cues (§9.1), baked once at startup with AudioClip.Create.
     /// A few ms of maths, no files, no load hitch — deliberately kept that way rather than
     /// shipping WAVs. There is no game-over cue in this design.
     /// </summary>
@@ -64,6 +64,14 @@ namespace PanDulce.Runtime
                 new Tone(2637f, 0.04f, 0.30f, 0, 0.03f),
                 new Tone(1568f, 0.24f, 0.55f, 0, 0.07f),
                 new Tone(2093f, 0.26f, 0.50f, 0, 0.04f),
+            });
+
+            // the order bubble popping in at the counter — softer and rounder than the
+            // door chime, so bell = "someone's coming", pop = "here's what they'd like"
+            clips["pop"] = Bake("pop", new[]
+            {
+                new Tone(880f, 0f, 0.07f, 0, 0.10f),
+                new Tone(1175f, 0.05f, 0.13f, 0, 0.08f),
             });
 
             clips["serve"] = Bake("serve", new[]
