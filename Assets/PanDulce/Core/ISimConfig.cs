@@ -25,6 +25,9 @@ namespace PanDulce.Core
         float StartCalmScale { get; }
         /// <summary>How many tiers begin discovered — in colour, spawnable, orderable.</summary>
         int StartDiscovered { get; }
+        /// <summary>Merges INTO a tier before its case seat colours in (and it becomes
+        /// spawnable/orderable). 1 = the classic first-merge reveal.</summary>
+        int DiscoverMerges { get; }
         float EntranceTime { get; }
         bool EndOfDay { get; }
         bool BoostsOn { get; }

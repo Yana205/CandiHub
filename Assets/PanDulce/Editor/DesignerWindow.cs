@@ -97,6 +97,12 @@ namespace PanDulce.Editor
                    "A fresh dessert cannot merge for this many seconds after it appears — the " +
                    "brake on instant chain reactions.",
                    d.comboDelay, 0f, 2f, v => d.comboDelay = v);
+            IntSlider(cfg, "Merges to reveal",
+                      "How many times a dessert must be merged into before its case seat " +
+                      "colours in — and it joins the spawn menu and the order pool. 1 = the " +
+                      "classic first-merge reveal; higher stretches the whole discovery arc, " +
+                      "since each new tier also has to be built from revealed spawns.",
+                      d.discoverMerges, 1, 6, v => d.discoverMerges = v);
             Slider(cfg, "Matching pull",
                    "Matching desserts within about a diameter drift toward each other. " +
                    "0 = off. Higher makes pairs find each other on their own — a helping " +

@@ -30,6 +30,7 @@ namespace PanDulce.Core
         readonly List<(Body a, Body c)> mergeBuffer = new List<(Body, Body)>(16);
 
         readonly bool[] discovered = new bool[TierTable.Count];
+        readonly int[] mergeCount = new int[TierTable.Count];   // merges INTO each tier, per run
         readonly System.Random rng;
         ISimConfig cfg;
         int nextId = 1;
@@ -178,6 +179,9 @@ namespace PanDulce.Core
         public void SetConfig(ISimConfig config) => cfg = config;
 
         public bool IsDiscovered(int tier) => discovered[tier];
+        public int MergeCount(int tier) => mergeCount[tier];
+        /// <summary>Merges into a tier before its seat colours in — the discovery pace knob.</summary>
+        public int DiscoverNeed => UnityEngine.Mathf.Max(1, cfg != null ? cfg.DiscoverMerges : 1);
         public bool CanDropNow => Now >= canDropAt;
         public bool Shaking => Now < ShakeUntil;
 
@@ -449,10 +453,21 @@ namespace PanDulce.Core
 
             if (!discovered[t2])
             {
-                discovered[t2] = true;
-                if (t2 > HighestDiscovered) HighestDiscovered = t2;
-                AddFloat(x, y - r2 - 26f, "New in the case!");
-                TierDiscovered?.Invoke(t2, new Vector2(x, y));
+                // A seat colours in only after DiscoverNeed merges into its tier — one
+                // lucky cascade can no longer reveal the whole case. Until then each
+                // merge floats its progress, so the goal reads at the pile.
+                mergeCount[t2]++;
+                if (mergeCount[t2] >= DiscoverNeed)
+                {
+                    discovered[t2] = true;
+                    if (t2 > HighestDiscovered) HighestDiscovered = t2;
+                    AddFloat(x, y - r2 - 26f, "New in the case!");
+                    TierDiscovered?.Invoke(t2, new Vector2(x, y));
+                }
+                else
+                {
+                    AddFloat(x, y - r2 - 26f, $"{mergeCount[t2]}/{DiscoverNeed}");
+                }
             }
         }
 
@@ -650,6 +665,7 @@ namespace PanDulce.Core
             int known = Mathf.Clamp(cfg != null ? cfg.StartDiscovered : 4, 1, TierTable.Count);
             HighestDiscovered = known - 1;
             for (int t = 0; t < TierTable.Count; t++) discovered[t] = t < known;
+            for (int t = 0; t < TierTable.Count; t++) mergeCount[t] = 0;
 
             CurTier = Pick();
             CurSkin = RollSkin(CurTier);
@@ -682,6 +698,7 @@ namespace PanDulce.Core
         {
             int known = Mathf.Clamp(cfg != null ? cfg.StartDiscovered : 4, 1, TierTable.Count);
             for (int t = 0; t < TierTable.Count; t++) discovered[t] = t < known;
+            for (int t = 0; t < TierTable.Count; t++) mergeCount[t] = 0;
             HighestDiscovered = known - 1;
         }
     }

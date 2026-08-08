@@ -17,13 +17,14 @@ MonoBehaviour:
     bounciness: 0.08
     sizeScale: 1.5899999
     rotationAmount: 0.2
-    mergeGrowTime: 1.09
+    mergeGrowTime: 1.4
     comboDelay: 0.5
     customerEverySec: 11
     startDelaySec: 0
     startCalmSec: 10
     startCalmScale: 0.55
     startDiscovered: 1
+    discoverMerges: 1
     entranceTime: 1.3
     endOfDay: 0
     boostsOn: 1
@@ -49,7 +50,7 @@ MonoBehaviour:
     startingBodies: 6
     shakeDuration: 0.6
     mergeOverlapPct: 0
-    mergeTouchSec: 0.18
+    mergeTouchSec: 0.5
     kinPull: 3
     coinBase: 5
     coinPerTier: 3

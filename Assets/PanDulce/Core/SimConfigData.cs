@@ -24,6 +24,7 @@ namespace PanDulce.Core
         public float startCalmSec = 0f;
         public float startCalmScale = 0.55f;
         public int startDiscovered = 4;
+        public int discoverMerges = 1;
         public float entranceTime = 1.3f;
         public bool endOfDay = false;
         public bool boostsOn = true;
@@ -99,6 +100,7 @@ namespace PanDulce.Core
         public float StartCalmSec => startCalmSec;
         public float StartCalmScale => startCalmScale;
         public int StartDiscovered => startDiscovered;
+        public int DiscoverMerges => discoverMerges;
         public float EntranceTime => entranceTime;
         public bool EndOfDay => endOfDay;
         public bool BoostsOn => boostsOn;

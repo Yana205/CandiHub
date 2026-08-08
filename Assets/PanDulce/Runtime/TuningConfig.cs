@@ -38,6 +38,7 @@ namespace PanDulce.Runtime
         public float StartCalmSec => data.StartCalmSec;
         public float StartCalmScale => data.StartCalmScale;
         public int StartDiscovered => data.StartDiscovered;
+        public int DiscoverMerges => data.DiscoverMerges;
         public float EntranceTime => data.EntranceTime;
         public bool EndOfDay => data.EndOfDay;
         public bool BoostsOn => data.BoostsOn;

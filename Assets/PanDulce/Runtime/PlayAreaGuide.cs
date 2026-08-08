@@ -10,6 +10,8 @@ namespace PanDulce.Runtime
     /// in the inspector and apply live.
     ///
     ///  - Floor curve (orange): the sagging line the desserts actually rest on.
+    ///  - Box line (pink): the straight-edged play box — walls down to a FLAT floor at
+    ///    floorY, no sag. This is the line to fit the drawn candy-box art against.
     ///  - Container (blue): the walls + floor — the box the pile is held inside.
     ///  - Canvas frame (gray): the full sim canvas rect.
     ///  - Spawn line (green): the height new desserts drop from.
@@ -25,6 +27,7 @@ namespace PanDulce.Runtime
 
         [Header("Show")]
         [SerializeField] bool floorCurve = true;
+        [SerializeField] bool boxLine = true;
         [SerializeField] bool container = true;
         [SerializeField] bool canvasFrame = false;
         [SerializeField] bool spawnLine = false;
@@ -32,7 +35,7 @@ namespace PanDulce.Runtime
 
         const int FloorSamples = 32;
 
-        LineRenderer floorLr, containerLr, frameLr, spawnLr, topOutLr;
+        LineRenderer floorLr, boxLr, containerLr, frameLr, spawnLr, topOutLr;
         float lastSag = float.NaN, lastTopOut = float.NaN, lastFloorY = float.NaN;
         float lastWL = float.NaN, lastWR = float.NaN;
 
@@ -51,6 +54,7 @@ namespace PanDulce.Runtime
         protected override void Build()
         {
             floorLr = MakeLine("FloorCurve", new Color(1f, 0.34f, 0.13f, 0.85f), 91, 3f);
+            boxLr = MakeLine("BoxLine", new Color(1f, 0.2f, 0.6f, 0.9f), 92, 3f);
             containerLr = MakeLine("Container", new Color(0.15f, 0.55f, 1f, 0.6f), 90, 2.5f);
             frameLr = MakeLine("CanvasFrame", new Color(0.45f, 0.45f, 0.45f, 0.55f), 90, 2f);
             frameLr.loop = true;
@@ -79,6 +83,14 @@ namespace PanDulce.Runtime
                 float x = Mathf.Lerp(wl, wr, i / (float)FloorSamples);
                 floorLr.SetPosition(i, P(x, SimField.FloorAt(x, sag, fy)));
             }
+
+            // The straight play box: walls down to a flat floor at floorY — no sag.
+            // One stroke, all right angles, made to sit flush against the drawn box art.
+            boxLr.positionCount = 4;
+            boxLr.SetPosition(0, P(wl, 0f));
+            boxLr.SetPosition(1, P(wl, fy));
+            boxLr.SetPosition(2, P(wr, fy));
+            boxLr.SetPosition(3, P(wr, 0f));
 
             // Walls down into the floor curve and out again — the holding box, one stroke.
             containerLr.positionCount = FloorSamples + 3;
@@ -109,6 +121,7 @@ namespace PanDulce.Runtime
         {
             if (floorLr == null) return;
             floorLr.gameObject.SetActive(floorCurve);
+            boxLr.gameObject.SetActive(boxLine);
             containerLr.gameObject.SetActive(container);
             frameLr.gameObject.SetActive(canvasFrame);
             spawnLr.gameObject.SetActive(spawnLine);
