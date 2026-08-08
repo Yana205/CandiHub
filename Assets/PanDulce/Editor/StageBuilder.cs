@@ -82,33 +82,38 @@ namespace PanDulce.Editor
 
             // 22 · LAYOUT ART — the hand-drawn v2 layout. The prefab is the designer
             // surface (Version2ArtImport creates it once; hand edits win), so the rebuild
-            // only re-instantiates it.
-            var artFolder = Folder(stage.transform, "[ 22 · LAYOUT ART ]");
+            // only re-instantiates it — directly under the stage wearing the folder name,
+            // instead of a wrapper folder holding a single prefab.
             var layoutArt = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/PanDulce/Prefabs/LayoutArt.prefab");
             if (layoutArt != null)
             {
                 var inst = (GameObject)PrefabUtility.InstantiatePrefab(layoutArt);
-                inst.transform.SetParent(artFolder.transform, false);
+                inst.name = "[ 22 · LAYOUT ART ]";
+                inst.transform.SetParent(stage.transform, false);
             }
 
-            // 23 · CUSTOMER
+            // 23 · CUSTOMER — the bear plus its two satellites: the speech bubble showing
+            // the order, and the dessert flying over to it.
             var customerFolder = Folder(stage.transform, "[ 23 · CUSTOMER ]");
             var customer = customerFolder.AddComponent<CustomerView>();
             customer.EditorAssign(db);
 
-            // 24 · FURNITURE
-            var furniture = Folder(stage.transform, "[ 24 · FURNITURE ]");
-            var signGo = Child(furniture.transform, "HangingSign");
-            var sign = signGo.AddComponent<SignView>();
+            var bubbleGo = Child(customerFolder.transform, "OrderBubble");
+            var bubble = bubbleGo.AddComponent<OrderBubbleView>();
+            bubble.EditorAssign(db);
 
-            // 25 · DISPLAY CASE
-            var caseFolder = Folder(stage.transform, "[ 25 · DISPLAY CASE ]");
+            var flightGo = Child(customerFolder.transform, "ServeFlight");
+            var flight = flightGo.AddComponent<ServeFlightView>();
+            flight.EditorAssign(db);
+
+            // 24 · DISPLAY CASE
+            var caseFolder = Folder(stage.transform, "[ 24 · DISPLAY CASE ]");
             var displayCase = caseFolder.AddComponent<DisplayCaseView>();
             displayCase.EditorAssign(db);
 
-            // 26 · PLAY AREA — the sim origin sits at stage (6, 424)
-            var play = Folder(stage.transform, "[ 26 · PLAY AREA ]");
+            // 25 · PLAY AREA — the sim origin sits at stage (6, 424)
+            var play = Folder(stage.transform, "[ 25 · PLAY AREA ]");
             play.transform.localPosition = StageCoords.Stage(StageCoords.PlayOriginX,
                                                              StageCoords.PlayOriginY);
 
@@ -148,8 +153,8 @@ namespace PanDulce.Editor
             var guide = guidesGo.AddComponent<PlayAreaGuide>();
             guide.EditorAssign(tuning);
 
-            // 27 · UI
-            var ui = Folder(stage.transform, "[ 27 · UI ]");
+            // 26 · UI
+            var ui = Folder(stage.transform, "[ 26 · UI ]");
 
             var topBarGo = Child(ui.transform, "TopBar");
             var topBar = topBarGo.AddComponent<TopBarView>();
@@ -164,13 +169,10 @@ namespace PanDulce.Editor
             boostGo.transform.localPosition = StageCoords.Stage(11f, -18f);
             var boostBar = boostGo.AddComponent<BoostBarView>();
 
-            var bubbleGo = Child(ui.transform, "OrderBubble");
-            var bubble = bubbleGo.AddComponent<OrderBubbleView>();
-            bubble.EditorAssign(db);
-
-            var flightGo = Child(ui.transform, "ServeFlight");
-            var flight = flightGo.AddComponent<ServeFlightView>();
-            flight.EditorAssign(db);
+            // The hanging "next customer in" sign is an info widget like the bars — it
+            // lives with the UI rather than in a furniture folder of one.
+            var signGo = Child(ui.transform, "HangingSign");
+            var sign = signGo.AddComponent<SignView>();
 
             var cardGo = Child(ui.transform, "GameOverCard");
             var card = cardGo.AddComponent<GameOverCard>();

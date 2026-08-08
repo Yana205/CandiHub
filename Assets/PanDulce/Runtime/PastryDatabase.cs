@@ -6,8 +6,9 @@ namespace PanDulce.Runtime
 {
     /// <summary>
     /// One asset holding the tier table's art. Base radii live in Core's TierTable — this binds
-    /// sprites, display names, and the per-tier size percentage that scales both. Names and
-    /// sizes travel WITH their sprite when the Studio window reorders the merge chain, so
+    /// sprites, display names, and two ISOLATED per-tier size percentages: the play size
+    /// (pile art + physics circle) and the case size (chrome icons only). Names and sizes
+    /// travel WITH their sprite when the Studio window reorders the merge chain, so
     /// "which dessert is tier 3" is a data edit here, never a code change.
     /// </summary>
     [CreateAssetMenu(fileName = "Pastries", menuName = "Pan Dulce/Pastry Database")]
@@ -21,10 +22,24 @@ namespace PanDulce.Runtime
 
         // Serialized name stays `artScale` so existing Pastries.asset values survive the rename
         // to TierSize — the meaning widened from "art only" to "art and physics".
-        [Tooltip("Per-tier size, as a fraction of the authored size (1 = 100%). Scales the " +
-                 "sprite AND the physics circle, so an enlarged dessert also takes up more " +
-                 "room in the pile.")]
+        [Tooltip("Per-tier PLAY size, as a fraction of the authored size (1 = 100%). Scales " +
+                 "the play-area sprite AND the physics circle, so an enlarged dessert also " +
+                 "takes up more room in the pile.")]
         [SerializeField] float[] artScale = new float[0];
+
+        [Tooltip("Per-tier CASE size (1 = 100%) — presentation only. Scales the icon in the " +
+                 "glass case, order bubble, next plaque and serve flight, never the pile or " +
+                 "physics. Keeps the shop window tidy however wild the play sizes get.")]
+        [SerializeField] float[] caseScale = new float[0];
+
+        [Tooltip("How much bigger each merge's result should be than its parent, as a " +
+                 "fraction (0.21 = +21% per merge). The Studio window audits the chain " +
+                 "against this and can rewrite Play sizes to match it exactly; the EditMode " +
+                 "MergeGrowthTests enforce it per asset.")]
+        [SerializeField] float mergeGrowth = 0.21f;
+
+        [Tooltip("Allowed deviation around mergeGrowth before a step is flagged (0.05 = ±5%).")]
+        [SerializeField] float mergeGrowthTolerance = 0.05f;
 
         [Tooltip("3 regulars, cycled by served % 3.")]
         [SerializeField] Sprite[] customers = new Sprite[3];
@@ -52,16 +67,40 @@ namespace PanDulce.Runtime
         }
 
         /// <summary>
-        /// Size multiplier for a tier, as a fraction of its authored size (1 = 100%).
+        /// PLAY size multiplier for a tier, as a fraction of its authored size (1 = 100%).
         ///
         /// Anything sized off the tier table already has this folded in by TierTable's
-        /// EffectiveRadius/Er config overloads — multiply by it yourself ONLY for chrome drawn
-        /// at a fixed radius (case seat, plaque, order bubble), where it is what keeps the icon
-        /// proportional to the dessert it stands for.
+        /// EffectiveRadius/Er config overloads — never multiply by it again. Chrome drawn at
+        /// a fixed radius (case seat, plaque, order bubble, serve flight) uses DisplaySize
+        /// instead, so shop-window presentation stays isolated from pile physics.
         /// </summary>
         public float TierSize(int tier)
             => (artScale != null && tier >= 0 && tier < artScale.Length && artScale[tier] > 0f)
                ? artScale[tier] : 1f;
+
+        /// <summary>
+        /// CASE size multiplier (1 = 100%) — presentation only, for fixed-radius chrome icons.
+        /// Independent of TierSize: resizing a dessert for gameplay never moves the shop
+        /// window, and vice versa.
+        /// </summary>
+        public float DisplaySize(int tier)
+            => (caseScale != null && tier >= 0 && tier < caseScale.Length && caseScale[tier] > 0f)
+               ? caseScale[tier] : 1f;
+
+        /// <summary>Target growth per merge as a fraction (+0.21 = each result 21% bigger).</summary>
+        public float MergeGrowthTarget => mergeGrowth > 0f ? mergeGrowth : 0.21f;
+
+        /// <summary>Allowed deviation around MergeGrowthTarget before a step is flagged.</summary>
+        public float MergeGrowthTolerance => mergeGrowthTolerance >= 0f ? mergeGrowthTolerance : 0.05f;
+
+        /// <summary>
+        /// The visual/physical growth of the merge INTO this tier: how much bigger tier's
+        /// effective radius is than the previous tier's, as a fraction (+0.21 = 21% bigger).
+        /// SizeScale cancels out of the ratio, so this is the pure chain shape.
+        /// </summary>
+        public float MergeGrowth(int tier)
+            => (TierTable.BaseRadius[tier] * TierSize(tier))
+             / (TierTable.BaseRadius[tier - 1] * TierSize(tier - 1)) - 1f;
 
         public int PastryCount => pastries?.Length ?? 0;
 
@@ -86,6 +125,14 @@ namespace PanDulce.Runtime
                     s[i] = (artScale != null && i < artScale.Length && artScale[i] > 0f)
                            ? artScale[i] : 1f;
                 artScale = s;
+            }
+            if (caseScale == null || caseScale.Length != TierTable.Count)
+            {
+                var s = new float[TierTable.Count];
+                for (int i = 0; i < s.Length; i++)
+                    s[i] = (caseScale != null && i < caseScale.Length && caseScale[i] > 0f)
+                           ? caseScale[i] : 1f;
+                caseScale = s;
             }
         }
 

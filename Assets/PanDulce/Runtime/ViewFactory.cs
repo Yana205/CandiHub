@@ -68,7 +68,11 @@ namespace PanDulce.Runtime
             return t;
         }
 
-        /// <summary>A pastry icon at a given stage-px radius, from the tier sprites.</summary>
+        /// <summary>
+        /// A pastry icon at a given stage-px radius, from the tier sprites. Chrome-flavoured:
+        /// the initial size folds in the dessert's CASE size (DisplaySize); play-area users
+        /// re-SetIcon with a TierTable radius before ever being shown.
+        /// </summary>
         public static SpriteRenderer Icon(Transform parent, string name, PastryDatabase db, int tier,
                                           float cx, float cy, float radius, string layer, int order)
         {
@@ -80,7 +84,7 @@ namespace PanDulce.Runtime
             sr.sprite = db != null ? db.Pastry(tier) : null;
             sr.sortingLayerName = layer;
             sr.sortingOrder = order;
-            SetIcon(sr, radius, db != null ? db.TierSize(tier) : 1f);
+            SetIcon(sr, radius, db != null ? db.DisplaySize(tier) : 1f);
             go.transform.localPosition = new Vector3(cx * StageCoords.PX, -cy * StageCoords.PX, 0f);
             return sr;
         }
@@ -89,9 +93,10 @@ namespace PanDulce.Runtime
         /// Sprites are authored at radius 200, so any icon size is a uniform scale.
         ///
         /// Pass tierSize ONLY when radiusStagePx is a fixed chrome radius (a case seat, the
-        /// plaque, the order bubble) — there it is what keeps the icon proportional to the
-        /// dessert. A radius that came from TierTable already has it folded in; passing it
-        /// again would square it.
+        /// plaque, the order bubble) — and there pass the dessert's CASE size (DisplaySize),
+        /// which keeps the icon proportional without tying it to gameplay. A radius that came
+        /// from TierTable already has the PLAY size folded in; passing that again would
+        /// square it.
         /// </summary>
         public static void SetIcon(SpriteRenderer sr, float radiusStagePx, float tierSize = 1f)
         {

@@ -15,6 +15,10 @@ namespace PanDulce.Core
         float MergeGrowTime { get; }
         float ComboDelay { get; }
         int CustomerEverySec { get; }
+        /// <summary>Extra calm seconds added before the FIRST customer of a run only.</summary>
+        float StartDelaySec { get; }
+        /// <summary>How many tiers begin discovered — in colour, spawnable, orderable.</summary>
+        int StartDiscovered { get; }
         float EntranceTime { get; }
         bool EndOfDay { get; }
         bool BoostsOn { get; }
@@ -38,6 +42,21 @@ namespace PanDulce.Core
         float HappyMs { get; }
         int StartingBodies { get; }
         float ShakeDuration { get; }
+
+        // --- Rhythm & difficulty (2026-08-08): how deliberate a merge has to be ---
+
+        /// <summary>Overlap depth required to merge, as a fraction of the smaller dessert's
+        /// radius. 0 = a graze merges instantly (classic); higher demands a real squeeze —
+        /// a landing drop, the pile's weight, or a shake.</summary>
+        float MergeOverlapPct { get; }
+
+        /// <summary>How long two matching desserts must stay in contact before they may
+        /// merge. 0 = instant (classic).</summary>
+        float MergeTouchSec { get; }
+
+        /// <summary>Acceleration (sim px/s²) pulling matching desserts toward each other
+        /// when they are within about a diameter. 0 = off (classic).</summary>
+        float KinPull { get; }
 
         // --- Economy: coins from serves buy boosts (spec 2026-08-04) ---
         int CoinBase { get; }

@@ -29,7 +29,7 @@ namespace PanDulce.Runtime
             if (database != null)
             {
                 icon.sprite = database.Pastry(nextTier);
-                ViewFactory.SetIcon(icon, 13f, database.TierSize(nextTier));
+                ViewFactory.SetIcon(icon, 13f, database.DisplaySize(nextTier));
             }
         }
     }

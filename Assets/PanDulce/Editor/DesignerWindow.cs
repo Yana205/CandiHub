@@ -80,15 +80,47 @@ namespace PanDulce.Editor
                    d.mergeGrowTime, 0.2f, 2f, v => d.mergeGrowTime = v);
 
             EditorGUILayout.Space(6f);
+            EditorGUILayout.LabelField("Rhythm & difficulty", EditorStyles.boldLabel);
+            PercentSlider(cfg, "Merge squeeze",
+                          "How firmly two matching desserts must press together to merge, as a " +
+                          "share of the smaller one's size. 0% = a graze merges instantly. " +
+                          "Even a few % means resting neighbours stay put — only a landing " +
+                          "drop, pile weight, or a shake merges them. Above ~15% needs a " +
+                          "full-height drop.",
+                          d.mergeOverlapPct, 0f, 25f, v => d.mergeOverlapPct = v);
+            Slider(cfg, "Touch time to merge",
+                   "Seconds two matching desserts must stay in contact before merging. " +
+                   "0 = instant. A short hold makes the pile readable — you can see a merge " +
+                   "coming and still change your mind.",
+                   d.mergeTouchSec, 0f, 1.5f, v => d.mergeTouchSec = v);
+            Slider(cfg, "Min age to merge",
+                   "A fresh dessert cannot merge for this many seconds after it appears — the " +
+                   "brake on instant chain reactions.",
+                   d.comboDelay, 0f, 2f, v => d.comboDelay = v);
+            Slider(cfg, "Matching pull",
+                   "Matching desserts within about a diameter drift toward each other. " +
+                   "0 = off. Higher makes pairs find each other on their own — a helping " +
+                   "hand, or a hazard when you wanted them apart.",
+                   d.kinPull, 0f, 400f, v => d.kinPull = v);
+            Slider(cfg, "Drop cooldown",
+                   "Seconds between drops. The base beat of the whole game.",
+                   d.dropCooldown, 0.1f, 1.5f, v => d.dropCooldown = v);
+
+            EditorGUILayout.Space(6f);
             EditorGUILayout.LabelField("Customers", EditorStyles.boldLabel);
             IntSlider(cfg, "Customer every (s)", "Seconds between the bear's visits.",
                       d.customerEverySec, 5, 60, v => d.customerEverySec = v);
+            Slider(cfg, "Start delay (s)", "Extra calm seconds before the FIRST customer of " +
+                   "a run only — a few moments to read the shop. Later visits use the plain cadence.",
+                   d.startDelaySec, 0f, 20f, v => d.startDelaySec = v);
+            IntSlider(cfg, "Known at start", "How many desserts begin discovered — in colour, " +
+                      "spawnable, orderable. 3 keeps Purin a silhouette until first merged.",
+                      d.startDiscovered, 1, 6, v => d.startDiscovered = v);
             Slider(cfg, "Rise time", "How long the bear takes to pop up behind the counter.",
                    d.entranceTime, 0.3f, 2f, v => d.entranceTime = v);
 
             EditorGUILayout.Space(6f);
-            EditorGUILayout.LabelField("Furoshiki", EditorStyles.boldLabel);
-            SwatchRow(cfg, d);
+            EditorGUILayout.LabelField("Shake", EditorStyles.boldLabel);
             Slider(cfg, "Shake power", "How hard a full-meter shake launches the pile.",
                    d.shakePower, 0.3f, 2.2f, v => d.shakePower = v);
             Slider(cfg, "Charge per merge", "Meter gained per merge. 0.14 = full in 8 merges.",
@@ -110,9 +142,7 @@ namespace PanDulce.Editor
             if (GUILayout.Button("Reset all to defaults"))
             {
                 Undo.RecordObject(cfg, "Reset tuning");
-                int keepCloth = d.clothColorIndex;
                 cfg.ResetToMockDefaults();
-                cfg.Data.clothColorIndex = keepCloth;
                 EditorUtility.SetDirty(cfg);
                 AssetDatabase.SaveAssets();
             }
@@ -161,27 +191,6 @@ namespace PanDulce.Editor
             Apply(cfg, label, next != value, () => set(next));
         }
 
-        void SwatchRow(TuningConfig cfg, SimConfigData d)
-        {
-            EditorGUILayout.LabelField("Cloth colour");
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                for (int i = 0; i < Palette.ClothSwatches.Length; i++)
-                {
-                    var prev = GUI.backgroundColor;
-                    GUI.backgroundColor = Palette.ClothSwatches[i];
-                    string mark = d.clothColorIndex == i ? "●" : " ";
-                    if (GUILayout.Button(mark, GUILayout.Height(24f)))
-                    {
-                        int idx = i;
-                        Apply(cfg, "Cloth colour", d.clothColorIndex != idx, () => d.clothColorIndex = idx);
-                    }
-                    GUI.backgroundColor = prev;
-                }
-            }
-            Help("The furoshiki's colour — every highlight and shadow follows it.");
-        }
-
         static void Help(string text)
             => EditorGUILayout.LabelField(" ", text, EditorStyles.wordWrappedMiniLabel);
 
@@ -199,6 +208,16 @@ namespace PanDulce.Editor
         {
             EditorGUILayout.LabelField("Try it (play mode)", EditorStyles.boldLabel);
             var g = Application.isPlaying ? GameRoot.Current : null;   // fresh, never cached
+
+            if (g != null)
+            {
+                EditorGUILayout.LabelField(
+                    $"Desserts: {g.Sim.Bodies.Count}   Highest tier: {g.Sim.HighestDiscovered}" +
+                    $"   Combo: {g.Sim.ComboN}", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField(
+                    $"Coins: {g.Purse.Coins}   Served: {g.Shop.Served}   Physics: {g.PhysicsMs:F1} ms",
+                    EditorStyles.miniLabel);
+            }
 
             using (new EditorGUI.DisabledScope(g == null))
             {

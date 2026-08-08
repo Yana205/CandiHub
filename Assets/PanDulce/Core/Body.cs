@@ -40,6 +40,13 @@ namespace PanDulce.Core
         /// </summary>
         public bool atRest;
 
+        /// <summary>Touched a same-tier neighbour during the last substep — accumulated by
+        /// the pair loop, consumed into <see cref="kinTouchT"/> at the top of the next.</summary>
+        public bool kinTouch;
+
+        /// <summary>Sim seconds of sustained same-tier contact, for the merge touch delay.</summary>
+        public float kinTouchT;
+
         public bool dead;
 
         public void Reset()
@@ -54,6 +61,8 @@ namespace PanDulce.Core
             restAnchorX = restAnchorY = restSampleT = 0f;
             wentNowhere = false;
             atRest = false;
+            kinTouch = false;
+            kinTouchT = 0f;
             dead = false;
         }
 

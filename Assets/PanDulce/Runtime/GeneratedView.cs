@@ -69,6 +69,10 @@ namespace PanDulce.Runtime
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 var child = transform.GetChild(i).gameObject;
+                // Only generated children are ours to destroy — they are always DontSave.
+                // A persistent child (e.g. OrderBubble under the customer folder) belongs
+                // to the scene, and clearing it here would delete authored objects.
+                if ((child.hideFlags & HideFlags.DontSave) == 0) continue;
                 if (Application.isPlaying) Destroy(child); else DestroyImmediate(child);
             }
         }

@@ -83,6 +83,8 @@ namespace PanDulce.Runtime
 
             Sim = new MergeSim(tuning);
             Shop = new ShopDirector();
+            // Orders only ever ask for desserts the pile can produce right now.
+            Shop.Orderable = t => Sim.IsDiscovered(t);
             Boost = new BoostMeter();
             Day = new DayCycle();
             Score = new ScoreKeeper();
@@ -120,6 +122,10 @@ namespace PanDulce.Runtime
         {
             if (tuning == null) return;
             Sim.SetConfig(tuning);
+            // The authored case order doubles as the spawn menu; progress mode keeps the
+            // classic tier 0–3 pick. Re-pushed each frame so Studio edits apply live.
+            Sim.SetSpawnPool(displayCase != null && !displayCase.FollowProgress
+                             ? displayCase.SeatTiers : null);
             if (sfx != null) sfx.Muted = !tuning.SoundOn;
 
             float dt = Mathf.Min(0.032f, Time.deltaTime) * Mathf.Max(0.01f, tuning.TimeScale);
@@ -322,8 +328,6 @@ namespace PanDulce.Runtime
             CompleteServe();
         }
 
-        public void CycleClothColor()
-            => tuning.Data.clothColorIndex = (tuning.Data.clothColorIndex + 1) % Palette.ClothSwatches.Length;
 
         // ---------------------------------------------------------------- run lifecycle
 

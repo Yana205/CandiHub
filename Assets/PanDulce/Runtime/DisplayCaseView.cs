@@ -85,7 +85,7 @@ namespace PanDulce.Runtime
                 if (database != null)
                 {
                     icons[i].sprite = database.Pastry(tier);
-                    ViewFactory.SetIcon(icons[i], IconRadius, database.TierSize(tier));
+                    ViewFactory.SetIcon(icons[i], IconRadius, database.DisplaySize(tier));
                 }
                 // Undiscovered entries render the sprite as a dark silhouette, label '?'.
                 icons[i].color = found ? Color.white : Silhouette;
@@ -108,7 +108,7 @@ namespace PanDulce.Runtime
                 if (icons[i] == null || labels[i] == null) continue;
                 icons[i].sprite = database.Pastry(tier);
                 icons[i].color = Color.white;
-                ViewFactory.SetIcon(icons[i], IconRadius, database.TierSize(tier));
+                ViewFactory.SetIcon(icons[i], IconRadius, database.DisplaySize(tier));
                 labels[i].text = database.Name(tier);
             }
         }

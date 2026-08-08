@@ -34,6 +34,8 @@ namespace PanDulce.Runtime
         public float MergeGrowTime => data.MergeGrowTime;
         public float ComboDelay => data.ComboDelay;
         public int CustomerEverySec => data.CustomerEverySec;
+        public float StartDelaySec => data.StartDelaySec;
+        public int StartDiscovered => data.StartDiscovered;
         public float EntranceTime => data.EntranceTime;
         public bool EndOfDay => data.EndOfDay;
         public bool BoostsOn => data.BoostsOn;
@@ -57,6 +59,10 @@ namespace PanDulce.Runtime
         public float HappyMs => data.HappyMs;
         public int StartingBodies => data.StartingBodies;
         public float ShakeDuration => data.ShakeDuration;
+
+        public float MergeOverlapPct => data.MergeOverlapPct;
+        public float MergeTouchSec => data.MergeTouchSec;
+        public float KinPull => data.KinPull;
 
         public int CoinBase => data.CoinBase;
         public int CoinPerTier => data.CoinPerTier;
