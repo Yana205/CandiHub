@@ -38,15 +38,22 @@ namespace PanDulce.Editor
             ("layout-candybox.jpeg", "candybox"),
         };
 
-        // Merge-chain replacements: original desserts only; the color variants stay in
-        // final-desserts as future skins.
-        static readonly (string src, string dst, string old)[] Desserts =
+        // The full merge chain is hand-drawn: the color variants are tiers of their own,
+        // so each family reads as a progression (pink → matcha → mango mochi, …). Ordered
+        // smallest to largest — mochi trio, purin, donut trio, roll cake, melon pan trio.
+        static readonly (string src, string dst)[] Desserts =
         {
-            ("mochi_pink.PNG", "pastry_00_mochi.png", "pastry_00_cookie.png"),
-            ("rollcake_strawberrymatcha.PNG", "pastry_06_rollcake.png", "pastry_06_cinnamon-roll.png"),
-            ("melonpan_original.PNG", "pastry_07_melonpan.png", "pastry_07_shell-bun.png"),
-            ("purin_original.PNG", "pastry_09_purin.png", "pastry_09_flan.png"),
-            ("donut_brown.PNG", "pastry_10_donut.png", "pastry_10_ring-cake.png"),
+            ("mochi_pink.PNG", "pastry_00_mochi.png"),
+            ("mochi_green.PNG", "pastry_01_matcha-mochi.png"),
+            ("mochi_yellow.PNG", "pastry_02_mango-mochi.png"),
+            ("purin_original.PNG", "pastry_03_purin.png"),
+            ("donut_pink.PNG", "pastry_04_berry-donut.png"),
+            ("donut_green.PNG", "pastry_05_matcha-donut.png"),
+            ("donut_brown.PNG", "pastry_06_choco-donut.png"),
+            ("rollcake_strawberrymatcha.PNG", "pastry_07_rollcake.png"),
+            ("melonpan_pink.PNG", "pastry_08_sakura-pan.png"),
+            ("IMG_1359.PNG", "pastry_09_honey-pan.png"),   // the yellow melon pan skin
+            ("melonpan_original.PNG", "pastry_10_melonpan.png"),
         };
 
         // The mock's desk line sits at canvas y 950 (475 at half scale); the sim's counter
@@ -152,13 +159,14 @@ namespace PanDulce.Editor
 
         static void ProcessDesserts()
         {
-            foreach (var (src, dst, old) in Desserts)
-            {
-                string oldPath = $"{SpriteImportSetup.PastryDir}/{old}";
-                if (File.Exists(oldPath)) AssetDatabase.DeleteAsset(oldPath);
+            // The whole chain is re-baked from source, so any pastry file not in the table
+            // (old placeholders, desserts that moved tier) is stale — clear them all first.
+            foreach (string path in Directory.GetFiles(SpriteImportSetup.PastryDir, "pastry_*.png"))
+                AssetDatabase.DeleteAsset(path.Replace('\\', '/'));
+
+            foreach (var (src, dst) in Desserts)
                 BakeDessert(Path.Combine(DessertDir, src),
                             $"{SpriteImportSetup.PastryDir}/{dst}");
-            }
         }
 
         /// <summary>Fits the opaque content into a 400 px box centered on a 512² canvas.</summary>

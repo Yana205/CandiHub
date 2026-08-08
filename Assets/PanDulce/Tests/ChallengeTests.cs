@@ -153,8 +153,8 @@ namespace PanDulce.Tests
             cfg.topOutLine = 82f;
             var w = new TopOutWatch();
 
-            float r = TierTable.EffectiveRadius(10, cfg.SizeScale);   // 90 * 1.3 = 117
-            var bodies = new List<Body> { Settled(82f + r - 5f, 10) };
+            float r = TierTable.EffectiveRadius(TierTable.Max, cfg.SizeScale);
+            var bodies = new List<Body> { Settled(82f + r - 5f, TierTable.Max) };
 
             w.Tick(0.1f, bodies, 10f, cfg);
             Assert.That(w.DangerT, Is.GreaterThan(0f), "top of the body crosses the line");

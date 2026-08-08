@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 0747eb0def07243f4b1ac5468b265941
+guid: 5bd8516eceb5f4ba48f0b49aeaa8823d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5149062180498040440
-    second: pastry_08_piggy-cookie_0
+      213: -5646165357526537671
+    second: pastry_09_honey-pan_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pastry_08_piggy-cookie_0
+      name: pastry_09_honey-pan_0
       rect:
         serializedVersion: 2
-        x: 44
-        y: 94
-        width: 414
-        height: 342
+        x: 55
+        y: 100
+        width: 402
+        height: 312
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 876ebf2b5c4257740800000000000000
-      internalID: 5149062180498040440
+      spriteID: 93aa381a58ac4a1b0800000000000000
+      internalID: -5646165357526537671
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pastry_08_piggy-cookie_0: 5149062180498040440
+      pastry_09_honey-pan_0: -5646165357526537671
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -9,6 +9,7 @@ namespace PanDulce.Runtime
 
         SpriteRenderer sprite;
         Vector2 from;
+        int tier;
         float startTime, duration = 0.9f;
         System.Action onArrive;
 
@@ -32,6 +33,7 @@ namespace PanDulce.Runtime
         public void Launch(int tier, Vector2 stageFrom, float flySec, System.Action arrived)
         {
             if (!IsBuilt) { arrived?.Invoke(); return; }
+            this.tier = tier;
             from = stageFrom;
             duration = Mathf.Max(0.05f, flySec);
             startTime = Time.time;
@@ -72,7 +74,7 @@ namespace PanDulce.Runtime
             float s = Mathf.Lerp(1f, 0.6f, Mathf.SmoothStep(0f, 1f, t));
 
             sprite.transform.localPosition = StageCoords.Stage(p.x, p.y);
-            ViewFactory.SetIcon(sprite, 26f * s);
+            ViewFactory.SetIcon(sprite, 26f * s, database != null ? database.DisplaySize(tier) : 1f);
         }
 
         /// <summary>Approximates cubic-bezier(0.35, -0.15, 0.35, 1).</summary>

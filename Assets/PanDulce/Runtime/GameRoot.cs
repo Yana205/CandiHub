@@ -83,6 +83,8 @@ namespace PanDulce.Runtime
 
             Sim = new MergeSim(tuning);
             Shop = new ShopDirector();
+            // Orders only ever ask for desserts the pile can produce right now.
+            Shop.Orderable = t => Sim.IsDiscovered(t);
             Boost = new BoostMeter();
             Day = new DayCycle();
             Score = new ScoreKeeper();
@@ -120,6 +122,10 @@ namespace PanDulce.Runtime
         {
             if (tuning == null) return;
             Sim.SetConfig(tuning);
+            // The authored case order doubles as the spawn menu; progress mode keeps the
+            // classic tier 0–3 pick. Re-pushed each frame so Studio edits apply live.
+            Sim.SetSpawnPool(displayCase != null && !displayCase.FollowProgress
+                             ? displayCase.SeatTiers : null);
             if (sfx != null) sfx.Muted = !tuning.SoundOn;
 
             float dt = Mathf.Min(0.032f, Time.deltaTime) * Mathf.Max(0.01f, tuning.TimeScale);
@@ -269,7 +275,8 @@ namespace PanDulce.Runtime
             if (effects != null)
                 for (int i = 0; i < clearedBuffer.Count; i++)
                     effects.MergeBurst(clearedBuffer[i].pos, clearedBuffer[i].tier,
-                                       TierTable.BaseRadius[clearedBuffer[i].tier], tuning.ParticleScale);
+                                       TierTable.EffectiveRadius(clearedBuffer[i].tier, tuning),
+                                       tuning.ParticleScale);
             Sim.AddFloat(SimField.CX, 200f, "Day-old clearance!");
             if (sfx != null) sfx.Play("serve");
             return true;
@@ -279,7 +286,7 @@ namespace PanDulce.Runtime
         {
             flyingTier = b.tier;
             Vector2 stage = StageCoords.SimToStage(new Vector2(b.x, b.y));
-            Sim.AddFloat(b.x, b.y - TierTable.Er(b, tuning.SizeScale) - 8f,
+            Sim.AddFloat(b.x, b.y - TierTable.Er(b, tuning) - 8f,
                          $"+${CoinPurse.ServePay(tuning, b.tier)}");
             if (effects != null) effects.ServeBurst(new Vector2(b.x, b.y), b.tier, tuning.ParticleScale);
             Sim.RemoveForServe(b);
@@ -321,8 +328,6 @@ namespace PanDulce.Runtime
             CompleteServe();
         }
 
-        public void CycleClothColor()
-            => tuning.Data.clothColorIndex = (tuning.Data.clothColorIndex + 1) % Palette.ClothSwatches.Length;
 
         // ---------------------------------------------------------------- run lifecycle
 
@@ -363,7 +368,9 @@ namespace PanDulce.Runtime
         {
             Boost.AddMerge(tuning.ChargePerMerge);
             Score.AddMerge(tier, comboN);
-            if (effects != null) effects.MergeBurst(pos, tier, TierTable.BaseRadius[tier], tuning.ParticleScale);
+            // Burst radius follows the dessert's real size, so a 200% purin bursts 200% wide.
+            if (effects != null)
+                effects.MergeBurst(pos, tier, TierTable.EffectiveRadius(tier, tuning), tuning.ParticleScale);
             if (sfx != null) sfx.Play("merge", tier);
         }
 

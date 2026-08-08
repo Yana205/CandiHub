@@ -40,7 +40,7 @@ namespace PanDulce.Core
                 if (b.spawnT < 1f) continue;                        // still popping in
                 if (now - b.bornAt < SettledAge) continue;          // too young to blame
                 if (Mathf.Abs(b.vy) > SettledSpeed) continue;       // still in motion
-                if (b.y - TierTable.Er(b, cfg.SizeScale) < line) { over = true; break; }
+                if (b.y - TierTable.Er(b, cfg) < line) { over = true; break; }
             }
 
             if (over)

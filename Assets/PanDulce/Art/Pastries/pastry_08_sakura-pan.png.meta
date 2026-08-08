@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 61afdb3251cdc4a9d8556d6b36ea31db
+guid: 2e32dc4a1d06045c5afbdb540017cfe8
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3062660738356506907
-    second: pastry_01_muffin_0
-  - first:
-      213: 1382150310064149036
-    second: pastry_01_muffin_1
+      213: 4745152914426651595
+    second: pastry_08_sakura-pan_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -142,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pastry_01_muffin_0
+      name: pastry_08_sakura-pan_0
       rect:
         serializedVersion: 2
-        x: 86
-        y: 309
-        width: 340
-        height: 145
+        x: 55
+        y: 100
+        width: 402
+        height: 312
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -157,30 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5ee89bef84e3f75d0800000000000000
-      internalID: -3062660738356506907
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: pastry_01_muffin_1
-      rect:
-        serializedVersion: 2
-        x: 102
-        y: 62
-        width: 308
-        height: 214
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c22d19152626e2310800000000000000
-      internalID: 1382150310064149036
+      spriteID: bc36f4d4f6b2ad140800000000000000
+      internalID: 4745152914426651595
       vertices: []
       indices: 
       edges: []
@@ -199,8 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pastry_01_muffin_0: -3062660738356506907
-      pastry_01_muffin_1: 1382150310064149036
+      pastry_08_sakura-pan_0: 4745152914426651595
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

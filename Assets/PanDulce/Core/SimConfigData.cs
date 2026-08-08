@@ -18,6 +18,10 @@ namespace PanDulce.Core
         public float mergeGrowTime = 0.85f;
         public float comboDelay = 0.5f;
         public int customerEverySec = 18;
+        // Both start knobs default to the mock's behaviour (no delay, tiers 0–3 known) so
+        // bare configs and tests are unaffected; the shipped values live in Tuning.asset.
+        public float startDelaySec = 0f;
+        public int startDiscovered = 4;
         public float entranceTime = 1.3f;
         public bool endOfDay = false;
         public bool boostsOn = true;
@@ -47,6 +51,12 @@ namespace PanDulce.Core
         public int startingBodies = 9;
         public float shakeDuration = 0.6f;
 
+        // Rhythm & difficulty (2026-08-08) — all default to the classic instant-merge feel,
+        // so a fresh config still reproduces the mock exactly.
+        public float mergeOverlapPct = 0f;
+        public float mergeTouchSec = 0f;
+        public float kinPull = 0f;
+
         // Economy — coins from serves buy boosts (spec 2026-08-04). A tier-2..5 order
         // pays 11..20, so the 30-coin clearance costs about two serves.
         public int coinBase = 5;
@@ -65,6 +75,13 @@ namespace PanDulce.Core
         public float timeScale = 1f;
         public bool paused = false;
 
+        /// <summary>
+        /// Per-tier size fractions. Null (the default) means every tier is at 100%, which keeps
+        /// a bare SimConfigData reproducing the mock — the real values come from Pastries.asset
+        /// via TuningConfig, so they can travel with the sprites on a chain reorder.
+        /// </summary>
+        public float[] tierSize = null;
+
         public float Gravity => gravity;
         public float Bounciness => bounciness;
         public float SizeScale => sizeScale;
@@ -72,6 +89,8 @@ namespace PanDulce.Core
         public float MergeGrowTime => mergeGrowTime;
         public float ComboDelay => comboDelay;
         public int CustomerEverySec => customerEverySec;
+        public float StartDelaySec => startDelaySec;
+        public int StartDiscovered => startDiscovered;
         public float EntranceTime => entranceTime;
         public bool EndOfDay => endOfDay;
         public bool BoostsOn => boostsOn;
@@ -95,6 +114,10 @@ namespace PanDulce.Core
         public int StartingBodies => startingBodies;
         public float ShakeDuration => shakeDuration;
 
+        public float MergeOverlapPct => mergeOverlapPct;
+        public float MergeTouchSec => mergeTouchSec;
+        public float KinPull => kinPull;
+
         public int CoinBase => coinBase;
         public int CoinPerTier => coinPerTier;
         public int ClearanceCost => clearanceCost;
@@ -106,5 +129,9 @@ namespace PanDulce.Core
 
         public float TimeScale => timeScale;
         public bool Paused => paused;
+
+        public float TierSize(int tier)
+            => (tierSize != null && tier >= 0 && tier < tierSize.Length && tierSize[tier] > 0f)
+               ? tierSize[tier] : 1f;
     }
 }

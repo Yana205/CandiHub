@@ -79,8 +79,11 @@ namespace PanDulce.Runtime
                                                          -b.y * StageCoords.PX, 0f);
                 sr.transform.localEulerAngles = new Vector3(0f, 0f, StageCoords.RotationDegrees(b.rot));
 
-                // Sprites are authored at radius 200, so scale is simply Er / 200.
-                float er = TierTable.Er(b, sizeScale);
+                // Sprites are authored at radius 200, so scale is simply Er / 200. The
+                // per-dessert size is already inside er — multiplying it in again here is what
+                // used to let the drawn size drift away from the circle the sim collides with.
+                float er = TierTable.Er(b, sizeScale,
+                                        database != null ? database.TierSize(b.tier) : 1f);
                 float s = er / TierTable.CanonicalSpriteRadius;
                 float highlight = (b == hovered) ? 1.14f : 1f;
                 sr.transform.localScale = new Vector3((1f + b.squish * 0.6f) * s * highlight,
@@ -94,7 +97,7 @@ namespace PanDulce.Runtime
                     if (!ring.gameObject.activeSelf) ring.gameObject.SetActive(true);
                     ring.transform.localPosition = sr.transform.localPosition;
                     float pulse = 1.18f + 0.08f * Mathf.Sin(Time.time * (2f * Mathf.PI / 0.9f));
-                    float rs = er * pulse / RingBakedRadius;
+                    float rs = er * pulse / RingBakedRadius;   // hugs the dessert, whatever size it is
                     ring.transform.localScale = new Vector3(rs, rs, 1f);
                 }
                 else if (ring.gameObject.activeSelf) ring.gameObject.SetActive(false);
