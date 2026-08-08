@@ -35,6 +35,8 @@ namespace PanDulce.Runtime
         public float ComboDelay => data.ComboDelay;
         public int CustomerEverySec => data.CustomerEverySec;
         public float StartDelaySec => data.StartDelaySec;
+        public float StartCalmSec => data.StartCalmSec;
+        public float StartCalmScale => data.StartCalmScale;
         public int StartDiscovered => data.StartDiscovered;
         public float EntranceTime => data.EntranceTime;
         public bool EndOfDay => data.EndOfDay;
@@ -47,6 +49,8 @@ namespace PanDulce.Runtime
         public int Substeps => data.Substeps;
         public float FloorSag => data.FloorSag;
         public float FloorY => data.FloorY;
+        public float WallLeft => data.WallLeft;
+        public float WallRight => data.WallRight;
         public float CenterPull => data.CenterPull;
         public float GroundFriction => data.GroundFriction;
         public float ComboWindow => data.ComboWindow;

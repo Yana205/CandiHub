@@ -157,29 +157,62 @@ namespace PanDulce.Editor
 
         // ------------------------------------------------------------- dessert bake
 
+        /// <summary>Re-bake only the desserts — for sizing/normalization changes. Files are
+        /// overwritten in place so sprite GUIDs (and every Pastries.asset slot, Original and
+        /// skin alike) survive without an EditorAssign pass.</summary>
+        [MenuItem("Pan Dulce/Rebake Desserts")]
+        public static void RebakeDesserts()
+        {
+            if (EditorApplication.isCompiling)
+            {
+                Debug.LogWarning("[PanDulce] compiling — run Rebake Desserts again when idle.");
+                return;
+            }
+            ProcessDesserts();
+            AssetDatabase.Refresh();
+            SpriteImportSetup.Apply(SpriteImportSetup.PastryDir);
+            Debug.Log("[PanDulce] desserts re-baked.");
+        }
+
         static void ProcessDesserts()
         {
-            // The whole chain is re-baked from source, so any pastry file not in the table
-            // (old placeholders, desserts that moved tier) is stale — clear them all first.
+            // Only files that fell OUT of the table (a dessert renamed or cut) are deleted;
+            // everything in the table is overwritten in place, which keeps its GUID and so
+            // every sprite reference in Pastries.asset — Original slots and skin slots alike.
             foreach (string path in Directory.GetFiles(SpriteImportSetup.PastryDir, "pastry_*.png"))
-                AssetDatabase.DeleteAsset(path.Replace('\\', '/'));
+            {
+                string name = Path.GetFileName(path);
+                if (System.Array.FindIndex(Desserts, d => d.dst == name) < 0)
+                    AssetDatabase.DeleteAsset(path.Replace('\\', '/'));
+            }
 
             foreach (var (src, dst) in Desserts)
                 BakeDessert(Path.Combine(DessertDir, src),
                             $"{SpriteImportSetup.PastryDir}/{dst}");
         }
 
-        /// <summary>Fits the opaque content into a 400 px box centered on a 512² canvas.</summary>
+        /// <summary>
+        /// Every dessert should READ as the same size at the same tier radius, but the
+        /// drawings fill their boxes very differently — a chunky roll cake swirl versus an
+        /// airy melon pan. So the bake normalizes by perceived mass, not bounding box: the
+        /// content is scaled until the radius of a circle with its opaque-pixel area hits
+        /// TargetEffR, centered on the 512² canvas.
+        /// </summary>
+        const float TargetEffR = 181f;   // the mochi trio's historical size — the eye's anchor
+        const float MaxContent = 460f;   // safety cap so no bake can spill the canvas
+
         static void BakeDessert(string srcPath, string dstPath)
         {
             var src = LoadTex(srcPath);
 
             int minX = src.width, minY = src.height, maxX = -1, maxY = -1;
+            long area = 0;
             var pixels = src.GetPixels32();
             for (int y = 0; y < src.height; y++)
                 for (int x = 0; x < src.width; x++)
                     if (pixels[y * src.width + x].a > 8)
                     {
+                        area++;
                         if (x < minX) minX = x;
                         if (x > maxX) maxX = x;
                         if (y < minY) minY = y;
@@ -188,7 +221,8 @@ namespace PanDulce.Editor
             if (maxX < 0) { Object.DestroyImmediate(src); return; }
 
             float w = maxX - minX + 1, h = maxY - minY + 1;
-            float scale = 400f / Mathf.Max(w, h);
+            float effR = Mathf.Sqrt(area / Mathf.PI);
+            float scale = Mathf.Min(TargetEffR / effR, MaxContent / Mathf.Max(w, h));
             int tw = Mathf.RoundToInt(w * scale), th = Mathf.RoundToInt(h * scale);
             int ox = (512 - tw) / 2, oy = (512 - th) / 2;
 

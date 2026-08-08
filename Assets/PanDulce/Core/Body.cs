@@ -9,6 +9,12 @@ namespace PanDulce.Core
         public float rot, vrot;
         public int tier;
 
+        /// <summary>Color track: 0 = Original, 1.. = skin tracks. Purely which art the
+        /// dessert wears — same radius, same physics — but merging matches on it: only
+        /// same-color desserts of a tier merge, and the child keeps the color (normalized
+        /// to 0 where the next tier has no variant art, so colors converge there).</summary>
+        public int skin;
+
         /// <summary>0→1 grow-in progress. Drops start at 1; merge products start at 0.</summary>
         public float spawnT;
 
@@ -53,6 +59,7 @@ namespace PanDulce.Core
         {
             x = y = vx = vy = rot = vrot = 0f;
             tier = 0;
+            skin = 0;
             spawnT = 1f;
             squish = 0f;
             bornAt = 0f;

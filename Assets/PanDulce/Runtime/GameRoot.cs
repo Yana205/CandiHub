@@ -70,6 +70,17 @@ namespace PanDulce.Runtime
         int pendingBubbleTier = -1;     // bubble waits for the walk-in to finish
         float pendingBubbleAt;
         bool heldShown;                 // last frame's aim-guide visibility, for the spawn cue
+        float runClock;                 // real seconds since run start — feeds the opening calm
+
+        // Hold-to-serve (Yana, 2026-08-08): a press on the wanted dessert swells it for
+        // HoldServeSec, then it flies. Release early = cancel; and any press that BEGAN on
+        // the dessert never falls through to a drop, so a mistimed tap can neither serve
+        // nor dump a pastry onto the pile.
+        const float HoldServeSec = 0.3f;
+        Body holdTarget;
+        float holdT;
+        bool pressOnDessert;
+        bool wasPointerDown;
 
         // ---------------------------------------------------------------- lifecycle
 
@@ -85,6 +96,10 @@ namespace PanDulce.Runtime
             Shop = new ShopDirector();
             // Orders only ever ask for desserts the pile can produce right now.
             Shop.Orderable = t => Sim.IsDiscovered(t);
+            // Which color tracks exist, and which tiers each has art for, is the painted
+            // sprites' call — the sim just asks. Reaching the donut opens the color rolls.
+            Sim.SkinTrackCount = database != null ? database.SkinCount : 1;
+            Sim.SkinHasArt = (tier, track) => database != null && database.HasVariant(tier, track);
             Boost = new BoostMeter();
             Day = new DayCycle();
             Score = new ScoreKeeper();
@@ -128,8 +143,14 @@ namespace PanDulce.Runtime
                              ? displayCase.SeatTiers : null);
             if (sfx != null) sfx.Muted = !tuning.SoundOn;
 
-            float dt = Mathf.Min(0.032f, Time.deltaTime) * Mathf.Max(0.01f, tuning.TimeScale);
+            // The opening calm: the run's first seconds play slowed and ease up to full
+            // tempo. It scales the same dt everything ticks on, so the pile, merges and
+            // the customer clock all breathe together — input stays real-time.
+            float rawDt = Mathf.Min(0.032f, Time.deltaTime);
+            float dt = rawDt * Mathf.Max(0.01f, tuning.TimeScale)
+                     * StartCalm.Scale(runClock, tuning.StartCalmSec, tuning.StartCalmScale);
             bool frozen = tuning.Paused || GameOver;
+            if (!frozen) runClock += rawDt;
 
             Day.Tick(dt, tuning.EndOfDay);
 
@@ -147,14 +168,50 @@ namespace PanDulce.Runtime
             }
 
             UpdateHover();
+            UpdateServeHold(rawDt);
             SyncViews();
             HandleServeTimeout(dt);
         }
 
+        /// <summary>
+        /// The serve press: began on the wanted dessert, held on it for HoldServeSec →
+        /// serve. Runs on REAL time — the opening calm slows the pile, not the player's
+        /// hands. hovered is this frame's servable hit, so "slid off" and "it merged
+        /// away mid-press" are both just hovered != holdTarget.
+        /// </summary>
+        void UpdateServeHold(float rawDt)
+        {
+            bool down = pointer != null && pointer.IsDown;
+            if (down && !wasPointerDown)
+            {
+                holdTarget = hovered;
+                holdT = 0f;
+                pressOnDessert = holdTarget != null;
+            }
+            wasPointerDown = down;
+
+            if (holdTarget == null) return;
+            if (!down || GameOver || hovered != holdTarget) { holdTarget = null; return; }
+
+            holdT += rawDt;
+            if (holdT < HoldServeSec) return;
+            Body target = holdTarget;
+            holdTarget = null;
+            Serve(target);
+        }
+
+        /// <summary>
+        /// The bell announces the visit, but the ORDER stays secret until the bear reaches
+        /// the counter: rings, hover and tap-to-serve all reveal with the bubble, not the
+        /// chime. pendingBubbleTier doubles as the walk-in tracker, so everything unlocks
+        /// on the exact frame the bubble pops.
+        /// </summary>
+        bool OrderRevealed => Shop.OrderActive && pendingBubbleTier < 0;
+
         void UpdateHover()
         {
             hovered = null;
-            if (pointer == null || !Shop.OrderActive || GameOver) return;
+            if (pointer == null || !OrderRevealed || GameOver) return;
             float tol = Application.isMobilePlatform ? 16f : 6f;
             hovered = Sim.ServableAt(pointer.SimPosition.x, pointer.SimPosition.y, Shop.OrderTier, tol);
         }
@@ -164,19 +221,22 @@ namespace PanDulce.Runtime
             if (pendingBubbleTier >= 0 && Time.time >= pendingBubbleAt)
             {
                 if (bubble != null) bubble.Show(pendingBubbleTier, Time.time);
+                if (sfx != null) sfx.Play("pop");   // the reveal gets its own beat
                 pendingBubbleTier = -1;
             }
 
             if (clothShakeRoot != null) clothShakeRoot.Sync(Sim.ShakeOffset());
 
-            // Order tier only while servable — rings drop the moment the serve launches.
+            // Rings only once the bear has arrived, and they drop when the serve launches.
             if (bodies != null) bodies.Sync(Sim, tuning.SizeScale,
-                                            Shop.OrderActive ? Shop.OrderTier : -1, hovered);
+                                            OrderRevealed ? Shop.OrderTier : -1, hovered,
+                                            holdTarget, holdT / HoldServeSec);
             if (floats != null) floats.Sync(Sim);
 
             bool canDrop = Day.CanDrop && Sim.CanDropNow && !GameOver;
             if (aim != null) aim.Sync(canDrop, pointer != null ? pointer.AimX : SimField.CX,
-                                      Sim.CurTier, tuning.SizeScale);
+                                      Sim.CurTier, Sim.CurSkin, tuning.SizeScale,
+                                      tuning.WallLeft, tuning.WallRight);
 
             // "Here it comes": the held pastry is HIDDEN for the whole drop cooldown, so the
             // moment it visually appears above the cloth is this rising edge — not the Drop()
@@ -198,9 +258,11 @@ namespace PanDulce.Runtime
                 boostBar.SyncClearance(Purse.Coins, tuning.ClearanceCost,
                                        Sim.HasAnyUpToTier(ClearanceMaxTier), Sim.Now);
             }
-            if (sign != null) sign.Sync(Shop.State, Shop.SecondsShown);
+            // arriving == the walk-in is still pending; NOT !OrderRevealed, which also
+            // covers the serve flight — the sign must keep reading "now serving" then.
+            if (sign != null) sign.Sync(Shop.State, Shop.SecondsShown, pendingBubbleTier >= 0);
             if (displayCase != null) displayCase.Sync(Sim);
-            if (nextPlaque != null) nextPlaque.Sync(Sim.NextTier);
+            if (nextPlaque != null) nextPlaque.Sync(Sim.NextTier, Sim.NextSkin);
         }
 
         Color CurrentClothColor
@@ -229,12 +291,19 @@ namespace PanDulce.Runtime
                 return;
             }
 
-            // A hit on a matching pastry SERVES instead of dropping (§7.6).
-            if (Shop.OrderActive && !serveFlight.Flying)
+            // Serving is HOLD-based (UpdateServeHold) — a release never serves. Any press
+            // that began on the wanted dessert is fully consumed here, and so is a release
+            // over it, so neither a too-short hold nor a stray tap dumps a pastry onto the
+            // pile the player was aiming at.
+            if (pressOnDessert)
+            {
+                pressOnDessert = false;
+                return;
+            }
+            if (OrderRevealed)
             {
                 float tol = Application.isMobilePlatform ? 16f : 6f;
-                Body target = Sim.ServableAt(simPos.x, simPos.y, Shop.OrderTier, tol);
-                if (target != null) { Serve(target); return; }
+                if (Sim.ServableAt(simPos.x, simPos.y, Shop.OrderTier, tol) != null) return;
             }
 
             if (Day.CanDrop && Sim.Drop(pointer.AimX, true) && sfx != null) sfx.Play("drop");
@@ -285,6 +354,7 @@ namespace PanDulce.Runtime
         void Serve(Body b)
         {
             flyingTier = b.tier;
+            int flyingSkin = b.skin;
             Vector2 stage = StageCoords.SimToStage(new Vector2(b.x, b.y));
             Sim.AddFloat(b.x, b.y - TierTable.Er(b, tuning) - 8f,
                          $"+${CoinPurse.ServePay(tuning, b.tier)}");
@@ -297,7 +367,7 @@ namespace PanDulce.Runtime
 
             if (serveFlight != null)
             {
-                serveFlight.Launch(flyingTier, stage, tuning.FlySec, CompleteServe);
+                serveFlight.Launch(flyingTier, flyingSkin, stage, tuning.FlySec, CompleteServe);
                 if (effects != null) effects.FollowFlyer(serveFlight.FlyerTransform, tuning.ParticleScale);
             }
             else
@@ -348,6 +418,9 @@ namespace PanDulce.Runtime
             serveTimeout = -1f;
             pendingBubbleTier = -1;
             heldShown = false;          // the first pastry of the new run gets its cue
+            runClock = 0f;              // the new run opens calm again
+            holdTarget = null;
+            pressOnDessert = false;
             Day.Reset();
             Sim.ResetRun();
             Shop.Reset(tuning);
@@ -400,7 +473,8 @@ namespace PanDulce.Runtime
             if (state != ShopState.Closed) return;
             pendingBubbleTier = -1;
             if (bubble != null) bubble.Hide();
-            if (customer != null) customer.Leave();
+            // Waddle out, don't vanish — Restart still hard-Leaves after this fires.
+            if (customer != null) customer.Depart(tuning.EntranceTime);
         }
 
         // ---------------------------------------------------------------- editor hooks

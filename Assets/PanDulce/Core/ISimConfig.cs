@@ -17,6 +17,12 @@ namespace PanDulce.Core
         int CustomerEverySec { get; }
         /// <summary>Extra calm seconds added before the FIRST customer of a run only.</summary>
         float StartDelaySec { get; }
+        /// <summary>How long the opening calm lasts: the run's first seconds play slowed,
+        /// easing back to full tempo. 0 = off.</summary>
+        float StartCalmSec { get; }
+        /// <summary>Tempo at the very first moment of the calm, as a fraction of full
+        /// speed (0.55 = 55%). Eases to 1 over StartCalmSec.</summary>
+        float StartCalmScale { get; }
         /// <summary>How many tiers begin discovered — in colour, spawnable, orderable.</summary>
         int StartDiscovered { get; }
         float EntranceTime { get; }
@@ -30,6 +36,11 @@ namespace PanDulce.Core
         int Substeps { get; }
         float FloorSag { get; }
         float FloorY { get; }
+        /// <summary>Left play wall in sim px — where desserts stop. Tunable so the walls can
+        /// sit on the drawn candy box's straight edges (v2 layout), like FloorY.</summary>
+        float WallLeft { get; }
+        /// <summary>Right play wall in sim px — see <see cref="WallLeft"/>.</summary>
+        float WallRight { get; }
         float CenterPull { get; }
         float GroundFriction { get; }
         float ComboWindow { get; }

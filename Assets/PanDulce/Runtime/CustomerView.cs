@@ -31,12 +31,13 @@ namespace PanDulce.Runtime
 
         Transform bearAnchor;
         SpriteRenderer bear;
-        float entranceStart = -1f, happyStart = -1f, duration = 0.7f;
+        float entranceStart = -1f, happyStart = -1f, departStart = -1f, duration = 0.7f;
+        float idleStart = -1f;          // idle breathing phase-zeroes when a walk/bounce ends
         bool present;
 
         protected override void Build()
         {
-            entranceStart = happyStart = -1f;
+            entranceStart = happyStart = departStart = idleStart = -1f;
             present = false;
             var t = Content;
 
@@ -63,7 +64,7 @@ namespace PanDulce.Runtime
             bear.gameObject.SetActive(true);
             duration = Mathf.Max(0.05f, entranceTime);
             entranceStart = Time.time;
-            happyStart = -1f;
+            happyStart = departStart = idleStart = -1f;
             // Our Update may not run again this frame — never flash a centred bear.
             bearAnchor.localPosition = StageCoords.Stage(StartX, anchor.y);
         }
@@ -71,15 +72,23 @@ namespace PanDulce.Runtime
         public void Celebrate()
         {
             // A serve can land mid-walk; finish the entrance so the bounce plays at the counter.
-            entranceStart = -1f;
+            entranceStart = departStart = idleStart = -1f;
             happyStart = Time.time;
+        }
+
+        /// <summary>The visit is over: waddle back out the way the bear came in.</summary>
+        public void Depart(float walkTime)
+        {
+            if (!IsBuilt || !present) { Leave(); return; }
+            duration = Mathf.Max(0.05f, walkTime);
+            departStart = Time.time;
+            entranceStart = happyStart = idleStart = -1f;
         }
 
         public void Leave()
         {
             present = false;
-            entranceStart = -1f;
-            happyStart = -1f;
+            entranceStart = happyStart = departStart = idleStart = -1f;
             if (bear != null) bear.gameObject.SetActive(false);
         }
 
@@ -103,21 +112,48 @@ namespace PanDulce.Runtime
                 happyStart = -1f;
             }
 
-            if (entranceStart < 0f) return;
-            float t = Mathf.Clamp01((Time.time - entranceStart) / duration);
-            if (t >= 1f)
+            if (departStart >= 0f)
             {
-                entranceStart = -1f;
-                bearAnchor.localPosition = Base();
-                bearAnchor.localRotation = Quaternion.identity;
-                bearAnchor.localScale = Vector3.one;
+                float k = Mathf.Clamp01((Time.time - departStart) / duration);
+                if (k >= 1f) { Leave(); return; }
+                Waddle(k, anchor.x, StartX);
                 return;
             }
 
-            // Waddle: glide eases in/out; an integer step count means the hop and tilt both
-            // land on zero exactly at t=1, and the envelope keeps the first/last steps small.
-            float x = Mathf.SmoothStep(StartX, anchor.x, t);
-            int steps = Mathf.Max(3, Mathf.RoundToInt((anchor.x - StartX) / StepPx));
+            if (entranceStart >= 0f)
+            {
+                float t = Mathf.Clamp01((Time.time - entranceStart) / duration);
+                if (t >= 1f)
+                {
+                    entranceStart = -1f;
+                    bearAnchor.localPosition = Base();
+                    bearAnchor.localRotation = Quaternion.identity;
+                    bearAnchor.localScale = Vector3.one;
+                    return;
+                }
+                Waddle(t, StartX, anchor.x);
+                return;
+            }
+
+            // Waiting at the counter: a slow squash-breathe so the bear never sits frozen.
+            // Phase starts at zero when the idle begins, so there is no pop out of a walk
+            // or bounce; the amplitude stays under the happy bounce's so it reads as rest.
+            if (idleStart < 0f) idleStart = Time.time;
+            float br = Mathf.Sin((Time.time - idleStart) * (2f * Mathf.PI / 3.4f));
+            bearAnchor.localPosition = Base();
+            bearAnchor.localRotation = Quaternion.identity;
+            bearAnchor.localScale = new Vector3(1f + 0.012f * br, 1f - 0.012f * br, 1f);
+        }
+
+        /// <summary>
+        /// Waddle: glide eases in/out; an integer step count means the hop and tilt both
+        /// land on zero exactly at t=1, and the envelope keeps the first/last steps small.
+        /// Shared by the entrance and the walk-out (same walk, opposite direction).
+        /// </summary>
+        void Waddle(float t, float fromX, float toX)
+        {
+            float x = Mathf.SmoothStep(fromX, toX, t);
+            int steps = Mathf.Max(3, Mathf.RoundToInt(Mathf.Abs(toX - fromX) / StepPx));
             float swing = Mathf.Sin(t * steps * Mathf.PI);       // signed: flips each step
             float env = Mathf.Sin(t * Mathf.PI);
             bearAnchor.localPosition = StageCoords.Stage(x, anchor.y)

@@ -31,7 +31,7 @@ namespace PanDulce.Runtime
             nameLabel = ViewFactory.Label(t, "Name", "", 192f, 188f, 180f, 15f,
                                           Palette.Hex("#6b4a2e"), "Overlay", 12,
                                           TextAlignmentOptions.Left);
-            ViewFactory.Label(t, "Hint", "tap it in the cloth to hand it over",
+            ViewFactory.Label(t, "Hint", "press & hold one to hand it over",
                               192f, 208f, 180f, 9f, Palette.Hex("#a58358"), "Overlay", 12,
                               TextAlignmentOptions.Left, FontStyles.Normal);
             SetVisible(false);
@@ -42,7 +42,11 @@ namespace PanDulce.Runtime
             if (!IsBuilt || tier < 0) { Hide(); return; }
             SetVisible(true);
             shownAt = now;
-            if (tier == shownTier) return;
+            if (tier != shownTier) Apply(tier);
+        }
+
+        void Apply(int tier)
+        {
             shownTier = tier;
             if (database != null)
             {

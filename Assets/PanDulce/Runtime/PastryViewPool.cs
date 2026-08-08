@@ -62,8 +62,12 @@ namespace PanDulce.Runtime
             return sr;
         }
 
-        /// <summary>One frame of mirroring: position, rotation, squish scale, tier sprite.</summary>
-        public void Sync(MergeSim sim, float sizeScale, int orderTier, Body hovered)
+        /// <summary>One frame of mirroring: position, rotation, squish scale, tier sprite.
+        /// <paramref name="holdTarget"/>/<paramref name="holdK"/> is the serve press in
+        /// progress — that dessert swells with the hold so "this is about to fly" is
+        /// unmistakable before it commits.</summary>
+        public void Sync(MergeSim sim, float sizeScale, int orderTier, Body hovered,
+                         Body holdTarget = null, float holdK = 0f)
         {
             var bodies = sim.Bodies;
             for (int i = 0; i < bodies.Count; i++)
@@ -73,7 +77,7 @@ namespace PanDulce.Runtime
                 SpriteRenderer sr = views[i];
 
                 if (!sr.gameObject.activeSelf) sr.gameObject.SetActive(true);
-                sr.sprite = database != null ? database.Pastry(b.tier) : null;
+                sr.sprite = database != null ? database.Pastry(b.tier, b.skin) : null;
 
                 sr.transform.localPosition = new Vector3(b.x * StageCoords.PX,
                                                          -b.y * StageCoords.PX, 0f);
@@ -85,7 +89,10 @@ namespace PanDulce.Runtime
                 float er = TierTable.Er(b, sizeScale,
                                         database != null ? database.TierSize(b.tier) : 1f);
                 float s = er / TierTable.CanonicalSpriteRadius;
-                float highlight = (b == hovered) ? 1.14f : 1f;
+                // Hover reads "you can hand this over"; the hold swell reads "it is being
+                // handed over" — ease-out so most of the growth lands early in the press.
+                float highlight = b == holdTarget ? 1.2f + 0.25f * (1f - (1f - holdK) * (1f - holdK))
+                                : b == hovered    ? 1.2f : 1f;
                 sr.transform.localScale = new Vector3((1f + b.squish * 0.6f) * s * highlight,
                                                        (1f - b.squish) * s * highlight, 1f);
                 sr.color = Color.white;

@@ -313,8 +313,10 @@ namespace PanDulce.Editor
             // above that for experiments.
             pTarget.floatValue = EditorGUILayout.Slider("Target growth per merge %",
                                                         pTarget.floatValue * 100f, 5f, 100f) * 0.01f;
+            // Wide enough for a deliberately uneven chain: Yana's authored sizes run
+            // +12%..+58% per merge (2026-08-08, intentional), which needs ±25 around 35.
             pTol.floatValue = EditorGUILayout.Slider("Tolerance ±%",
-                                                     pTol.floatValue * 100f, 0f, 20f) * 0.01f;
+                                                     pTol.floatValue * 100f, 0f, 30f) * 0.01f;
             so.ApplyModifiedProperties();
 
             if (GUILayout.Button("Even out growth → rewrite Play sizes"))

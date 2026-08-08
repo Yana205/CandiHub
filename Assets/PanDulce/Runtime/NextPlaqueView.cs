@@ -10,7 +10,7 @@ namespace PanDulce.Runtime
         const float IconRadius = 13f;
 
         SpriteRenderer icon;
-        int shownTier = -1;
+        int shownTier = -1, shownSkin = -1;
 
         protected override void Build()
         {
@@ -48,13 +48,14 @@ namespace PanDulce.Runtime
             }
         }
 
-        public void Sync(int nextTier)
+        public void Sync(int nextTier, int nextSkin)
         {
-            if (!IsBuilt || nextTier == shownTier) return;
+            if (!IsBuilt || (nextTier == shownTier && nextSkin == shownSkin)) return;
             shownTier = nextTier;
+            shownSkin = nextSkin;
             if (database != null)
             {
-                icon.sprite = database.Pastry(nextTier);
+                icon.sprite = database.Pastry(nextTier, nextSkin);
                 ViewFactory.SetIcon(icon, IconRadius, database.DisplaySize(nextTier));
             }
         }
