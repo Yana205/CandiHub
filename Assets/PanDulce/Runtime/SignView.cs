@@ -10,6 +10,10 @@ namespace PanDulce.Runtime
     /// </summary>
     public sealed class SignView : GeneratedView
     {
+        /// <summary>Drawn sign footprint in stage px, at the art's own 822 × 606 aspect.</summary>
+        const float SignW = 140f;
+        const float SignH = 103f;
+
         TextMeshPro topLine, bigLine;
         string shownTop, shownBig;
 
@@ -18,22 +22,49 @@ namespace PanDulce.Runtime
             shownTop = shownBig = null;
             var t = Content;
 
-            var ropeL = ViewFactory.Rect(t, "RopeLeft", Shapes.White, 40f, 54f, 3f, 26f,
-                                         Palette.ChipFill, "Furniture", 10);
-            ropeL.transform.localRotation = Quaternion.Euler(0f, 0f, 16f);
-            var ropeR = ViewFactory.Rect(t, "RopeRight", Shapes.White, 88f, 54f, 3f, 26f,
-                                         Palette.ChipFill, "Furniture", 10);
-            ropeR.transform.localRotation = Quaternion.Euler(0f, 0f, -16f);
+            // The sign hangs still. It used to swing ±1.2°, which the drawing's own rail
+            // swung with — a rail bolted to the wall cannot tilt. Cleared here as well as
+            // removed, so a scene saved mid-swing does not keep the stale tilt.
+            transform.localRotation = Quaternion.identity;
 
-            // drop shadow, border, face — three stacked panels fake border+shadow (§8.4)
-            ViewFactory.Panel(t, "BoardShadow", 8f, 80f, 118f, 76f, 10, Palette.Crust, "Furniture", 10);
-            ViewFactory.Panel(t, "BoardBorder", 8f, 76f, 118f, 76f, 10, Palette.Wood, "Furniture", 11);
-            ViewFactory.Panel(t, "Board", 11f, 79f, 112f, 70f, 8, Palette.Hex("#fffaf0"), "Furniture", 12);
+            // The drawing holds rail, ropes and board in one piece, so it replaces all five
+            // primitives the sign used to be built from. Drawn at its own aspect (822×606) so
+            // the ropes stay round, and a size up from the flat board's 118 × 76: the carved
+            // frame and the rail eat most of the sprite, leaving a cream centre only 65% × 50%
+            // of it, and the countdown has to keep its old presence inside that.
+            Sprite art = skin != null ? skin.Sign : null;
+            if (art != null)
+            {
+                ViewFactory.Rect(t, "Board", art, 8f, 54f, SignW, SignH, Color.white, "Furniture", 10);
+            }
+            else
+            {
+                var ropeL = ViewFactory.Rect(t, "RopeLeft", Shapes.White, 40f, 54f, 3f, 26f,
+                                             Palette.ChipFill, "Furniture", 10);
+                ropeL.transform.localRotation = Quaternion.Euler(0f, 0f, 16f);
+                var ropeR = ViewFactory.Rect(t, "RopeRight", Shapes.White, 88f, 54f, 3f, 26f,
+                                             Palette.ChipFill, "Furniture", 10);
+                ropeR.transform.localRotation = Quaternion.Euler(0f, 0f, -16f);
 
-            topLine = ViewFactory.Label(t, "TopLabel", "next customer in", 8f, 98f, 118f, 10f,
+                // drop shadow, border, face — three stacked panels fake border+shadow (§8.4)
+                ViewFactory.Panel(t, "BoardShadow", 8f, 80f, 118f, 76f, 10, Palette.Crust, "Furniture", 10);
+                ViewFactory.Panel(t, "BoardBorder", 8f, 76f, 118f, 76f, 10, Palette.Wood, "Furniture", 11);
+                ViewFactory.Panel(t, "Board", 11f, 79f, 112f, 70f, 8, Palette.Hex("#fffaf0"), "Furniture", 12);
+            }
+
+            // The writing area is the cream oval, which sits low and inset — the rail and
+            // ropes own the top third — so both lines move onto it. Kept off the oval's
+            // extremes, where it narrows and the longer line would clip the frame.
+            // Authored placement (Lital, 2026-08-08): local y -1.051 and -1.271.
+            float top = art != null ? 105.1f : 98f;
+            float big = art != null ? 127.1f : 130f;
+            float x = art != null ? 8f + SignW * 0.19f : 8f;
+            float w = art != null ? SignW * 0.62f : 118f;
+
+            topLine = ViewFactory.Label(t, "TopLabel", "next customer in", x, top, w, 10f,
                                         Palette.Hex("#a58358"), "Furniture", 13,
                                         TextAlignmentOptions.Center, FontStyles.Normal);
-            bigLine = ViewFactory.Label(t, "BigLabel", "18s", 8f, 130f, 118f, 30f,
+            bigLine = ViewFactory.Label(t, "BigLabel", "18s", x, big, w, art != null ? 26f : 30f,
                                         Palette.Crust, "Furniture", 13);
         }
 
@@ -44,13 +75,6 @@ namespace PanDulce.Runtime
             string big = state == ShopState.Closed ? $"{secondsShown}s" : "♥";
             if (top != shownTop) { shownTop = top; topLine.text = top; }
             if (big != shownBig) { shownBig = big; bigLine.text = big; }
-        }
-
-        void Update()
-        {
-            // swing ±1.2° over 3.6s, pivoting at the ropes
-            float a = Mathf.Sin(Time.time / 3.6f * Mathf.PI * 2f) * 1.2f;
-            transform.localRotation = Quaternion.Euler(0f, 0f, a);
         }
     }
 }

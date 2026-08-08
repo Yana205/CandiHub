@@ -21,12 +21,35 @@ namespace PanDulce.Runtime
         /// <summary>Peak scale-up of the ready pulse (§8.7 specifies 0.035).</summary>
         const float ReadyPulseScale = 0.015f;
 
-        SpriteRenderer button, chargeFill, clearFace;
+        /// <summary>
+        /// Charge badge geometry, in stage px. Only the width moves: the label swaps between
+        /// "0%" and "READY!", which is close to three times wider, so a fixed plate either
+        /// clips the word or leaves the figure swimming. The RIGHT edge is what stays pinned
+        /// — the badge sits on the button's top-right corner, and growing rightward would run
+        /// it under the clearance button that starts at stage x 250.
+        /// </summary>
+        const float BadgeRight = 256f;
+        const float BadgeTop = 824f;
+        const float BadgeH = 21f;
+        const float BadgeMinW = 36f;      // the "0%" plate the bar was authored at
+        const float BadgePadX = 9f;       // cream either side of the text
+        const float BadgeRim = 2f;        // how far BadgeBorder stands proud of Badge
+        const float BadgeBaseline = 14f;  // label centre, down from the plate top
+
+        SpriteRenderer button, chargeFill, clearFace, badge, badgeBorder;
         TextMeshPro label, badgeLabel, clearLabel, priceLabel;
         Transform buttonRoot, clearRoot;
         float shownCharge, denyAt, clearDenyAt;
         bool shownReady, shownCanBuy;
         int shownCost;
+        string shownBadge;
+
+        /// <summary>
+        /// Face tints for the ready/idle states. The drawn button carries its own colour, so
+        /// with art both are white and only the alpha still separates the two states —
+        /// multiplying Amber over the salmon would just muddy it.
+        /// </summary>
+        Color readyTint, idleTint;
 
         protected override void Build()
         {
@@ -36,6 +59,7 @@ namespace PanDulce.Runtime
             shownReady = false;
             shownCanBuy = false;
             shownCost = -1;
+            shownBadge = null;
             var t = Content;
 
             ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.85f),
@@ -45,12 +69,18 @@ namespace PanDulce.Runtime
             ViewFactory.Rect(t, "TopSheen", Shapes.White, 0f, 827f, 430f, 3f,
                              new Color(1f, 225f/255f, 180f/255f, 0.22f), "Overlay", 31);
 
+            Sprite faceArt = skin != null ? skin.Button : null;
+            Sprite plateArt = skin != null ? skin.Plate : null;
+            readyTint = faceArt != null ? Color.white : Palette.Amber;
+            idleTint = faceArt != null ? Color.white : Palette.AmberDeep;
+
             buttonRoot = ViewFactory.Node(t, "ShakeButton").transform;
 
-            ViewFactory.Panel(buttonRoot, "Shadow", 12f, 836f, 226f, 46f, 15,
+            // The shadow reuses the face drawing so its corners match; only the tint differs.
+            ViewFactory.Plate(buttonRoot, "Shadow", faceArt, 12f, 836f, 226f, 46f, 15,
                               Palette.Hex("#6f4a2c"), "Overlay", 31);
-            button = ViewFactory.Panel(buttonRoot, "Face", 12f, 833f, 226f, 46f, 15,
-                                       Palette.Amber, "Overlay", 32);
+            button = ViewFactory.Plate(buttonRoot, "Face", faceArt, 12f, 833f, 226f, 46f, 15,
+                                       readyTint, "Overlay", 32);
 
             // shaker icon: rotated cream square + knot circle + two motion dashes (§8.7)
             var square = ViewFactory.Panel(buttonRoot, "IconSquare", 25f, 845f, 17f, 17f, 4,
@@ -67,7 +97,7 @@ namespace PanDulce.Runtime
 
             // Starts on the hint text; Sync swaps it once the meter is ready.
             label = ViewFactory.Label(buttonRoot, "Label", "Merge desserts to charge!",
-                                      48f, 851f, 184f, 13f, Palette.DarkCrust, "Overlay", 34);
+                                      48f, 851f, 184f, 13f, Palette.Cream, "Overlay", 34);
 
             ViewFactory.Rect(buttonRoot, "ChargeTrack", Shapes.RoundedRect(12, 12, 4),
                              45f, 864f, 160f, 7f,
@@ -75,23 +105,30 @@ namespace PanDulce.Runtime
             chargeFill = ViewFactory.Rect(buttonRoot, "ChargeFill", Shapes.RoundedRect(12, 12, 4),
                                           45f, 864f, 1f, 7f, Palette.Cream, "Overlay", 35);
 
-            // badge overlapping the button's top-right corner
-            ViewFactory.Panel(buttonRoot, "BadgeBorder", 218f, 822f, 40f, 25f, 12,
-                              Palette.Hex("#6f4a2c"), "Overlay", 35);
-            ViewFactory.Panel(buttonRoot, "Badge", 220f, 824f, 36f, 21f, 10,
-                              Palette.ChipFill, "Overlay", 36);
-            badgeLabel = ViewFactory.Label(buttonRoot, "BadgeLabel", "0%", 220f, 838f, 36f, 11f,
-                                           Palette.Cream, "Overlay", 37);
+            // Badge overlapping the button's top-right corner. Built at its narrowest and
+            // then fitted, so the plates start out matching whatever the label says.
+            badgeBorder = ViewFactory.Plate(buttonRoot, "BadgeBorder", plateArt,
+                                            BadgeRight - BadgeMinW - BadgeRim, BadgeTop - BadgeRim,
+                                            BadgeMinW + BadgeRim * 2f, BadgeH + BadgeRim * 2f, 12,
+                                            Palette.Hex("#6f4a2c"), "Overlay", 35);
+            badge = ViewFactory.Plate(buttonRoot, "Badge", plateArt,
+                                      BadgeRight - BadgeMinW, BadgeTop, BadgeMinW, BadgeH, 10,
+                                      BadgeTint(plateArt), "Overlay", 36);
+            badgeLabel = ViewFactory.Label(buttonRoot, "BadgeLabel", "0%",
+                                           BadgeRight - BadgeMinW, BadgeTop + BadgeBaseline,
+                                           BadgeMinW, 11f, BadgeInk(plateArt), "Overlay", 37);
+            FitBadge();
 
             // --- Day-old clearance: coin-priced, pops every tier-0/1 pastry ---
             clearRoot = ViewFactory.Node(t, "ClearanceButton").transform;
 
-            ViewFactory.Panel(clearRoot, "Shadow", 250f, 836f, 168f, 46f, 15,
+            ViewFactory.Plate(clearRoot, "Shadow", faceArt, 250f, 836f, 168f, 46f, 15,
                               Palette.Hex("#6f4a2c"), "Overlay", 31);
-            clearFace = ViewFactory.Panel(clearRoot, "Face", 250f, 833f, 168f, 46f, 15,
-                                          Palette.WithAlpha(Palette.AmberDeep, 0.55f), "Overlay", 32);
+            clearFace = ViewFactory.Plate(clearRoot, "Face", faceArt, 250f, 833f, 168f, 46f, 15,
+                                          Palette.WithAlpha(idleTint, 0.55f), "Overlay", 32);
 
-            // coin icon: gold rim, cream fill, $ stamp
+            // coin icon: gold rim, cream fill, $ stamp. The drawn coin lives on the price
+            // badge below instead — one coin per button is enough.
             ViewFactory.Rect(clearRoot, "CoinRim", Shapes.Circle(32), 262f, 843f, 18f, 18f,
                              Palette.Hex("#c07f1c"), "Overlay", 33);
             ViewFactory.Rect(clearRoot, "CoinFill", Shapes.Circle(32), 264f, 845f, 14f, 14f,
@@ -100,17 +137,57 @@ namespace PanDulce.Runtime
                               Palette.Hex("#c07f1c"), "Overlay", 35);
 
             clearLabel = ViewFactory.Label(clearRoot, "Label", "Clear day-olds",
-                                           284f, 851f, 130f, 12f, Palette.DarkCrust, "Overlay", 34);
+                                           284f, 851f, 130f, 12f, Palette.Cream, "Overlay", 34);
             clearLabel.alpha = 0.55f;
 
-            // price badge overlapping the button's top-right corner
-            ViewFactory.Panel(clearRoot, "PriceBorder", 388f, 822f, 40f, 25f, 12,
-                              Palette.Hex("#6f4a2c"), "Overlay", 35);
-            ViewFactory.Panel(clearRoot, "Price", 390f, 824f, 36f, 21f, 10,
-                              Palette.ChipFill, "Overlay", 36);
-            priceLabel = ViewFactory.Label(clearRoot, "PriceLabel", "$30", 390f, 838f, 36f, 11f,
-                                           Palette.Cream, "Overlay", 37);
+            // Price badge overlapping the button's top-right corner. The coin-counter drawing
+            // is a coin plus a number pill, so it takes the whole badge: the inner Price
+            // plate would cover it, and the figure moves onto the pill the way the top bar's
+            // coin chip does. Sized to the drawing's own 524 × 191 aspect, right edge kept
+            // where the badge already ended.
+            Sprite priceArt = skin != null ? skin.CoinChip : null;
+            if (priceArt != null)
+            {
+                ViewFactory.Rect(clearRoot, "PriceBorder", priceArt, 368f, 822f, 60f, 22f,
+                                 Color.white, "Overlay", 35);
+                priceLabel = ViewFactory.Label(clearRoot, "PriceLabel", "$30", 391f, 833f, 35f, 11f,
+                                               Palette.Crust, "Overlay", 37);
+            }
+            else
+            {
+                ViewFactory.Panel(clearRoot, "PriceBorder", 388f, 822f, 40f, 25f, 12,
+                                  Palette.Hex("#6f4a2c"), "Overlay", 35);
+                ViewFactory.Plate(clearRoot, "Price", plateArt, 390f, 824f, 36f, 21f, 10,
+                                  BadgeTint(plateArt), "Overlay", 36);
+                priceLabel = ViewFactory.Label(clearRoot, "PriceLabel", "$30", 390f, 838f, 36f, 11f,
+                                               BadgeInk(plateArt), "Overlay", 37);
+            }
         }
+
+        /// <summary>
+        /// Sizes the badge plates to whatever the label currently reads, growing leftward
+        /// from the fixed right edge. Call after any change to BadgeLabel.text.
+        /// </summary>
+        void FitBadge()
+        {
+            // GetPreferredValues measures in local units; wrapping is off, so this is the
+            // unwrapped run. A font asset that is not ready yet reports 0, and the minimum
+            // width covers that — the next Sync re-fits with a real measurement.
+            float textW = badgeLabel.GetPreferredValues(badgeLabel.text).x / StageCoords.PX;
+            float w = Mathf.Max(BadgeMinW, textW + BadgePadX * 2f);
+            float x = BadgeRight - w;
+
+            ViewFactory.Place(badgeBorder, x - BadgeRim, BadgeTop - BadgeRim,
+                              w + BadgeRim * 2f, BadgeH + BadgeRim * 2f);
+            ViewFactory.Place(badge, x, BadgeTop, w, BadgeH);
+            ViewFactory.Place(badgeLabel, x, BadgeTop + BadgeBaseline, w);
+        }
+
+        /// <summary>Untinted when the drawing carries its own colour, else the flat chip fill.</summary>
+        static Color BadgeTint(Sprite art) => art != null ? Color.white : Palette.ChipFill;
+
+        /// <summary>The drawn badge is cream, so its figure has to darken to stay legible.</summary>
+        static Color BadgeInk(Sprite art) => art != null ? Palette.Crust : Palette.Cream;
 
         public void Sync(float charge, bool ready, bool boostsOn, float now)
         {
@@ -121,11 +198,17 @@ namespace PanDulce.Runtime
             if (!Mathf.Approximately(charge, shownCharge))
             {
                 shownCharge = charge;
-                float w = Mathf.Max(1f, 160f * charge);
-                chargeFill.size = new Vector2(w * StageCoords.PX, 7f * StageCoords.PX);
-                chargeFill.transform.localPosition =
-                    new Vector3((45f + w * 0.5f) * StageCoords.PX, -(864f + 3.5f) * StageCoords.PX, 0f);
-                badgeLabel.text = ready ? "READY!" : $"{Mathf.RoundToInt(charge * 100f)}%";
+                ViewFactory.Place(chargeFill, 45f, 864f, Mathf.Max(1f, 160f * charge), 7f);
+            }
+
+            // Keyed on the string, not on charge: the badge has to re-fit on every width
+            // change, and "99%" → "READY!" is the widest jump of all.
+            string badgeText = ready ? "READY!" : $"{Mathf.RoundToInt(charge * 100f)}%";
+            if (badgeText != shownBadge)
+            {
+                shownBadge = badgeText;
+                badgeLabel.text = badgeText;
+                FitBadge();
             }
 
             if (ready != shownReady)
@@ -136,7 +219,7 @@ namespace PanDulce.Runtime
 
             // Charging reads at 0.72 opacity; ready breathes over ReadyPulsePeriod (§8.7).
             float alpha = ready ? 1f : 0.72f;
-            button.color = Palette.WithAlpha(ready ? Palette.Amber : Palette.AmberDeep, alpha);
+            button.color = Palette.WithAlpha(ready ? readyTint : idleTint, alpha);
             label.alpha = alpha;
 
             // Deny wiggle: a decaying side-shake after a tap on the uncharged button.
@@ -166,7 +249,7 @@ namespace PanDulce.Runtime
             {
                 shownCanBuy = canBuy;
                 float alpha = canBuy ? 1f : 0.55f;
-                clearFace.color = Palette.WithAlpha(canBuy ? Palette.Amber : Palette.AmberDeep, alpha);
+                clearFace.color = Palette.WithAlpha(canBuy ? readyTint : idleTint, alpha);
                 clearLabel.alpha = alpha;
             }
 

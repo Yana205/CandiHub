@@ -15,16 +15,21 @@ namespace PanDulce.Runtime
         {
             var t = Content;
 
+            Sprite plateArt = skin != null ? skin.Plate : null;
+            Sprite buttonArt = skin != null ? skin.Button : null;
+
             ViewFactory.Rect(t, "Scrim", Shapes.White, -40f, -40f, 510f, 960f,
                              new Color(0f, 0f, 0f, 0.35f), "Overlay", 60);
-            ViewFactory.Panel(t, "Card", 55f, 300f, 320f, 240f, 20, Palette.Hex("#fffaf0"), "Overlay", 61);
+            ViewFactory.Plate(t, "Card", plateArt, 55f, 300f, 320f, 240f, 20,
+                              plateArt != null ? Color.white : Palette.Hex("#fffaf0"), "Overlay", 61);
             ViewFactory.Label(t, "Title", "Sold out!", 55f, 350f, 320f, 34f, Palette.Crust, "Overlay", 62);
             scoreLabel = ViewFactory.Label(t, "Score", "0", 55f, 410f, 320f, 44f,
                                            Palette.Hex("#c9502f"), "Overlay", 62);
             bestLabel = ViewFactory.Label(t, "Best", "best 0", 55f, 452f, 320f, 14f,
                                           Palette.Hex("#a58358"), "Overlay", 62,
                                           TextAlignmentOptions.Center, FontStyles.Normal);
-            ViewFactory.Panel(t, "Button", 125f, 480f, 180f, 46f, 14, Palette.Amber, "Overlay", 62);
+            ViewFactory.Plate(t, "Button", buttonArt, 125f, 480f, 180f, 46f, 14,
+                              buttonArt != null ? Color.white : Palette.Amber, "Overlay", 62);
             ViewFactory.Label(t, "ButtonLabel", "Play again", 125f, 508f, 180f, 17f,
                               Palette.DarkCrust, "Overlay", 63);
             SetVisible(false);

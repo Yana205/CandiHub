@@ -20,10 +20,20 @@ namespace PanDulce.Runtime
     {
         [SerializeField] protected PastryDatabase database;
 
+        [Tooltip("Hand-drawn chrome art. Empty = the generated rounded rects are drawn instead.")]
+        [SerializeField] protected UiSkin skin;
+
         /// <summary>Editor-time wiring. Serialized, unlike anything Build() produces.</summary>
         public void EditorAssign(PastryDatabase db)
         {
             database = db;
+            Rebuild();
+        }
+
+        /// <summary>Editor-time wiring for the views that draw chrome plates.</summary>
+        public void EditorAssignSkin(UiSkin s)
+        {
+            skin = s;
             Rebuild();
         }
 

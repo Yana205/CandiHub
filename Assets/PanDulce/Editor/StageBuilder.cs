@@ -22,6 +22,7 @@ namespace PanDulce.Editor
         const string ConfigDir = "Assets/PanDulce/Config";
         const string TuningPath = ConfigDir + "/Tuning.asset";
         const string PastriesPath = ConfigDir + "/Pastries.asset";
+        const string UiSkinPath = ConfigDir + "/UiSkin.asset";
         const string ScenePath = "Assets/Scenes/Main.unity";
 
         [MenuItem("Pan Dulce/Rebuild Stage %#b")]
@@ -29,6 +30,7 @@ namespace PanDulce.Editor
         {
             var tuning = EnsureTuning();
             var db = EnsurePastryDatabase();
+            var uiSkin = EnsureUiSkin();
 
             // Per-dessert sizes live with the sprites; Tuning reads them from here so the sim
             // sees one radius for both art and collision.
@@ -145,6 +147,7 @@ namespace PanDulce.Editor
             var plaqueGo = Child(play.transform, "NextPlaque");
             var plaque = plaqueGo.AddComponent<NextPlaqueView>();
             plaque.EditorAssign(db);
+            plaque.EditorAssignSkin(uiSkin);
 
             // Scene-view-only gizmo guides for the fall area (walls, floor curve, spawn
             // and top-out lines). Uncheck the object to hide them; they never render in
@@ -159,6 +162,7 @@ namespace PanDulce.Editor
             var topBarGo = Child(ui.transform, "TopBar");
             var topBar = topBarGo.AddComponent<TopBarView>();
             topBar.EditorAssign(db);
+            topBar.EditorAssignSkin(uiSkin);
             topBarGo.AddComponent<SafeAreaInset>();   // defaults to the Top edge
 
             // Authored placement (Yana, 2026-08-04): the bar is hand-positioned beneath the
@@ -168,14 +172,17 @@ namespace PanDulce.Editor
             var boostGo = Child(ui.transform, "BoostBar");
             boostGo.transform.localPosition = StageCoords.Stage(11f, -18f);
             var boostBar = boostGo.AddComponent<BoostBarView>();
+            boostBar.EditorAssignSkin(uiSkin);
 
             // The hanging "next customer in" sign is an info widget like the bars — it
             // lives with the UI rather than in a furniture folder of one.
             var signGo = Child(ui.transform, "HangingSign");
             var sign = signGo.AddComponent<SignView>();
+            sign.EditorAssignSkin(uiSkin);
 
             var cardGo = Child(ui.transform, "GameOverCard");
             var card = cardGo.AddComponent<GameOverCard>();
+            card.EditorAssignSkin(uiSkin);
 
             // ---- wire it up ----
             // Pools deliberately do NOT build their children here — they grow in Awake, so
@@ -412,6 +419,50 @@ namespace PanDulce.Editor
                 Debug.LogWarning($"[PanDulce] expected at least {Core.TierTable.Count} pastry sprites " +
                                  $"(chain), found {pastries.Length}. Run: node Docs/tools/bake-sprites.js");
             return db;
+        }
+
+        /// <summary>
+        /// Binds the hand-drawn chrome from Art/UI by file name, after fixing the import
+        /// settings 9-slicing needs. A missing file leaves its slot empty and the view falls
+        /// back to the generated rounded rect, so a partial art drop never breaks the shell.
+        /// </summary>
+        static UiSkin EnsureUiSkin()
+        {
+            Directory.CreateDirectory(ConfigDir);
+            SpriteImportSetup.ApplyUi();
+
+            var skin = AssetDatabase.LoadAssetAtPath<UiSkin>(UiSkinPath);
+            if (skin == null)
+            {
+                skin = ScriptableObject.CreateInstance<UiSkin>();
+                AssetDatabase.CreateAsset(skin, UiSkinPath);
+            }
+
+            skin.EditorAssign(LoadUiSprite("customers counter"),
+                              LoadUiSprite("coin counter"),
+                              LoadUiSprite("Button"),
+                              LoadUiSprite("Button 2"),
+                              LoadUiSprite("Next customer"),
+                              LoadUiSprite("Next pastry"),
+                              LoadUiSprite("Coin"));
+
+            EditorUtility.SetDirty(skin);
+            AssetDatabase.SaveAssets();
+            return skin;
+        }
+
+        /// <summary>
+        /// The chrome PNGs are sliced in Multiple mode so the borders survive a reimport,
+        /// and LoadAssetAtPath&lt;Sprite&gt; returns null for those — the sprite is a sub-asset.
+        /// </summary>
+        static Sprite LoadUiSprite(string fileName)
+        {
+            string path = $"{SpriteImportSetup.UiDir}/{fileName}.png";
+            var sprite = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().FirstOrDefault();
+            if (sprite == null)
+                Debug.LogWarning($"[PanDulce] no sprite in {path} — that chrome falls back to " +
+                                 "the generated rounded rect.");
+            return sprite;
         }
 
         static Sprite[] LoadSprites(string dir, string prefix)

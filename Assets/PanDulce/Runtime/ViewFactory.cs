@@ -22,13 +22,34 @@ namespace PanDulce.Runtime
             sr.sharedMaterial = SpriteMaterials.Unlit;
             sr.sprite = sprite != null ? sprite : Shapes.White;
             sr.drawMode = SpriteDrawMode.Sliced;
-            sr.size = new Vector2(w * StageCoords.PX, h * StageCoords.PX);
             sr.color = color;
             sr.sortingLayerName = layer;
             sr.sortingOrder = order;
-            go.transform.localPosition = new Vector3((x + w * 0.5f) * StageCoords.PX,
-                                                      -(y + h * 0.5f) * StageCoords.PX, 0f);
+            Place(sr, x, y, w, h);
             return sr;
+        }
+
+        /// <summary>
+        /// Moves and resizes a sprite already built by Rect onto a new stage-px rect. The one
+        /// place that turns a y-down rect into a centred local position, so a view that
+        /// resizes itself at runtime cannot drift from where the same rect was built.
+        /// </summary>
+        public static void Place(SpriteRenderer sr, float x, float y, float w, float h)
+        {
+            sr.size = new Vector2(w * StageCoords.PX, h * StageCoords.PX);
+            sr.transform.localPosition = new Vector3((x + w * 0.5f) * StageCoords.PX,
+                                                     -(y + h * 0.5f) * StageCoords.PX, 0f);
+        }
+
+        /// <summary>
+        /// The same for a label built by Label. Height comes from the font size it was built
+        /// with, so only the horizontal band and the baseline are given here.
+        /// </summary>
+        public static void Place(TextMeshPro t, float x, float y, float w)
+        {
+            t.rectTransform.sizeDelta = new Vector2(w * StageCoords.PX, t.rectTransform.sizeDelta.y);
+            t.transform.localPosition = new Vector3((x + w * 0.5f) * StageCoords.PX,
+                                                    -y * StageCoords.PX, 0f);
         }
 
         public static SpriteRenderer Panel(Transform parent, string name,
@@ -37,6 +58,22 @@ namespace PanDulce.Runtime
             => Rect(parent, name, Shapes.RoundedRect(Mathf.Max(4, radius * 2 + 4),
                                                      Mathf.Max(4, radius * 2 + 4), radius),
                     x, y, w, h, color, layer, order);
+
+        /// <summary>
+        /// A chrome plate: the hand-drawn art when the skin carries it, otherwise the
+        /// generated rounded rect that art replaced. Same rect either way, so a missing
+        /// sprite changes the look and never the layout.
+        ///
+        /// Pass Color.white for a face — the drawing already holds its colour. A tint is
+        /// still honoured, which is how the fake drop shadows reuse the button's own
+        /// silhouette instead of a rounded rect that would not match its corners.
+        /// </summary>
+        public static SpriteRenderer Plate(Transform parent, string name, Sprite art,
+                                           float x, float y, float w, float h, int radius,
+                                           Color color, string layer, int order)
+            => art != null
+               ? Rect(parent, name, art, x, y, w, h, color, layer, order)
+               : Panel(parent, name, x, y, w, h, radius, color, layer, order);
 
         public static TextMeshPro Label(Transform parent, string name, string text,
                                         float x, float y, float w, float sizeStagePx,

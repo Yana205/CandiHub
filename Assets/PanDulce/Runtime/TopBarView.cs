@@ -10,6 +10,15 @@ namespace PanDulce.Runtime
     /// </summary>
     public sealed class TopBarView : GeneratedView
     {
+        /// <summary>
+        /// Chip band, in stage px. Authored placement (Lital, 2026-08-08): both plates and
+        /// both figures centre on local y -0.281, so the plate top is that centre less half
+        /// its height and the labels sit straight on it.
+        /// </summary>
+        const float ChipH = 38f;
+        const float ChipMidY = 28.1f;
+        const float ChipY = ChipMidY - ChipH * 0.5f;
+
         TextMeshPro customersLabel, coinsLabel;
         int shownServed = -1, shownCoins = -1;
 
@@ -24,9 +33,15 @@ namespace PanDulce.Runtime
             ViewFactory.Rect(t, "BottomBorder", Shapes.White, 0f, 52f, 430f, 4f,
                              Palette.BarBorder, "Overlay", 1);
 
-            ViewFactory.Panel(t, "CustomersChip", 10f, 14f, 104f, 28f, 10, Palette.ChipFill, "Overlay", 2);
-            customersLabel = ViewFactory.Label(t, "CustomersLabel", "Customers: 0",
-                                               10f, 28f, 104f, 14f, Palette.Cream, "Overlay", 3);
+            // Both chips are drawings of an icon plus a number pill, so they are sized to the
+            // art's own aspect (28 px tall would squash the panda) and the label is pushed
+            // into the pill. The drawn icon now says "customers" and "coins", so the labels
+            // carry the bare figure — a "Customers: n" caption would run over the face.
+            Sprite customersArt = skin != null ? skin.CustomersChip : null;
+            ViewFactory.Plate(t, "CustomersChip", customersArt,
+                              10f, ChipY, 104f, ChipH, 10, ChipTint(customersArt), "Overlay", 2);
+            customersLabel = ViewFactory.Label(t, "CustomersLabel", "0",
+                                               50f, ChipMidY, 58f, 15f, ChipInk(customersArt), "Overlay", 3);
 
             // Sweet Bakery — 22px 800 cream with a 2px dark drop (§8.2)
             ViewFactory.Label(t, "TitleShadow", "Sweet Bakery", 115f, 32f, 200f, 22f,
@@ -36,15 +51,23 @@ namespace PanDulce.Runtime
             // The next-dessert preview lives on the play-area plaque only (NextPlaqueView).
 
             // Coin chip on the right — serves pay in, the clearance boost draws out.
-            ViewFactory.Panel(t, "CoinChip", 326f, 14f, 94f, 28f, 10, Palette.ChipFill, "Overlay", 2);
+            Sprite coinArt = skin != null ? skin.CoinChip : null;
+            ViewFactory.Plate(t, "CoinChip", coinArt,
+                              316f, ChipY, 104f, ChipH, 10, ChipTint(coinArt), "Overlay", 2);
             coinsLabel = ViewFactory.Label(t, "CoinsLabel", "$0",
-                                           326f, 28f, 94f, 14f, Palette.Cream, "Overlay", 3);
+                                           356f, ChipMidY, 60f, 15f, ChipInk(coinArt), "Overlay", 3);
         }
+
+        /// <summary>Untinted when the drawing carries its own colour, else the flat chip fill.</summary>
+        static Color ChipTint(Sprite art) => art != null ? Color.white : Palette.ChipFill;
+
+        /// <summary>The art's pill is cream, so the figure has to darken to stay legible.</summary>
+        static Color ChipInk(Sprite art) => art != null ? Palette.Crust : Palette.Cream;
 
         public void Sync(int served, int coins)
         {
             if (!IsBuilt) return;
-            if (served != shownServed) { shownServed = served; customersLabel.text = $"Customers: {served}"; }
+            if (served != shownServed) { shownServed = served; customersLabel.text = served.ToString(); }
             if (coins != shownCoins) { shownCoins = coins; coinsLabel.text = $"${coins}"; }
         }
     }

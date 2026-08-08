@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f1c37c0a56ba841931c8fe4cd0e148, type: 3}
+  m_Name: UiSkin
+  m_EditorClassIdentifier: PanDulce.Runtime::PanDulce.Runtime.UiSkin
+  customersChip: {fileID: 6815336928455204390, guid: 8f756e4ed63c4e94ab6cc11944142e65, type: 3}
+  coinChip: {fileID: 7054930476551290961, guid: 0d140375cbad2c24785da4f99e319db6, type: 3}
+  button: {fileID: 649223268058989734, guid: 8d9196300af731a4794448370ba98639, type: 3}
+  plate: {fileID: -66490268015967822, guid: 299d82e0810eaca4481bb5059f6015b7, type: 3}
+  sign: {fileID: 2045770761078223462, guid: d4b5d8b1345668e44933714e82b92aee, type: 3}
+  nextPlaque: {fileID: 7901986634849129017, guid: 0115ecd00c355674d8f8b026b521c1fd, type: 3}
+  coin: {fileID: -3338749442709606003, guid: 0edcfb260b8440544a06e4c12990e0c6, type: 3}
