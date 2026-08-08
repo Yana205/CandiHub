@@ -145,7 +145,6 @@ namespace PanDulce.Core
         {
             float rotAmt = cfg.RotationAmount;
             float e = cfg.Bounciness;
-            float sizeScale = cfg.SizeScale;
 
             // Approach speed that separates a real hit from the pile leaning on itself.
             float impactV = cfg.Gravity * dt * ImpactSubsteps;
@@ -190,7 +189,7 @@ namespace PanDulce.Core
                     Body c = Bodies[j];
                     if (a.dead || c.dead) continue;
 
-                    float ra = TierTable.Er(a, sizeScale), rc = TierTable.Er(c, sizeScale);
+                    float ra = TierTable.Er(a, cfg), rc = TierTable.Er(c, cfg);
                     float dx = c.x - a.x, dy = c.y - a.y;
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
                     float min = ra + rc;
@@ -245,7 +244,7 @@ namespace PanDulce.Core
             {
                 Body b = Bodies[i];
                 if (b.dead) continue;
-                float r = TierTable.Er(b, sizeScale);
+                float r = TierTable.Er(b, cfg);
 
                 // The wall spin is an assignment, not an impulse — left ungated it would
                 // overwrite the rest damping every substep for anything leaning on a wall.
@@ -337,8 +336,7 @@ namespace PanDulce.Core
         void ApplyMerge(Body a, Body c)
         {
             int t2 = a.tier + 1;
-            float sizeScale = cfg.SizeScale;
-            float ra = TierTable.Er(a, sizeScale), rc = TierTable.Er(c, sizeScale);
+            float ra = TierTable.Er(a, cfg), rc = TierTable.Er(c, cfg);
             float x = (a.x * ra + c.x * rc) / (ra + rc);      // radius-weighted midpoint
             float y = (a.y * ra + c.y * rc) / (ra + rc);
 
@@ -348,7 +346,9 @@ namespace PanDulce.Core
 
             ComboN = (Now - lastMergeT < cfg.ComboWindow) ? ComboN + 1 : 1;
             lastMergeT = Now;
-            if (ComboN >= 2) AddFloat(x, y - TierTable.BaseRadius[t2] - 8f, $"Combo {ComboN}!");
+            // Clears the dessert it belongs to, so the label stays legible at any size.
+            float r2 = TierTable.EffectiveRadius(t2, cfg);
+            if (ComboN >= 2) AddFloat(x, y - r2 - 8f, $"Combo {ComboN}!");
 
             Merged?.Invoke(t2, new Vector2(x, y), ComboN);
 
@@ -356,7 +356,7 @@ namespace PanDulce.Core
             {
                 discovered[t2] = true;
                 if (t2 > HighestDiscovered) HighestDiscovered = t2;
-                AddFloat(x, y - TierTable.BaseRadius[t2] - 26f, "New in the case!");
+                AddFloat(x, y - r2 - 26f, "New in the case!");
                 TierDiscovered?.Invoke(t2, new Vector2(x, y));
             }
         }
@@ -395,7 +395,7 @@ namespace PanDulce.Core
         public bool Drop(float aimX, bool canDrop)
         {
             if (!canDrop || Now < canDropAt) return false;
-            float r = TierTable.EffectiveRadius(CurTier, cfg.SizeScale);
+            float r = TierTable.EffectiveRadius(CurTier, cfg);
             Body b = MakeBody(Mathf.Clamp(aimX, SimField.WL + r, SimField.WR - r),
                               SimField.DropY, CurTier, 1f);
             b.vy = cfg.DropVy;
@@ -417,7 +417,7 @@ namespace PanDulce.Core
                 if (b.dead || b.tier != orderTier) continue;
                 float dx = b.x - x, dy = b.y - y;
                 float d = Mathf.Sqrt(dx * dx + dy * dy);
-                if (d < TierTable.Er(b, cfg.SizeScale) + tolerance && d < bd) { bd = d; best = b; }
+                if (d < TierTable.Er(b, cfg) + tolerance && d < bd) { bd = d; best = b; }
             }
             return best;
         }

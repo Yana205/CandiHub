@@ -30,6 +30,11 @@ namespace PanDulce.Editor
             var tuning = EnsureTuning();
             var db = EnsurePastryDatabase();
 
+            // Per-dessert sizes live with the sprites; Tuning reads them from here so the sim
+            // sees one radius for both art and collision.
+            tuning.EditorAssign(db);
+            EditorUtility.SetDirty(tuning);
+
             var scene = EnsureScene();
             ClearStage(scene);
 

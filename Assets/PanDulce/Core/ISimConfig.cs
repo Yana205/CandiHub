@@ -53,5 +53,15 @@ namespace PanDulce.Core
         // --- Editor-only ---
         float TimeScale { get; }
         bool Paused { get; }
+
+        /// <summary>
+        /// Per-dessert size, as a fraction of the tier's authored size (1 = 100%). Multiplies
+        /// on top of <see cref="SizeScale"/> and reaches BOTH the drawn sprite and the physics
+        /// circle, so enlarging a dessert also enlarges the room it takes in the pile.
+        ///
+        /// It is a method, not an array, because the values live with the sprites in
+        /// Pastries.asset — they travel with a dessert when Studio reorders the merge chain.
+        /// </summary>
+        float TierSize(int tier);
     }
 }

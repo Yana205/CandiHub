@@ -71,8 +71,11 @@ namespace PanDulce.Editor
                    d.gravity, 600f, 3000f, v => d.gravity = v);
             Slider(cfg, "Bounciness", "How much everything rebounds on impact.",
                    d.bounciness, 0f, 0.5f, v => d.bounciness = v);
-            Slider(cfg, "Pastry size", "Scales every pastry. Bigger fills the cloth faster.",
-                   d.sizeScale, 0.7f, 1.6f, v => d.sizeScale = v);
+            PercentSlider(cfg, "Pile size",
+                          "Scales every dessert — art and physics together — as a percentage of " +
+                          "its authored size. 100% is the drawn size. Bigger fills the cloth " +
+                          "faster. Per-dessert tweaks live in Studio ▸ Dessert chain.",
+                          d.sizeScale, 50f, 300f, v => d.sizeScale = v);
             Slider(cfg, "Merge grow time", "How long a freshly merged pastry takes to pop in.",
                    d.mergeGrowTime, 0.2f, 2f, v => d.mergeGrowTime = v);
 
@@ -127,6 +130,20 @@ namespace PanDulce.Editor
             float next = EditorGUILayout.Slider(label, value, min, max);
             Help(help);
             Apply(cfg, label, !Mathf.Approximately(next, value), () => set(next));
+        }
+
+        /// <summary>
+        /// A fraction shown as a percentage. The stored value stays the multiplier the sim
+        /// consumes — only the row's units change, so "how much bigger" is a number a designer
+        /// can read off the label instead of a decimal they have to translate.
+        /// </summary>
+        void PercentSlider(TuningConfig cfg, string label, string help, float value,
+                           float minPct, float maxPct, System.Action<float> set)
+        {
+            float pct = Mathf.Round(EditorGUILayout.Slider(label, value * 100f, minPct, maxPct));
+            Help(help);
+            Apply(cfg, label, !Mathf.Approximately(pct, Mathf.Round(value * 100f)),
+                  () => set(pct * 0.01f));
         }
 
         void IntSlider(TuningConfig cfg, string label, string help, int value, int min, int max,

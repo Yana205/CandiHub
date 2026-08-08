@@ -46,6 +46,75 @@ namespace PanDulce.Tests
             Assert.That(er, Is.LessThan(full * 1.2f));
         }
 
+        // ---------------------------------------------------------------- per-dessert size
+
+        [Test]
+        public void TierSize_MultipliesOnTopOfSizeScale()
+        {
+            var cfg = Cfg();
+            cfg.tierSize = new float[TierTable.Count];
+            for (int i = 0; i < cfg.tierSize.Length; i++) cfg.tierSize[i] = 1f;
+            cfg.tierSize[5] = 1.5f;
+
+            Assert.That(TierTable.EffectiveRadius(5, cfg),
+                        Is.EqualTo(TierTable.BaseRadius[5] * cfg.SizeScale * 1.5f).Within(0.001f));
+            Assert.That(TierTable.EffectiveRadius(4, cfg),
+                        Is.EqualTo(TierTable.BaseRadius[4] * cfg.SizeScale).Within(0.001f),
+                        "an untouched tier keeps its authored size");
+        }
+
+        [Test]
+        public void TierSize_UnsetMeansOneHundredPercent()
+        {
+            var cfg = Cfg();      // tierSize left null — the mock's sizing, unchanged
+            Assert.That(cfg.TierSize(0), Is.EqualTo(1f));
+            Assert.That(TierTable.EffectiveRadius(5, cfg),
+                        Is.EqualTo(TierTable.EffectiveRadius(5, cfg.SizeScale)).Within(0.001f));
+        }
+
+        [Test]
+        public void TierSize_WidensTheRoomADessertClaims()
+        {
+            // The point of the feature: enlarging a dessert must also enlarge the space it
+            // takes in the pile. Two tier-0 bodies 40 px apart clear each other at 100%
+            // (radius 13 × 1.3 = 16.9 each, 33.8 apart at most) and must shove each other
+            // apart at 200%. Overlap resolution is positional and impulse-free for bodies at
+            // rest, so they end at exactly touching — a number worth pinning down.
+            const float gap = 40f;
+            Assert.That(TierTable.BaseRadius[0] * 1.3f * 2f, Is.LessThan(gap));
+
+            Assert.That(SettledGap(gap, 1f), Is.EqualTo(gap).Within(0.01f),
+                        "100% desserts that far apart never touch, so nothing moves");
+
+            float wide = TierTable.BaseRadius[0] * 1.3f * 2f * 2f;   // both radii, both doubled
+            Assert.That(SettledGap(gap, 2f), Is.EqualTo(wide).Within(0.01f),
+                        "200% desserts must push out to their own doubled contact distance");
+        }
+
+        /// <summary>
+        /// Distance between two tier-0 bodies placed `gap` apart, after the sim settles them
+        /// with every dessert scaled to `size`. Gravity and the centre pull are off, so the
+        /// only thing that can move them is each other.
+        /// </summary>
+        static float SettledGap(float gap, float size)
+        {
+            var cfg = Cfg();
+            cfg.startingBodies = 0;
+            cfg.gravity = 0f;
+            cfg.centerPull = 0f;
+            cfg.tierSize = new float[TierTable.Count];
+            for (int i = 0; i < cfg.tierSize.Length; i++) cfg.tierSize[i] = size;
+
+            var sim = new MergeSim(cfg, new System.Random(1));
+            sim.EmptyCloth();
+            sim.MakeBody(SimField.CX - gap * 0.5f, 200f, 0, 1f);
+            sim.MakeBody(SimField.CX + gap * 0.5f, 200f, 0, 1f);
+
+            for (int i = 0; i < 10; i++) sim.Tick(0.016f);   // inside the start grace: no merges
+            var a = sim.Bodies[0]; var b = sim.Bodies[1];
+            return Mathf.Sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
+        }
+
         // ---------------------------------------------------------------- spawn distribution
 
         [Test]

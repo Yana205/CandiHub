@@ -65,6 +65,13 @@ namespace PanDulce.Core
         public float timeScale = 1f;
         public bool paused = false;
 
+        /// <summary>
+        /// Per-tier size fractions. Null (the default) means every tier is at 100%, which keeps
+        /// a bare SimConfigData reproducing the mock — the real values come from Pastries.asset
+        /// via TuningConfig, so they can travel with the sprites on a chain reorder.
+        /// </summary>
+        public float[] tierSize = null;
+
         public float Gravity => gravity;
         public float Bounciness => bounciness;
         public float SizeScale => sizeScale;
@@ -106,5 +113,9 @@ namespace PanDulce.Core
 
         public float TimeScale => timeScale;
         public bool Paused => paused;
+
+        public float TierSize(int tier)
+            => (tierSize != null && tier >= 0 && tier < tierSize.Length && tierSize[tier] > 0f)
+               ? tierSize[tier] : 1f;
     }
 }

@@ -1,1 +1,354 @@
-{"entries":[{"path":"[ 20 · STAGE ]/[ 21 · BACKDROP ]","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt","pos":{"x":0,"y":0.51,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/Backdrop","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/Backdrop/StreetWindow","pos":{"x":2.14999986,"y":-4,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/Backdrop/HangingEntrance","pos":{"x":2.14999986,"y":-4,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/GlassDisplay","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/GlassDisplay/GlassContainer","pos":{"x":2.14999986,"y":-4,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/PlayAreaArt","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/PlayAreaArt/DeskLine","pos":{"x":2.14999986,"y":-4,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/PlayAreaArt/Furoshiki","pos":{"x":2.14999986,"y":-4,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/PlayAreaArt/CandyBox","pos":{"x":2.14999986,"y":-4,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 23 · CUSTOMER ]","pos":{"x":0.13,"y":0.71,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 24 · FURNITURE ]","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 24 · FURNITURE ]/HangingSign","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":1.062378},{"path":"[ 20 · STAGE ]/[ 25 · DISPLAY CASE ]","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]","pos":{"x":0.12,"y":-4.27,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/AimGuide","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/DangerLine","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies","pos":{"x":0.1,"y":1.25,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_00","pos":{"x":1.97876441,"y":-3.43303919,"z":0},"scale":{"x":0.143,"y":0.143,"z":1},"rotZ":37.795578},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_00","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_01","pos":{"x":0.9832603,"y":-3.33890414,"z":0},"scale":{"x":0.143,"y":0.143,"z":1},"rotZ":72.2567139},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_01","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_02","pos":{"x":2.48273587,"y":-3.487025,"z":0},"scale":{"x":0.1105,"y":0.1105,"z":1},"rotZ":319.7775},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_02","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_03","pos":{"x":1.47314262,"y":-3.46945786,"z":0},"scale":{"x":0.1105,"y":0.1105,"z":1},"rotZ":47.185524},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_03","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_04","pos":{"x":3.073465,"y":-3.21590877,"z":0},"scale":{"x":0.21450001,"y":0.21450001,"z":1},"rotZ":-4.645891E-33},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_04","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_05","pos":{"x":0.52883637,"y":-3.36177969,"z":0},"scale":{"x":0.0845,"y":0.0845,"z":1},"rotZ":5.24898865E-34},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_05","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_06","pos":{"x":2.82288861,"y":-2.56549954,"z":0},"scale":{"x":0.1755,"y":0.1755,"z":1},"rotZ":356.760223},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_06","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_07","pos":{"x":2.34685636,"y":-3.00856376,"z":0},"scale":{"x":0.110550962,"y":0.110415064,"z":1},"rotZ":351.8605},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_07","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_08","pos":{"x":3.48282242,"y":-3.05266047,"z":0},"scale":{"x":0.086084336,"y":0.08185945,"z":1},"rotZ":349.596741},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_08","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_09","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_09","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_10","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_10","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_11","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_11","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_12","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_12","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_13","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_13","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_14","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_14","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_15","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_15","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_16","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_16","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_17","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_17","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_18","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_18","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_19","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_19","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_20","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_20","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_21","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_21","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_22","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_22","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_23","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_23","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_24","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_24","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_25","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_25","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_26","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_26","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_27","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_27","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_28","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_28","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_29","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_29","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_30","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_30","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_31","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_31","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_32","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_32","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_33","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_33","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_34","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_34","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_35","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_35","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_36","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_36","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_37","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_37","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_38","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_38","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_39","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_39","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_40","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_40","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_41","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_41","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_42","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_42","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_43","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_43","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_44","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_44","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_45","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_45","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_46","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_46","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/Pastry_47","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Bodies/OrderRing_47","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Effects","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Effects/MergeBurst(Clone)","pos":{"x":2.951093,"y":-2.972855,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Effects/Sparkle(Clone)","pos":{"x":2.951093,"y":-2.972855,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Effects/ServePoof(Clone)","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Effects/ShakeDust(Clone)","pos":{"x":2.09,"y":-3.72,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/Effects/SpawnPuff(Clone)","pos":{"x":2.82288861,"y":-0.42,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText/Float_00","pos":{"x":2.951093,"y":-1.96571946,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText/Float_01","pos":{"x":3.1256218,"y":-2.78259969,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText/Float_02","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText/Float_03","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText/Float_04","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText/Float_05","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText/Float_06","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/FloatingText/Float_07","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/FoldFlaps","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/NextPlaque","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 26 · PLAY AREA ]/Guides","pos":{"x":0,"y":1.19,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 27 · UI ]","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 27 · UI ]/TopBar","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 27 · UI ]/BoostBar","pos":{"x":0.11,"y":0.179999992,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 27 · UI ]/OrderBubble","pos":{"x":0.86,"y":1.01,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 27 · UI ]/ServeFlight","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0},{"path":"[ 20 · STAGE ]/[ 27 · UI ]/GameOverCard","pos":{"x":0,"y":0,"z":0},"scale":{"x":1,"y":1,"z":1},"rotZ":0}]}
+{
+    "entries": [
+        {
+            "path": "[ 20 · STAGE ]/[ 21 · BACKDROP ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt",
+            "pos": {
+                "x": 0.0,
+                "y": 0.5099999904632568,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/Backdrop",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/Backdrop/StreetWindow",
+            "pos": {
+                "x": 2.1499998569488527,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/Backdrop/HangingEntrance",
+            "pos": {
+                "x": 2.1499998569488527,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/GlassDisplay",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/GlassDisplay/GlassContainer",
+            "pos": {
+                "x": 2.1499998569488527,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/PlayAreaArt",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/PlayAreaArt/DeskLine",
+            "pos": {
+                "x": 2.1499998569488527,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/PlayAreaArt/Furoshiki",
+            "pos": {
+                "x": 2.1499998569488527,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 22 · LAYOUT ART ]/LayoutArt/PlayAreaArt/CandyBox",
+            "pos": {
+                "x": 2.1499998569488527,
+                "y": -4.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 23 · CUSTOMER ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.8899999856948853,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 24 · FURNITURE ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 25 · DISPLAY CASE ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 26 · PLAY AREA ]",
+            "pos": {
+                "x": 0.11999999731779099,
+                "y": -4.269999980926514,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/AimGuide",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 26 · PLAY AREA ]/ShakeRoot/DangerLine",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 26 · PLAY AREA ]/FoldFlaps",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 26 · PLAY AREA ]/NextPlaque",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 27 · UI ]",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 27 · UI ]/BoostBar",
+            "pos": {
+                "x": 0.10999999940395355,
+                "y": 0.17999999225139619,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 27 · UI ]/OrderBubble",
+            "pos": {
+                "x": 0.8600000143051148,
+                "y": 1.0099999904632569,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 27 · UI ]/ServeFlight",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        },
+        {
+            "path": "[ 20 · STAGE ]/[ 27 · UI ]/GameOverCard",
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "rotZ": 0.0
+        }
+    ]
+}

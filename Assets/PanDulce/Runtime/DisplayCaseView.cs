@@ -5,9 +5,11 @@ using UnityEngine;
 namespace PanDulce.Runtime
 {
     /// <summary>
-    /// Display case — five slots with a sliding window (§8.4), following progress:
-    /// start = clamp(highestDiscovered - 1, 0, 6), so the slots ahead stay silhouetted
-    /// (usually 3 of the 5) and each merge reveals the next tease.
+    /// Display case — five slots. By default a sliding window follows progress (§8.4):
+    /// the window opens at clamp(highestDiscovered - 1, 0, 6) and then holds still while
+    /// its silhouettes are revealed one by one; it slides (by 3, keeping 2 for context)
+    /// only once the player merges past the whole window. A scene-authored seat order
+    /// (followProgress off) pins each seat to a chosen dessert instead.
     ///
     /// V2 layout: the case itself (glass, base, knob) is drawn by the LayoutArt prefab's
     /// GlassContainer piece; this view only places the desserts inside it. Undiscovered
@@ -22,6 +24,16 @@ namespace PanDulce.Runtime
 
         /// <summary>Undiscovered desserts render as this flat silhouette.</summary>
         static readonly Color Silhouette = new Color(0.16f, 0.11f, 0.07f, 0.92f);
+
+        // Seat order is scene-authored (Studio ▸ Glass case seats). With followProgress on,
+        // play mode ignores it and slides the classic progress window; with it off, each seat
+        // keeps its authored dessert for the whole run — discovery still decides whether it
+        // renders in colour or as a silhouette.
+        [SerializeField] bool followProgress = true;
+        [SerializeField] int[] seatTiers = { 0, 1, 2, 3, 4 };
+
+        public bool FollowProgress => followProgress;
+        public int[] SeatTiers => seatTiers;
 
         readonly SpriteRenderer[] icons = new SpriteRenderer[Slots];
         readonly TextMeshPro[] labels = new TextMeshPro[Slots];
@@ -49,19 +61,31 @@ namespace PanDulce.Runtime
         {
             if (!IsBuilt) return;
             int maxD = sim.HighestDiscovered;
-            int start = Mathf.Clamp(maxD - 1, 0, TierTable.Count - Slots);
+
+            // The window is patient: it holds still while its silhouettes fill in one by one,
+            // and only slides once the player merges PAST it — never right after the first
+            // new merge, and never before the last reveal has had its moment on the shelf.
+            // Each slide keeps two known desserts for context and teases three new ones.
+            int start = shownStart >= 0 ? shownStart
+                                        : Mathf.Clamp(maxD - 1, 0, TierTable.Count - Slots);
+            while (maxD > start + Slots - 1 && start < TierTable.Count - Slots)
+                start = Mathf.Min(start + Slots - 2, TierTable.Count - Slots);
+
             if (start == shownStart && maxD == shownMax) return;
             shownStart = start;
             shownMax = maxD;
 
             for (int i = 0; i < Slots; i++)
             {
-                int tier = start + i;
+                int tier = followProgress
+                    ? start + i
+                    : Mathf.Clamp(seatTiers != null && i < seatTiers.Length ? seatTiers[i] : i,
+                                  0, TierTable.Count - 1);
                 bool found = sim.IsDiscovered(tier);
                 if (database != null)
                 {
                     icons[i].sprite = database.Pastry(tier);
-                    ViewFactory.SetIcon(icons[i], IconRadius, database.ArtScale(tier));
+                    ViewFactory.SetIcon(icons[i], IconRadius, database.TierSize(tier));
                 }
                 // Undiscovered entries render the sprite as a dark silhouette, label '?'.
                 icons[i].color = found ? Color.white : Silhouette;
@@ -84,7 +108,7 @@ namespace PanDulce.Runtime
                 if (icons[i] == null || labels[i] == null) continue;
                 icons[i].sprite = database.Pastry(tier);
                 icons[i].color = Color.white;
-                ViewFactory.SetIcon(icons[i], IconRadius, database.ArtScale(tier));
+                ViewFactory.SetIcon(icons[i], IconRadius, database.TierSize(tier));
                 labels[i].text = database.Name(tier);
             }
         }

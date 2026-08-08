@@ -269,7 +269,8 @@ namespace PanDulce.Runtime
             if (effects != null)
                 for (int i = 0; i < clearedBuffer.Count; i++)
                     effects.MergeBurst(clearedBuffer[i].pos, clearedBuffer[i].tier,
-                                       TierTable.BaseRadius[clearedBuffer[i].tier], tuning.ParticleScale);
+                                       TierTable.EffectiveRadius(clearedBuffer[i].tier, tuning),
+                                       tuning.ParticleScale);
             Sim.AddFloat(SimField.CX, 200f, "Day-old clearance!");
             if (sfx != null) sfx.Play("serve");
             return true;
@@ -279,7 +280,7 @@ namespace PanDulce.Runtime
         {
             flyingTier = b.tier;
             Vector2 stage = StageCoords.SimToStage(new Vector2(b.x, b.y));
-            Sim.AddFloat(b.x, b.y - TierTable.Er(b, tuning.SizeScale) - 8f,
+            Sim.AddFloat(b.x, b.y - TierTable.Er(b, tuning) - 8f,
                          $"+${CoinPurse.ServePay(tuning, b.tier)}");
             if (effects != null) effects.ServeBurst(new Vector2(b.x, b.y), b.tier, tuning.ParticleScale);
             Sim.RemoveForServe(b);
@@ -363,7 +364,9 @@ namespace PanDulce.Runtime
         {
             Boost.AddMerge(tuning.ChargePerMerge);
             Score.AddMerge(tier, comboN);
-            if (effects != null) effects.MergeBurst(pos, tier, TierTable.BaseRadius[tier], tuning.ParticleScale);
+            // Burst radius follows the dessert's real size, so a 200% purin bursts 200% wide.
+            if (effects != null)
+                effects.MergeBurst(pos, tier, TierTable.EffectiveRadius(tier, tuning), tuning.ParticleScale);
             if (sfx != null) sfx.Play("merge", tier);
         }
 

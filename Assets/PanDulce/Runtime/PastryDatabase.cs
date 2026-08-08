@@ -5,10 +5,10 @@ using UnityEngine;
 namespace PanDulce.Runtime
 {
     /// <summary>
-    /// One asset holding the tier table's art. Radii live in Core's TierTable — this binds
-    /// sprites, display names, and per-tier visual scale. Names and scales travel WITH their
-    /// sprite when the Studio window reorders the merge chain, so "which dessert is tier 3"
-    /// is a data edit here, never a code change.
+    /// One asset holding the tier table's art. Base radii live in Core's TierTable — this binds
+    /// sprites, display names, and the per-tier size percentage that scales both. Names and
+    /// sizes travel WITH their sprite when the Studio window reorders the merge chain, so
+    /// "which dessert is tier 3" is a data edit here, never a code change.
     /// </summary>
     [CreateAssetMenu(fileName = "Pastries", menuName = "Pan Dulce/Pastry Database")]
     public sealed class PastryDatabase : ScriptableObject
@@ -19,7 +19,11 @@ namespace PanDulce.Runtime
         [Tooltip("Display names, tier 0..10 — reordered together with the sprites by Studio.")]
         [SerializeField] string[] names = new string[0];
 
-        [Tooltip("Per-tier visual scale. Art only — the physics radius never changes.")]
+        // Serialized name stays `artScale` so existing Pastries.asset values survive the rename
+        // to TierSize — the meaning widened from "art only" to "art and physics".
+        [Tooltip("Per-tier size, as a fraction of the authored size (1 = 100%). Scales the " +
+                 "sprite AND the physics circle, so an enlarged dessert also takes up more " +
+                 "room in the pile.")]
         [SerializeField] float[] artScale = new float[0];
 
         [Tooltip("3 regulars, cycled by served % 3.")]
@@ -47,8 +51,15 @@ namespace PanDulce.Runtime
             return (tier >= 0 && tier < TierTable.Count) ? TierTable.Names[tier] : "?";
         }
 
-        /// <summary>Visual-only size multiplier for a tier's sprite (1 = authored size).</summary>
-        public float ArtScale(int tier)
+        /// <summary>
+        /// Size multiplier for a tier, as a fraction of its authored size (1 = 100%).
+        ///
+        /// Anything sized off the tier table already has this folded in by TierTable's
+        /// EffectiveRadius/Er config overloads — multiply by it yourself ONLY for chrome drawn
+        /// at a fixed radius (case seat, plaque, order bubble), where it is what keeps the icon
+        /// proportional to the dessert it stands for.
+        /// </summary>
+        public float TierSize(int tier)
             => (artScale != null && tier >= 0 && tier < artScale.Length && artScale[tier] > 0f)
                ? artScale[tier] : 1f;
 

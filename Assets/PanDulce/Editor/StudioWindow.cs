@@ -10,12 +10,15 @@ namespace PanDulce.Editor
     /// Window ▸ Pan Dulce ▸ Studio — the layout/art authoring panel, sibling to Designer
     /// (which owns gameplay tuning). Everything here works BEFORE play mode:
     ///
-    ///   · Glass case seats — put any dessert in any of the 5 seats as an edit preview.
+    ///   · Glass case seats — put any dessert in any of the 5 seats. Saved on the
+    ///     DisplayCaseView in the scene; play mode uses the authored order too unless the
+    ///     classic progress-following window is chosen.
     ///   · Dessert chain — reorder which dessert is tier 0..10 (sprite + name move together
     ///     in Pastries.asset, so this changes the real merge order) and set a per-dessert
-    ///     visual size. Physics radii never change.
-    ///   · Scene preview — a bear at the counter and a resting pile, as DontSave objects
-    ///     that are destroyed before any scene save or play-mode entry.
+    ///     size percentage, which scales the sprite and the physics circle together.
+    ///   · Scene preview — the REAL generated bear shown at its serialized anchor (drag it;
+    ///     the spot is captured on save/play), plus a resting-pile stand-in that is never
+    ///     saved.
     ///   · Selected object — uniform scale slider for whatever is picked in the Hierarchy.
     /// </summary>
     public sealed class StudioWindow : EditorWindow
@@ -24,9 +27,10 @@ namespace PanDulce.Editor
         const string TuningPath = "Assets/PanDulce/Config/Tuning.asset";
         const string StageName = "[ 20 · STAGE ]";
         const string PreviewName = "[ STUDIO PREVIEW ]";
-        const string SeatsKey = "PanDulce.Studio.Seats";
-        const string BearKey = "PanDulce.Studio.ShowBear";
         const string PileKey = "PanDulce.Studio.ShowPile";
+
+        /// <summary>Per-dessert size range, in percent of the authored size.</summary>
+        const float MinSizePct = 25f, MaxSizePct = 400f;
 
         [MenuItem("Window/Pan Dulce/Studio")]
         public static void Open()
@@ -39,8 +43,7 @@ namespace PanDulce.Editor
         PastryDatabase db;
         TuningConfig tuning;
         Vector2 scroll;
-        int[] seats;
-        bool showBear, showPile;
+        bool showPile;
         GameObject previewRoot;
         bool building;   // guards hierarchyChanged re-entry while we create preview objects
 
@@ -50,9 +53,6 @@ namespace PanDulce.Editor
 
         void OnEnable()
         {
-            seats = SessionState.GetIntArray(SeatsKey, new[] { 0, 1, 2, 3, 4 });
-            if (seats.Length != DisplayCaseView.Slots) seats = new[] { 0, 1, 2, 3, 4 };
-            showBear = SessionState.GetBool(BearKey, false);
             showPile = SessionState.GetBool(PileKey, false);
 
             EditorApplication.hierarchyChanged += OnHierarchyChanged;
@@ -83,7 +83,7 @@ namespace PanDulce.Editor
             // Views rebuild their DontSave children on enable/domain reload, wiping the seat
             // preview — and a scene reload orphans our preview root. Re-establish both.
             ApplySeats();
-            if ((showBear || showPile) && FindPreviewRoot() == null) RebuildPreview();
+            if (showPile && FindPreviewRoot() == null) RebuildPreview();
         }
 
         void OnPlayModeChanged(PlayModeStateChange s)
@@ -163,47 +163,52 @@ namespace PanDulce.Editor
 
         void SeatsSection()
         {
-            Help("Preview any dessert in any seat of the glass case. Edit-mode only — during " +
-                 "play the case follows the player's progress as always.");
+            var view = FindAnyObjectByType<DisplayCaseView>(FindObjectsInactive.Include);
+            if (view == null) { Help("No display case in the open scene."); return; }
+
+            Help("Choose which dessert sits in each of the 5 seats. This is saved on the " +
+                 "DisplayCaseView in the scene, so play mode shows the same order (desserts " +
+                 "the player has not discovered yet still play as silhouettes). Untick the " +
+                 "box below to use the classic window that follows the player's progress.");
+
+            var so = new SerializedObject(view);
+            var pFollow = so.FindProperty("followProgress");
+            var pSeats = so.FindProperty("seatTiers");
+            if (pSeats.arraySize != DisplayCaseView.Slots) pSeats.arraySize = DisplayCaseView.Slots;
 
             var options = new GUIContent[TierTable.Count];
             for (int i = 0; i < TierTable.Count; i++)
                 options[i] = new GUIContent($"{i} · {Db.Name(i)}");
 
-            bool changed = false;
-            for (int seat = 0; seat < seats.Length; seat++)
+            for (int seat = 0; seat < DisplayCaseView.Slots; seat++)
             {
-                int next = EditorGUILayout.Popup(new GUIContent($"Seat {seat + 1}"),
-                                                 Mathf.Clamp(seats[seat], 0, TierTable.Max), options);
-                if (next != seats[seat]) { seats[seat] = next; changed = true; }
+                var p = pSeats.GetArrayElementAtIndex(seat);
+                p.intValue = EditorGUILayout.Popup(new GUIContent($"Seat {seat + 1}"),
+                                                   Mathf.Clamp(p.intValue, 0, TierTable.Max), options);
             }
 
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Reset to 1–5"))
-                {
-                    seats = new[] { 0, 1, 2, 3, 4 };
-                    changed = true;
-                }
+                    for (int i = 0; i < DisplayCaseView.Slots; i++)
+                        pSeats.GetArrayElementAtIndex(i).intValue = i;
                 if (GUILayout.Button("Top 5"))
-                {
-                    seats = new[] { 6, 7, 8, 9, 10 };
-                    changed = true;
-                }
+                    for (int i = 0; i < DisplayCaseView.Slots; i++)
+                        pSeats.GetArrayElementAtIndex(i).intValue = TierTable.Count - DisplayCaseView.Slots + i;
             }
 
-            if (changed)
-            {
-                SessionState.SetIntArray(SeatsKey, seats);
-                ApplySeats();
-            }
+            pFollow.boolValue = !EditorGUILayout.ToggleLeft(
+                "Use this order during play (off = follow the player's progress)",
+                !pFollow.boolValue);
+
+            if (so.ApplyModifiedProperties()) ApplySeats();
         }
 
         void ApplySeats()
         {
             if (Application.isPlaying) return;
             var view = FindAnyObjectByType<DisplayCaseView>(FindObjectsInactive.Include);
-            if (view != null) view.EditorPreviewSeats(seats);
+            if (view != null) view.EditorPreviewSeats(view.SeatTiers);
             SceneView.RepaintAll();
         }
 
@@ -213,7 +218,9 @@ namespace PanDulce.Editor
         {
             Help("The merge chain, top = tier 0 (smallest). ▲▼ move a dessert to another tier " +
                  "— sprite, name and size travel together, and gameplay follows this order. " +
-                 "Size scales the art only; the physics circle stays the tier's radius.");
+                 "Size is a percentage of the dessert's authored size and moves the art AND " +
+                 "the physics circle, so an enlarged dessert also takes up more room in the " +
+                 "pile. It stacks on Designer ▸ Pile size, which scales all 11 at once.");
 
             var so = new SerializedObject(Db);
             var pSprites = so.FindProperty("pastries");
@@ -243,12 +250,16 @@ namespace PanDulce.Editor
                         var nameProp = pNames.GetArrayElementAtIndex(i);
                         nameProp.stringValue = EditorGUILayout.TextField(nameProp.stringValue);
 
+                        // Authored as a percentage — a designer thinks "make it 40% bigger",
+                        // not "0.4 stage px of radius". Stored as the fraction the sim wants.
                         var scaleProp = pScales.GetArrayElementAtIndex(i);
                         using (new EditorGUILayout.HorizontalScope())
                         {
-                            float v = GUILayout.HorizontalSlider(scaleProp.floatValue, 0.5f, 2f);
-                            v = EditorGUILayout.FloatField(v, GUILayout.Width(44f));
-                            scaleProp.floatValue = Mathf.Clamp(v, 0.1f, 4f);
+                            float pct = scaleProp.floatValue * 100f;
+                            pct = GUILayout.HorizontalSlider(pct, MinSizePct, MaxSizePct);
+                            pct = EditorGUILayout.FloatField(Mathf.Round(pct), GUILayout.Width(40f));
+                            GUILayout.Label("%", GUILayout.Width(14f));
+                            scaleProp.floatValue = Mathf.Clamp(pct, MinSizePct, MaxSizePct) * 0.01f;
                         }
                     }
 
@@ -282,9 +293,11 @@ namespace PanDulce.Editor
                 RebuildPreview();
             }
 
+            WarnIfChainShrinks();
+
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("All sizes → 1.0"))
+                if (GUILayout.Button("All sizes → 100%"))
                 {
                     for (int i = 0; i < TierTable.Count; i++)
                         pScales.GetArrayElementAtIndex(i).floatValue = 1f;
@@ -302,17 +315,35 @@ namespace PanDulce.Editor
 
         void PreviewSection()
         {
-            Help("Stand-ins so you can judge the layout without pressing Play. They are never " +
-                 "saved into the scene and are removed automatically before play mode / saving.");
+            Help("The bear is the REAL customer standing at its saved anchor — move it here, " +
+                 "in the Inspector, or drag it in the Scene view (captured on save/play). " +
+                 "Play mode walks the bear to this exact spot. The pile is a stand-in and " +
+                 "is never saved.");
 
             using (new EditorGUI.DisabledScope(Application.isPlaying))
             {
-                bool bear = EditorGUILayout.ToggleLeft("Show customer (bear at the counter)", showBear);
-                bool pile = EditorGUILayout.ToggleLeft("Show dessert pile (resting on the floor curve)", showPile);
-                if (bear != showBear || pile != showPile)
+                var customer = FindAnyObjectByType<CustomerView>(FindObjectsInactive.Include);
+                if (customer != null)
                 {
-                    showBear = bear; showPile = pile;
-                    SessionState.SetBool(BearKey, showBear);
+                    var so = new SerializedObject(customer);
+                    var pShow = so.FindProperty("editorPreview");
+                    var pAnchor = so.FindProperty("anchor");
+                    pShow.boolValue = EditorGUILayout.ToggleLeft("Show customer (bear at the counter)",
+                                                                 pShow.boolValue);
+                    pAnchor.vector2Value = EditorGUILayout.Vector2Field(
+                        new GUIContent("Customer position (stage px)"), pAnchor.vector2Value);
+                    if (so.ApplyModifiedProperties())
+                    {
+                        customer.Rebuild();
+                        SceneView.RepaintAll();
+                    }
+                }
+
+                bool pile = EditorGUILayout.ToggleLeft("Show dessert pile (resting on the floor curve)",
+                                                       showPile);
+                if (pile != showPile)
+                {
+                    showPile = pile;
                     SessionState.SetBool(PileKey, showPile);
                     RebuildPreview();
                 }
@@ -348,33 +379,46 @@ namespace PanDulce.Editor
             previewRoot = null;
 
             var stage = GameObject.Find(StageName);
-            if ((showBear || showPile) && stage != null && Db != null)
+            if (showPile && stage != null && Db != null)
             {
                 previewRoot = new GameObject(PreviewName) { hideFlags = HideFlags.DontSave };
                 previewRoot.transform.SetParent(stage.transform, false);
-                if (showBear) BuildBear(previewRoot.transform);
-                if (showPile) BuildPile(previewRoot.transform);
+                BuildPile(previewRoot.transform);
             }
             SceneView.RepaintAll();
             building = false;
         }
 
-        void BuildBear(Transform root)
+        /// <summary>
+        /// A merge must feel like a promotion, so every tier has to be physically bigger than
+        /// the one below it. The base radii guarantee that on their own; a size % steep enough
+        /// can undo it, and then merging two desserts hands back something smaller. Worth
+        /// catching here, where the number is being typed.
+        /// </summary>
+        void WarnIfChainShrinks()
         {
-            var anchor = new GameObject("Bear") { hideFlags = HideFlags.DontSave };
-            anchor.transform.SetParent(root, false);
-            anchor.transform.localPosition = StageCoords.Stage(CustomerView.AnchorX, CustomerView.AnchorY);
+            if (Db == null) return;
+            float sizeScale = Tuning != null ? Tuning.SizeScale : 1.3f;
 
-            var go = new GameObject("Sprite") { hideFlags = HideFlags.DontSave };
-            go.transform.SetParent(anchor.transform, false);
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sharedMaterial = SpriteMaterials.Unlit;
-            sr.sprite = Db.Customer(0);
-            sr.sortingLayerName = "Customer";
-            // Mirrors CustomerView: baked at 2x, PPU 100 → scale 0.5, lifted half the
-            // rendered height so the anchor is bottom-centre.
-            go.transform.localScale = Vector3.one * 0.5f;
-            go.transform.localPosition = new Vector3(0f, 100f * StageCoords.PX, 0f);
+            string bad = "";
+            float prev = TierTable.EffectiveRadius(0, sizeScale, Db.TierSize(0));
+            for (int i = 1; i < TierTable.Count; i++)
+            {
+                float r = TierTable.EffectiveRadius(i, sizeScale, Db.TierSize(i));
+                if (r <= prev)
+                {
+                    // The size % that would put this tier just past the one below it.
+                    float need = prev / (TierTable.BaseRadius[i] * sizeScale) * 100f;
+                    bad += $"\n· {Db.Name(i)} (tier {i}) is not bigger than {Db.Name(i - 1)} " +
+                           $"— needs more than {Mathf.Ceil(need)}%.";
+                }
+                prev = Mathf.Max(prev, r);
+            }
+
+            if (bad.Length > 0)
+                EditorGUILayout.HelpBox("Sizes now move the physics circle, and this chain " +
+                                        "shrinks somewhere — a merge there hands back a " +
+                                        "smaller dessert:" + bad, MessageType.Warning);
         }
 
         void BuildPile(Transform root)
@@ -398,7 +442,9 @@ namespace PanDulce.Editor
             float total = 0f;
             for (int i = 0; i < bottom.Length; i++)
             {
-                r[i] = TierTable.EffectiveRadius(bottom[i], sizeScale);
+                // Size % is in the radius, so the preview packs exactly like the real pile —
+                // that is what makes it a fitting check and not just a picture.
+                r[i] = TierTable.EffectiveRadius(bottom[i], sizeScale, Db.TierSize(bottom[i]));
                 total += 2f * r[i];
             }
 
@@ -416,7 +462,7 @@ namespace PanDulce.Editor
 
             for (int i = 0; i < top.Length && i + 1 < bottom.Length; i++)
             {
-                float tr = TierTable.EffectiveRadius(top[i], sizeScale);
+                float tr = TierTable.EffectiveRadius(top[i], sizeScale, Db.TierSize(top[i]));
                 float tx = (x[i] + x[i + 1]) * 0.5f;
                 float ty = Mathf.Min(y[i], y[i + 1]) - tr * 1.35f;
                 Spawn(pile.transform, top[i], tx, ty, sizeScale, 40 + i);
@@ -433,7 +479,7 @@ namespace PanDulce.Editor
             sr.sortingLayerName = "PlayArea";
             sr.sortingOrder = order;
             go.transform.localPosition = new Vector3(simX * StageCoords.PX, -simY * StageCoords.PX, 0f);
-            ViewFactory.SetIcon(sr, TierTable.EffectiveRadius(tier, sizeScale), Db.ArtScale(tier));
+            ViewFactory.SetIcon(sr, TierTable.EffectiveRadius(tier, sizeScale, Db.TierSize(tier)));
         }
 
         // ------------------------------------------------------------ 4 · scale
@@ -450,10 +496,12 @@ namespace PanDulce.Editor
             {
                 EditorGUILayout.LabelField("Selected", t.name, EditorStyles.boldLabel);
                 if (IsGenerated(t))
-                    EditorGUILayout.HelpBox("Generated object — its size resets on rebuild/play. " +
-                                            "Use it for eyeballing; make lasting changes via the " +
-                                            "dessert sizes above or on persistent objects (LayoutArt " +
-                                            "pieces, folders).", MessageType.Info);
+                    EditorGUILayout.HelpBox("Generated object. Moves/scales of a view's Content " +
+                                            "node (and the bear) are folded into saved data on " +
+                                            "save/play, so they stick. Leaves deeper down still " +
+                                            "reset on rebuild — for desserts use the sizes above; " +
+                                            "otherwise grab Content or a persistent folder.",
+                                            MessageType.Info);
                 if (!Mathf.Approximately(t.localScale.x, t.localScale.y))
                     Help($"Non-uniform scale ({t.localScale.x:F2}, {t.localScale.y:F2}) — the slider makes it uniform.");
 

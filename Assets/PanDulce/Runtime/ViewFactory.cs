@@ -80,18 +80,22 @@ namespace PanDulce.Runtime
             sr.sprite = db != null ? db.Pastry(tier) : null;
             sr.sortingLayerName = layer;
             sr.sortingOrder = order;
-            SetIcon(sr, radius, db != null ? db.ArtScale(tier) : 1f);
+            SetIcon(sr, radius, db != null ? db.TierSize(tier) : 1f);
             go.transform.localPosition = new Vector3(cx * StageCoords.PX, -cy * StageCoords.PX, 0f);
             return sr;
         }
 
         /// <summary>
         /// Sprites are authored at radius 200, so any icon size is a uniform scale.
-        /// artScale is the per-dessert visual multiplier from Pastries.asset (Studio window).
+        ///
+        /// Pass tierSize ONLY when radiusStagePx is a fixed chrome radius (a case seat, the
+        /// plaque, the order bubble) — there it is what keeps the icon proportional to the
+        /// dessert. A radius that came from TierTable already has it folded in; passing it
+        /// again would square it.
         /// </summary>
-        public static void SetIcon(SpriteRenderer sr, float radiusStagePx, float artScale = 1f)
+        public static void SetIcon(SpriteRenderer sr, float radiusStagePx, float tierSize = 1f)
         {
-            float s = radiusStagePx / Core.TierTable.CanonicalSpriteRadius * artScale;
+            float s = radiusStagePx / Core.TierTable.CanonicalSpriteRadius * tierSize;
             sr.transform.localScale = new Vector3(s, s, 1f);
         }
 

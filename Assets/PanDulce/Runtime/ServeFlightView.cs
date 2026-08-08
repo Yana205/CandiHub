@@ -74,7 +74,7 @@ namespace PanDulce.Runtime
             float s = Mathf.Lerp(1f, 0.6f, Mathf.SmoothStep(0f, 1f, t));
 
             sprite.transform.localPosition = StageCoords.Stage(p.x, p.y);
-            ViewFactory.SetIcon(sprite, 26f * s, database != null ? database.ArtScale(tier) : 1f);
+            ViewFactory.SetIcon(sprite, 26f * s, database != null ? database.TierSize(tier) : 1f);
         }
 
         /// <summary>Approximates cubic-bezier(0.35, -0.15, 0.35, 1).</summary>

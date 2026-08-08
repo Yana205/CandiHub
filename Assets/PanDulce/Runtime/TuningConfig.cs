@@ -15,8 +15,15 @@ namespace PanDulce.Runtime
     {
         [SerializeField] SimConfigData data = new SimConfigData();
 
+        [Tooltip("Where per-dessert sizes come from. They live with the sprites so they follow " +
+                 "a dessert when Studio reorders the merge chain.")]
+        [SerializeField] PastryDatabase pastries;
+
         /// <summary>Direct access for the Tweaks window's schema delegates.</summary>
         public SimConfigData Data => data;
+
+        /// <summary>Editor-time wiring, from StageBuilder — see TierSize.</summary>
+        public void EditorAssign(PastryDatabase db) => pastries = db;
 
         public void ResetToMockDefaults() => data = new SimConfigData();
 
@@ -62,5 +69,14 @@ namespace PanDulce.Runtime
 
         public float TimeScale => data.TimeScale;
         public bool Paused => data.Paused;
+
+        /// <summary>
+        /// Per-dessert size. Read from Pastries.asset when it is bound — that keeps ONE number
+        /// behind both the sprite and the physics circle, which is the whole point: a dessert
+        /// enlarged in Studio also claims more room in the pile. Falls back to the plain config
+        /// (all 100%) when unbound, so a bare Tuning.asset still runs.
+        /// </summary>
+        public float TierSize(int tier)
+            => pastries != null ? pastries.TierSize(tier) : data.TierSize(tier);
     }
 }

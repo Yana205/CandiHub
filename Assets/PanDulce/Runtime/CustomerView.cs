@@ -5,8 +5,9 @@ namespace PanDulce.Runtime
     /// <summary>The bear, waddling in from the left behind the counter.</summary>
     public sealed class CustomerView : GeneratedView
     {
-        // Public so the Studio window's edit-mode bear preview stands exactly here.
-        public const float AnchorX = 215f, AnchorY = 355f;
+        /// <summary>Bear sprite pivot is centred; the anchor is bottom-centre, so the sprite
+        /// sits half its rendered height (100 stage px) above it.</summary>
+        public const float SpriteLift = 100f;
 
         // Entrance walk. StartX puts the bear's leading edge past the widest letterbox the
         // fitter can show (left visible edge bottoms out at -122, half the bear is 115).
@@ -14,6 +15,19 @@ namespace PanDulce.Runtime
         const float StepPx = 65f;      // stride length → hop cadence
         const float HopPx = 9f;        // hop height at mid-walk
         const float WaddleDeg = 4f;    // side-to-side tilt per step
+
+        // Where the bear stands at the counter, in stage px. Serialized so the scene owns it:
+        // edit it in the Inspector / Studio window, or drag the bear in the Scene view (the
+        // editor folds the drag back into this field on save / play). The walk animation
+        // reads it live, so play mode always lands on the authored spot.
+        [SerializeField] Vector2 anchor = new Vector2(215f, 355f);
+
+        // Edit-mode only: show the real generated bear standing at the anchor, so the Scene
+        // and Game views preview exactly what play mode will render. Ignored during play.
+        [SerializeField] bool editorPreview;
+
+        public Vector2 Anchor => anchor;
+        public bool EditorPreviewOn => editorPreview;
 
         Transform bearAnchor;
         SpriteRenderer bear;
@@ -26,7 +40,7 @@ namespace PanDulce.Runtime
             present = false;
             var t = Content;
 
-            bearAnchor = ViewFactory.Node(t, "BearAnchor", AnchorX, AnchorY).transform;
+            bearAnchor = ViewFactory.Node(t, "BearAnchor", anchor.x, anchor.y).transform;
             var go = new GameObject("Bear") { hideFlags = HideFlags.DontSave };
             go.transform.SetParent(bearAnchor, false);
             bear = go.AddComponent<SpriteRenderer>();
@@ -38,8 +52,8 @@ namespace PanDulce.Runtime
             // pivot → lift half the RENDERED height (100 stage px) so the anchor is
             // bottom-centre; the lift is in the anchor's space, unaffected by the child scale.
             go.transform.localScale = Vector3.one * 0.5f;
-            go.transform.localPosition = new Vector3(0f, 100f * StageCoords.PX, 0f);
-            go.SetActive(false);
+            go.transform.localPosition = new Vector3(0f, SpriteLift * StageCoords.PX, 0f);
+            go.SetActive(!Application.isPlaying && editorPreview);
         }
 
         public void Arrive(float entranceTime)
@@ -51,7 +65,7 @@ namespace PanDulce.Runtime
             entranceStart = Time.time;
             happyStart = -1f;
             // Our Update may not run again this frame — never flash a centred bear.
-            bearAnchor.localPosition = StageCoords.Stage(StartX, AnchorY);
+            bearAnchor.localPosition = StageCoords.Stage(StartX, anchor.y);
         }
 
         public void Celebrate()
@@ -102,16 +116,31 @@ namespace PanDulce.Runtime
 
             // Waddle: glide eases in/out; an integer step count means the hop and tilt both
             // land on zero exactly at t=1, and the envelope keeps the first/last steps small.
-            float x = Mathf.SmoothStep(StartX, AnchorX, t);
-            int steps = Mathf.Max(3, Mathf.RoundToInt((AnchorX - StartX) / StepPx));
+            float x = Mathf.SmoothStep(StartX, anchor.x, t);
+            int steps = Mathf.Max(3, Mathf.RoundToInt((anchor.x - StartX) / StepPx));
             float swing = Mathf.Sin(t * steps * Mathf.PI);       // signed: flips each step
             float env = Mathf.Sin(t * Mathf.PI);
-            bearAnchor.localPosition = StageCoords.Stage(x, AnchorY)
+            bearAnchor.localPosition = StageCoords.Stage(x, anchor.y)
                                      + new Vector3(0f, HopPx * Mathf.Abs(swing) * env * StageCoords.PX, 0f);
             bearAnchor.localRotation = Quaternion.Euler(0f, 0f, WaddleDeg * swing * env);
             bearAnchor.localScale = Vector3.one;
         }
 
-        static Vector3 Base() => StageCoords.Stage(AnchorX, AnchorY);
+        Vector3 Base() => StageCoords.Stage(anchor);
+
+#if UNITY_EDITOR
+        // Inspector edits land here; SetActive is illegal inside OnValidate, so defer a frame.
+        void OnValidate()
+        {
+            if (Application.isPlaying) return;
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (this == null || Application.isPlaying) return;
+                if (bearAnchor != null) bearAnchor.localPosition = Base();
+                if (bear != null && bear.gameObject.activeSelf != editorPreview)
+                    bear.gameObject.SetActive(editorPreview);
+            };
+        }
+#endif
     }
 }

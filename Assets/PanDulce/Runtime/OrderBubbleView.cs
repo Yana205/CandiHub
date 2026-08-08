@@ -47,8 +47,9 @@ namespace PanDulce.Runtime
             if (database != null)
             {
                 icon.sprite = database.Pastry(tier);
-                // Re-apply the per-dessert art scale; the breathing in Update pulses around it.
-                ViewFactory.SetIcon(icon, 16f, database.ArtScale(tier));
+                // Fixed 16 px bubble icon, scaled by the dessert's size % so it reads as the
+                // same dessert; the breathing in Update pulses around that.
+                ViewFactory.SetIcon(icon, 16f, database.TierSize(tier));
                 iconBaseScale = icon.transform.localScale.x;
             }
             nameLabel.text = $"{(database != null ? database.Name(tier) : TierTable.Names[tier])}, please!";
