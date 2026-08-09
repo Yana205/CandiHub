@@ -21,6 +21,12 @@ namespace PanDulce.Runtime
         /// <summary>Peak scale-up of the ready pulse (§8.7 specifies 0.035).</summary>
         const float ReadyPulseScale = 0.015f;
 
+        /// <summary>How long a deny shake takes to decay to nothing, in seconds.</summary>
+        const float DenyShakeSec = 0.35f;
+
+        /// <summary>Peak side travel of a deny shake, in stage px.</summary>
+        const float DenyShakePx = 4f;
+
         /// <summary>
         /// Charge badge geometry, in stage px. Only the width moves: the label swaps between
         /// "0%" and "READY!", which is close to three times wider, so a fixed plate either
@@ -265,8 +271,7 @@ namespace PanDulce.Runtime
             label.alpha = alpha;
 
             // Deny wiggle: a decaying side-shake after a tap on the uncharged button.
-            float denyK = denyAt >= 0f ? (now - denyAt) / 0.35f : 2f;
-            float wiggle = denyK < 1f ? Mathf.Sin(denyK * Mathf.PI * 4f) * (1f - denyK) * 4f : 0f;
+            float wiggle = DenyWiggle(ref denyAt, now);
 
             // Ready breathe: composes with the wiggle above — wiggle owns x, pulse owns y.
             float pulse = ready ? Mathf.Sin(now / ReadyPulsePeriod * Mathf.PI * 2f) : 0f;
@@ -297,9 +302,32 @@ namespace PanDulce.Runtime
             }
 
             // Same deny grammar as the shake button: a decaying side-shake.
-            float denyK = clearDenyAt >= 0f ? (now - clearDenyAt) / 0.35f : 2f;
-            float wiggle = denyK < 1f ? Mathf.Sin(denyK * Mathf.PI * 4f) * (1f - denyK) * 4f : 0f;
+            float wiggle = DenyWiggle(ref clearDenyAt, now);
             clearRoot.localPosition = ButtonHome + new Vector3(wiggle * StageCoords.PX, 0f, 0f);
+        }
+
+        /// <summary>
+        /// The decaying side-shake after a rejected tap, in stage px — and the one place that
+        /// owns a deny stamp's lifetime, since both buttons shake to the same grammar.
+        ///
+        /// The stamps are taken from Sim.Now, which Restart winds back to 0, so a stamp can
+        /// end up in the FUTURE. Such a stamp has to be DROPPED rather than measured against:
+        /// (1 - k) is a decay only while k climbs from 0 towards 1, and a negative k turns it
+        /// into growth. That was the bug behind the button teleporting across the x axis on
+        /// itch — tap the uncharged button, die, hit Play again, and a two-minute-old stamp
+        /// threw it ±1500 stage px across a 446 px screen on every single frame, for as long
+        /// as the new run's clock took to climb back to the old stamp. It only showed up for
+        /// players who had been denied before restarting, which is why some devices looked
+        /// fine. Clearing the stamp here also stops it re-firing a spurious shake later, at
+        /// the moment the new clock passes it.
+        /// </summary>
+        static float DenyWiggle(ref float stamp, float now)
+        {
+            if (now < stamp) stamp = -1f;
+            if (stamp < 0f) return 0f;
+
+            float k = (now - stamp) / DenyShakeSec;
+            return k < 1f ? Mathf.Sin(k * Mathf.PI * 4f) * (1f - k) * DenyShakePx : 0f;
         }
 
         /// <summary>Tap landed on the button while it was not ready — shake the head.</summary>
