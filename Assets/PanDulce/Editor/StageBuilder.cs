@@ -444,7 +444,9 @@ namespace PanDulce.Editor
                               LoadUiSprite("Button 2"),
                               LoadUiSprite("Next customer"),
                               LoadUiSprite("Next pastry"),
-                              LoadUiSprite("Coin"));
+                              LoadUiSprite("Coin"),
+                              LoadUiSprite("Top Bar"),
+                              LoadUiSprite("Bottom Bar"));
 
             EditorUtility.SetDirty(skin);
             AssetDatabase.SaveAssets();

@@ -37,6 +37,12 @@ namespace PanDulce.Runtime
         [Tooltip("The sakura coin, rim included — the clearance button's price icon.")]
         [SerializeField] Sprite coin;
 
+        [Tooltip("The top bar slab — wood plus its cream flourish. Carries its own bottom edge.")]
+        [SerializeField] Sprite topBar;
+
+        [Tooltip("The boost bar slab. Carries its own top edge, sheen included.")]
+        [SerializeField] Sprite bottomBar;
+
         public Sprite CustomersChip => customersChip;
         public Sprite CoinChip => coinChip;
         public Sprite Button => button;
@@ -44,10 +50,13 @@ namespace PanDulce.Runtime
         public Sprite Sign => sign;
         public Sprite NextPlaque => nextPlaque;
         public Sprite Coin => coin;
+        public Sprite TopBar => topBar;
+        public Sprite BottomBar => bottomBar;
 
 #if UNITY_EDITOR
         public void EditorAssign(Sprite customers, Sprite chip, Sprite btn, Sprite pl,
-                                 Sprite sgn, Sprite plaque, Sprite coinIcon)
+                                 Sprite sgn, Sprite plaque, Sprite coinIcon,
+                                 Sprite top, Sprite bottom)
         {
             customersChip = customers;
             coinChip = chip;
@@ -56,6 +65,8 @@ namespace PanDulce.Runtime
             sign = sgn;
             nextPlaque = plaque;
             coin = coinIcon;
+            topBar = top;
+            bottomBar = bottom;
         }
 #endif
     }

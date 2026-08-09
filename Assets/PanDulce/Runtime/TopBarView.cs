@@ -19,6 +19,22 @@ namespace PanDulce.Runtime
         const float ChipMidY = 28.1f;
         const float ChipY = ChipMidY - ChipH * 0.5f;
 
+        /// <summary>
+        /// The slab, in stage px. Authored by hand in the scene (Lital, 2026-08-09) and read
+        /// back from there: deliberately larger than the 446 × 965 an iPhone 15 shows, and
+        /// hung past the frame's top-left, so the drawing runs off every edge instead of
+        /// ending in a seam. Only the bottom edge is pinned — it stays on the 56 px bar line,
+        /// which is what the chips and the title are placed against.
+        /// </summary>
+        const float BarX = -46.21f;
+        const float BarY = -74.48f;
+        const float BarW = 501.7f;
+        const float BarH = 130.49f;
+
+        /// <summary>Border band, kept for the no-art fallback. Sits on the slab's bottom edge.</summary>
+        const float BorderY = 52f;
+        const float BorderH = 4f;
+
         TextMeshPro customersLabel, coinsLabel;
         int shownServed = -1, shownCoins = -1;
 
@@ -28,10 +44,16 @@ namespace PanDulce.Runtime
             shownCoins = -1;
             var t = Content;
 
-            ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.89f),
-                             0f, -60f, 430f, 116f, Palette.BarTop, "Overlay", 0);
-            ViewFactory.Rect(t, "BottomBorder", Shapes.White, 0f, 52f, 430f, 4f,
-                             Palette.BarBorder, "Overlay", 1);
+            // The drawn slab already carries its own bottom edge, so it replaces both the
+            // generated gradient and the BottomBorder strip that used to sit on top of it.
+            Sprite barArt = skin != null ? skin.TopBar : null;
+            ViewFactory.Rect(t, "Background",
+                             barArt != null ? barArt : Shapes.VerticalGradient(64, 1f, 0.89f),
+                             BarX, BarY, BarW, BarH,
+                             barArt != null ? Color.white : Palette.BarTop, "Overlay", 0);
+            if (barArt == null)
+                ViewFactory.Rect(t, "BottomBorder", Shapes.White, BarX, BorderY,
+                                 BarW, BorderH, Palette.BarBorder, "Overlay", 1);
 
             // Both chips are drawings of an icon plus a number pill, so they are sized to the
             // art's own aspect (28 px tall would squash the panda) and the label is pushed

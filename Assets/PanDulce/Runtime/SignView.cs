@@ -62,7 +62,7 @@ namespace PanDulce.Runtime
             float x = art != null ? 8f + SignW * 0.19f : 8f;
             float w = art != null ? SignW * 0.62f : 118f;
 
-            topLine = ViewFactory.Label(t, "TopLabel", "next customer in", x, top, w, 10f,
+            topLine = ViewFactory.Label(t, "TopLabel", "next customer in", x, top, w, 12f,
                                         Palette.Hex("#a58358"), "Furniture", 13,
                                         TextAlignmentOptions.Center, FontStyles.Normal);
             bigLine = ViewFactory.Label(t, "BigLabel", "18s", x, big, w, art != null ? 26f : 30f,

@@ -36,6 +36,38 @@ namespace PanDulce.Runtime
         const float BadgeRim = 2f;        // how far BadgeBorder stands proud of Badge
         const float BadgeBaseline = 14f;  // label centre, down from the plate top
 
+        /// <summary>
+        /// The slab, in stage px. Authored by hand in the scene (Lital, 2026-08-09) and read
+        /// back from there: deliberately larger than the 446 × 965 an iPhone 15 shows, so the
+        /// drawing runs off both sides and past the bottom instead of ending in a seam. The
+        /// top edge stays on 824, which is the line §8.7 authored the bar against.
+        /// </summary>
+        const float BarX = -34.7f;
+        const float BarY = 824f;
+        const float BarW = 477.4f;
+        const float BarH = 128.45f;
+
+        /// <summary>Edge bands, kept for the no-art fallback. Both sit on the slab's top edge.</summary>
+        const float BorderH = 3f;
+        const float SheenY = BarY + BorderH;
+
+        /// <summary>
+        /// Where both buttons sit relative to the y values §8.7 authored them at, in stage px.
+        ///
+        /// The slab was redrawn taller and the buttons stayed pinned near its top edge, which
+        /// left them riding high with a wide empty band underneath. This re-centres the pair
+        /// in the strip the slab actually shows — 806 down to the screen's bottom edge — and
+        /// cancels the node's own +11 nudge so the two buttons straddle the screen centre.
+        /// Everything inside a button is placed relative to its root, so shifting the roots
+        /// carries the icons, labels, charge track and both badges along with them.
+        /// </summary>
+        const float ButtonShiftX = -11f;
+        const float ButtonShiftY = 26f;
+
+        /// <summary>The roots' resting local position. Sync composes the wiggle and the ready
+        /// pulse onto this, so the shift cannot be overwritten a frame later.</summary>
+        static Vector3 ButtonHome => StageCoords.Stage(ButtonShiftX, ButtonShiftY);
+
         SpriteRenderer button, chargeFill, clearFace, badge, badgeBorder;
         TextMeshPro label, badgeLabel, clearLabel, priceLabel;
         Transform buttonRoot, clearRoot;
@@ -62,19 +94,29 @@ namespace PanDulce.Runtime
             shownBadge = null;
             var t = Content;
 
-            ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.85f),
-                             0f, 824f, 430f, 120f, Palette.BarTop, "Overlay", 30);
-            ViewFactory.Rect(t, "TopBorder", Shapes.White, 0f, 824f, 430f, 3f,
-                             Palette.BarBorder, "Overlay", 31);
-            ViewFactory.Rect(t, "TopSheen", Shapes.White, 0f, 827f, 430f, 3f,
-                             new Color(1f, 225f/255f, 180f/255f, 0.22f), "Overlay", 31);
+            // The drawn slab already carries its own top edge and highlight, so it replaces
+            // the generated gradient plus the TopBorder and TopSheen strips that stood in for
+            // them.
+            Sprite barArt = skin != null ? skin.BottomBar : null;
+            ViewFactory.Rect(t, "Background",
+                             barArt != null ? barArt : Shapes.VerticalGradient(64, 1f, 0.85f),
+                             BarX, BarY, BarW, BarH,
+                             barArt != null ? Color.white : Palette.BarTop, "Overlay", 30);
+            if (barArt == null)
+            {
+                ViewFactory.Rect(t, "TopBorder", Shapes.White, BarX, BarY,
+                                 BarW, BorderH, Palette.BarBorder, "Overlay", 31);
+                ViewFactory.Rect(t, "TopSheen", Shapes.White, BarX, SheenY,
+                                 BarW, BorderH,
+                                 new Color(1f, 225f/255f, 180f/255f, 0.22f), "Overlay", 31);
+            }
 
             Sprite faceArt = skin != null ? skin.Button : null;
             Sprite plateArt = skin != null ? skin.Plate : null;
             readyTint = faceArt != null ? Color.white : Palette.Amber;
             idleTint = faceArt != null ? Color.white : Palette.AmberDeep;
 
-            buttonRoot = ViewFactory.Node(t, "ShakeButton").transform;
+            buttonRoot = ViewFactory.Node(t, "ShakeButton", ButtonShiftX, ButtonShiftY).transform;
 
             // The shadow reuses the face drawing so its corners match; only the tint differs.
             ViewFactory.Plate(buttonRoot, "Shadow", faceArt, 12f, 836f, 226f, 46f, 15,
@@ -97,7 +139,7 @@ namespace PanDulce.Runtime
 
             // Starts on the hint text; Sync swaps it once the meter is ready.
             label = ViewFactory.Label(buttonRoot, "Label", "Merge desserts to charge!",
-                                      48f, 851f, 184f, 13f, Palette.Cream, "Overlay", 34);
+                                      48f, 851f, 184f, 15f, Palette.Cream, "Overlay", 34);
 
             ViewFactory.Rect(buttonRoot, "ChargeTrack", Shapes.RoundedRect(12, 12, 4),
                              45f, 864f, 160f, 7f,
@@ -120,7 +162,7 @@ namespace PanDulce.Runtime
             FitBadge();
 
             // --- Day-old clearance: coin-priced, pops every tier-0/1 pastry ---
-            clearRoot = ViewFactory.Node(t, "ClearanceButton").transform;
+            clearRoot = ViewFactory.Node(t, "ClearanceButton", ButtonShiftX, ButtonShiftY).transform;
 
             ViewFactory.Plate(clearRoot, "Shadow", faceArt, 250f, 836f, 168f, 46f, 15,
                               Palette.Hex("#6f4a2c"), "Overlay", 31);
@@ -137,7 +179,7 @@ namespace PanDulce.Runtime
                               Palette.Hex("#c07f1c"), "Overlay", 35);
 
             clearLabel = ViewFactory.Label(clearRoot, "Label", "Clear day-olds",
-                                           284f, 851f, 130f, 12f, Palette.Cream, "Overlay", 34);
+                                           271f, 854.8f, 130f, 14f, Palette.Cream, "Overlay", 34);
             clearLabel.alpha = 0.55f;
 
             // Price badge overlapping the button's top-right corner. The coin-counter drawing
@@ -228,7 +270,8 @@ namespace PanDulce.Runtime
 
             // Ready breathe: composes with the wiggle above — wiggle owns x, pulse owns y.
             float pulse = ready ? Mathf.Sin(now / ReadyPulsePeriod * Mathf.PI * 2f) : 0f;
-            buttonRoot.localPosition = new Vector3(wiggle * StageCoords.PX,
+            buttonRoot.localPosition = ButtonHome
+                                     + new Vector3(wiggle * StageCoords.PX,
                                                    pulse * ReadyPulseBobPx * StageCoords.PX, 0f);
             buttonRoot.localScale = Vector3.one * (1f + Mathf.Max(0f, pulse) * ReadyPulseScale);
         }
@@ -256,7 +299,7 @@ namespace PanDulce.Runtime
             // Same deny grammar as the shake button: a decaying side-shake.
             float denyK = clearDenyAt >= 0f ? (now - clearDenyAt) / 0.35f : 2f;
             float wiggle = denyK < 1f ? Mathf.Sin(denyK * Mathf.PI * 4f) * (1f - denyK) * 4f : 0f;
-            clearRoot.localPosition = new Vector3(wiggle * StageCoords.PX, 0f, 0f);
+            clearRoot.localPosition = ButtonHome + new Vector3(wiggle * StageCoords.PX, 0f, 0f);
         }
 
         /// <summary>Tap landed on the button while it was not ready — shake the head.</summary>
@@ -274,16 +317,25 @@ namespace PanDulce.Runtime
             => new Vector2(transform.localPosition.x / StageCoords.PX,
                            -transform.localPosition.y / StageCoords.PX);
 
-        /// <summary>Stage-px rect of the shake button face, for hit testing without a Canvas.</summary>
+        /// <summary>Stage-px rect of the shake button face, for hit testing without a Canvas.
+        /// Carries ButtonShift so taps follow the re-centred face, not where §8.7 drew it.</summary>
         public Rect ButtonRect
         {
-            get { Vector2 o = StageOffset; return new Rect(12f + o.x, 833f + o.y, 226f, 46f); }
+            get
+            {
+                Vector2 o = StageOffset;
+                return new Rect(12f + ButtonShiftX + o.x, 833f + ButtonShiftY + o.y, 226f, 46f);
+            }
         }
 
         /// <summary>Stage-px rect of the clearance button face.</summary>
         public Rect ClearanceRect
         {
-            get { Vector2 o = StageOffset; return new Rect(250f + o.x, 833f + o.y, 168f, 46f); }
+            get
+            {
+                Vector2 o = StageOffset;
+                return new Rect(250f + ButtonShiftX + o.x, 833f + ButtonShiftY + o.y, 168f, 46f);
+            }
         }
     }
 }
