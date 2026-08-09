@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PanDulce.Runtime
 {
     /// <summary>
-    /// Boost bar — stage (0,824) 430 × 56 (§8.7). Shown only when boostsOn.
+    /// Boost buttons — stage (0,824) 430 × 56 (§8.7). Shown only when boostsOn.
     /// Two buttons since the coin economy: the charge-driven shake on the left
     /// (12–238) and the coin-priced Day-old clearance on the right (250–418).
     /// Both stay finger-sized on a real phone.
@@ -38,13 +38,9 @@ namespace PanDulce.Runtime
             shownCost = -1;
             var t = Content;
 
-            ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.85f),
-                             0f, 824f, 430f, 120f, Palette.BarTop, "Overlay", 30);
-            ViewFactory.Rect(t, "TopBorder", Shapes.White, 0f, 824f, 430f, 3f,
-                             Palette.BarBorder, "Overlay", 31);
-            ViewFactory.Rect(t, "TopSheen", Shapes.White, 0f, 827f, 430f, 3f,
-                             new Color(1f, 225f/255f, 180f/255f, 0.22f), "Overlay", 31);
-
+            // Bar-less since the painted art landed (2026-08-09, Yana's call) — the panel,
+            // border and sheen are gone. Both buttons already carry a drop shadow and a
+            // solid face, so they read on their own against the floor.
             buttonRoot = ViewFactory.Node(t, "ShakeButton").transform;
 
             ViewFactory.Panel(buttonRoot, "Shadow", 12f, 836f, 226f, 46f, 15,

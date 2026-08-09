@@ -34,9 +34,9 @@ MonoBehaviour:
     clothColorIndex: 0
     substeps: 3
     floorSag: 0
-    floorY: 250
-    wallLeft: 72
-    wallRight: 338
+    floorY: 255.99998
+    wallLeft: 38.31383
+    wallRight: 365.6233
     centerPull: 0
     groundFriction: 9
     comboWindow: 1.4
