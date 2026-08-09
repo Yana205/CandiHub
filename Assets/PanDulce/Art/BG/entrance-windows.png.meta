@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 09e8fbfc4bd9b495db37131b2f93f2a5
+guid: e6bea3463376f4f28bcf71c78b7dbe26
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8911411324452210705
-    second: glass-container_0
+      213: -6694002686848818013
+    second: entrance-windows_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 200
+  spritePixelsToUnits: 320
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: glass-container_0
+      name: entrance-windows_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 860
-        height: 1600
+        x: 174
+        y: 1998
+        width: 1022
+        height: 364
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: fe7f1a67d9e445480800000000000000
-      internalID: -8911411324452210705
+      spriteID: 3a4addcc5002a13a0800000000000000
+      internalID: -6694002686848818013
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      glass-container_0: -8911411324452210705
+      entrance-windows_0: -6694002686848818013
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

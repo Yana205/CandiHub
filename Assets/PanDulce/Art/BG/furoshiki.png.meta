@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: a700df23f3bb7481aa1d11d848d0d9ee
+guid: 55d84b9a651844184a9740cb95870ca0
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -9046932451453464347
-    second: deskline_0
+      213: 7694572244375863882
+    second: furoshiki_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 200
+  spritePixelsToUnits: 320
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: deskline_0
+      name: furoshiki_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 860
-        height: 1600
+        width: 1376
+        height: 1096
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5e0992c3ed6d27280800000000000000
-      internalID: -9046932451453464347
+      spriteID: a428a9c40bc98ca60800000000000000
+      internalID: 7694572244375863882
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      deskline_0: -9046932451453464347
+      furoshiki_0: 7694572244375863882
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
