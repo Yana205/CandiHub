@@ -146,18 +146,23 @@ namespace PanDulce.Tests
         }
 
         [Test]
-        public void TopOut_AccountsForBodyRadiusNotJustCentre()
+        public void TopOut_WaitsForTheCentreNotTheTopEdge()
         {
-            // A big pastry whose centre is below the line can still cross it with its top.
+            // A big pastry poking over the line with its top — centre still below — must
+            // NOT start the clock; in the v2 box the edge check ended two-dessert runs
+            // (see TopOutTests). Only a centre past the line counts.
             var cfg = Cfg();
             cfg.topOutLine = 82f;
             var w = new TopOutWatch();
 
             float r = TierTable.EffectiveRadius(TierTable.Max, cfg.SizeScale);
-            var bodies = new List<Body> { Settled(82f + r - 5f, TierTable.Max) };
+            var poking = new List<Body> { Settled(82f + r - 5f, TierTable.Max) };
+            w.Tick(0.1f, poking, 10f, cfg);
+            Assert.That(w.DangerT, Is.Zero, "poking over with the top edge is not over");
 
-            w.Tick(0.1f, bodies, 10f, cfg);
-            Assert.That(w.DangerT, Is.GreaterThan(0f), "top of the body crosses the line");
+            var centreOver = new List<Body> { Settled(82f - 1f, TierTable.Max) };
+            w.Tick(0.1f, centreOver, 10f, cfg);
+            Assert.That(w.DangerT, Is.GreaterThan(0f), "centre past the line starts the clock");
         }
 
         // ---------------------------------------------------------------- day cycle

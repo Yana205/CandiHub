@@ -25,6 +25,9 @@ namespace PanDulce.Core
         float StartCalmScale { get; }
         /// <summary>How many tiers begin discovered — in colour, spawnable, orderable.</summary>
         int StartDiscovered { get; }
+        /// <summary>Merges INTO a tier before its case seat colours in (and it becomes
+        /// spawnable/orderable). 1 = the classic first-merge reveal.</summary>
+        int DiscoverMerges { get; }
         float EntranceTime { get; }
         bool EndOfDay { get; }
         bool BoostsOn { get; }
@@ -64,10 +67,25 @@ namespace PanDulce.Core
         /// <summary>How long two matching desserts must stay in contact before they may
         /// merge. 0 = instant (classic).</summary>
         float MergeTouchSec { get; }
+        /// <summary>Touch seconds required when a matching pair came together WITHOUT a
+        /// real impact — the pile's own quiet progress. Throws, knocks and shakes use
+        /// plain MergeTouchSec. 0 = no distinction (classic).</summary>
+        float IdleMergeSec { get; }
 
         /// <summary>Acceleration (sim px/s²) pulling matching desserts toward each other
         /// when they are within about a diameter. 0 = off (classic).</summary>
         float KinPull { get; }
+
+        // --- The deal (2026-08-09): what the "next" hand favours ---
+
+        /// <summary>Exponent on the deal weights. 1 = the mock's linear 4:3:2:1 (classic);
+        /// 2 squares them so low tiers dominate and a dealt donut becomes rare.</summary>
+        float SpawnBias { get; }
+
+        /// <summary>Run seconds before the top two tiers (Choco Donut, Roll Cake) may be
+        /// DEALT as the next dessert. Merging up to them is untouched — this only stops
+        /// the deal from handing out the big ones early. 0 = no wait (classic).</summary>
+        float BigDealDelaySec { get; }
 
         // --- Economy: coins from serves buy boosts (spec 2026-08-04) ---
         int CoinBase { get; }

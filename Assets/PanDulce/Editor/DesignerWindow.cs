@@ -71,6 +71,15 @@ namespace PanDulce.Editor
                    d.gravity, 600f, 3000f, v => d.gravity = v);
             Slider(cfg, "Bounciness", "How much everything rebounds on impact.",
                    d.bounciness, 0f, 0.5f, v => d.bounciness = v);
+            Slider(cfg, "Center pull",
+                   "A constant sideways drift toward the middle of the box — the old cloth-" +
+                   "bowl feel. This is what herds desserts together (and into idle merges) " +
+                   "when you aren't touching them. 0 = they stay where they land.",
+                   d.centerPull, 0f, 100f, v => d.centerPull = v);
+            Slider(cfg, "Floor sag",
+                   "How much the floor curves up at the edges, like a hanging cloth. " +
+                   "Desserts roll downhill into the middle. 0 = the flat, straight box floor.",
+                   d.floorSag, 0f, 60f, v => d.floorSag = v);
             PercentSlider(cfg, "Pile size",
                           "Scales every dessert — art and physics together — as a percentage of " +
                           "its authored size. 100% is the drawn size. Bigger fills the cloth " +
@@ -83,20 +92,34 @@ namespace PanDulce.Editor
             EditorGUILayout.LabelField("Rhythm & difficulty", EditorStyles.boldLabel);
             PercentSlider(cfg, "Merge squeeze",
                           "How firmly two matching desserts must press together to merge, as a " +
-                          "share of the smaller one's size. 0% = a graze merges instantly. " +
-                          "Even a few % means resting neighbours stay put — only a landing " +
-                          "drop, pile weight, or a shake merges them. Above ~15% needs a " +
-                          "full-height drop.",
+                          "share of the smaller one's size. 0% = touching is enough. Above 0%, " +
+                          "resting neighbours stay put until something presses them — a landing " +
+                          "drop, pile weight, or a shake — and one hard-enough press counts for " +
+                          "the whole contact, so it composes with Touch time: press once, rest " +
+                          "together long enough, merge. Above ~15% needs a full-height drop.",
                           d.mergeOverlapPct, 0f, 25f, v => d.mergeOverlapPct = v);
             Slider(cfg, "Touch time to merge",
                    "Seconds two matching desserts must stay in contact before merging. " +
                    "0 = instant. A short hold makes the pile readable — you can see a merge " +
                    "coming and still change your mind.",
                    d.mergeTouchSec, 0f, 1.5f, v => d.mergeTouchSec = v);
+            Slider(cfg, "Idle merge time",
+                   "Two desserts that drifted together AT REST merge only after this long " +
+                   "side by side — the pile's own quiet progress, slowed. Throws, knocks " +
+                   "and shakes ignore this and use the plain touch time, so your own moves " +
+                   "always feel answered. 0 = no distinction.",
+                   d.idleMergeSec, 0f, 8f, v => d.idleMergeSec = v);
             Slider(cfg, "Min age to merge",
-                   "A fresh dessert cannot merge for this many seconds after it appears — the " +
-                   "brake on instant chain reactions.",
+                   "A dessert BORN FROM A MERGE cannot re-merge for this many seconds — the " +
+                   "brake on instant chain reactions. Dropped desserts never wait: a throw " +
+                   "onto a match merges as soon as the touch time is served.",
                    d.comboDelay, 0f, 2f, v => d.comboDelay = v);
+            IntSlider(cfg, "Merges to reveal",
+                      "How many times a dessert must be merged into before its case seat " +
+                      "colours in — and it joins the spawn menu and the order pool. 1 = the " +
+                      "classic first-merge reveal; higher stretches the whole discovery arc, " +
+                      "since each new tier also has to be built from revealed spawns.",
+                      d.discoverMerges, 1, 6, v => d.discoverMerges = v);
             Slider(cfg, "Matching pull",
                    "Matching desserts within about a diameter drift toward each other. " +
                    "0 = off. Higher makes pairs find each other on their own — a helping " +
@@ -105,6 +128,16 @@ namespace PanDulce.Editor
             Slider(cfg, "Drop cooldown",
                    "Seconds between drops. The base beat of the whole game.",
                    d.dropCooldown, 0.1f, 1.5f, v => d.dropCooldown = v);
+            Slider(cfg, "Low-tier lean",
+                   "How hard the deal leans on the small desserts. 1 = the classic " +
+                   "4:3:2:1; 2 squares the weights, so mochi dominates the hand and a " +
+                   "dealt donut becomes a rare treat.",
+                   d.spawnBias, 1f, 3f, v => d.spawnBias = v);
+            Slider(cfg, "Big deal wait (s)",
+                   "Run seconds before the top two tiers can be DEALT as the next " +
+                   "dessert. Merging up to them is untouched — this only keeps the " +
+                   "early hand small. 0 = off.",
+                   d.bigDealDelaySec, 0f, 30f, v => d.bigDealDelaySec = v);
 
             EditorGUILayout.Space(6f);
             EditorGUILayout.LabelField("Customers", EditorStyles.boldLabel);
@@ -215,6 +248,67 @@ namespace PanDulce.Editor
             EditorUtility.SetDirty(cfg);
         }
 
+        /// <summary>
+        /// Live diagnosis of the merge gate for the CLOSEST matching pair on the cloth —
+        /// every condition the sim checks, with its live numbers, so "why isn't it
+        /// merging?" answers itself instead of hiding in code.
+        /// </summary>
+        static void MergeGateReadout(TuningConfig cfg, MergeSim sim)
+        {
+            var bodies = sim.Bodies;
+            Body a = null, c = null;
+            float bestGap = float.MaxValue, bestRmin = 0f;
+            for (int i = 0; i < bodies.Count; i++)
+                for (int j = i + 1; j < bodies.Count; j++)
+                {
+                    Body p = bodies[i], q = bodies[j];
+                    if (p.dead || q.dead) continue;
+                    if (p.tier != q.tier || p.skin != q.skin || p.tier >= TierTable.Max) continue;
+                    float rp = TierTable.Er(p, cfg), rq = TierTable.Er(q, cfg);
+                    float dx = q.x - p.x, dy = q.y - p.y;
+                    float gap = Mathf.Sqrt(dx * dx + dy * dy) - (rp + rq);
+                    if (gap < bestGap) { bestGap = gap; a = p; c = q; bestRmin = Mathf.Min(rp, rq); }
+                }
+
+            EditorGUILayout.Space(2f);
+            if (a == null)
+            {
+                EditorGUILayout.LabelField("Merge gate: no matching pair on the cloth yet.",
+                                           EditorStyles.miniLabel);
+                return;
+            }
+
+            EditorGUILayout.LabelField(
+                $"Merge gate — closest matching pair ({TierTable.Names[a.tier]} + {TierTable.Names[c.tier]}):",
+                EditorStyles.miniBoldLabel);
+
+            float needPx = cfg.MergeOverlapPct * bestRmin;
+            float age = cfg.ComboDelay;
+            GateRow(sim.Now >= MergeSim.StartMergeGraceSec, "past start grace",
+                    $"no merges in the run's first {MergeSim.StartMergeGraceSec:F0}s");
+            GateRow(bestGap < MergeSim.KinTouchSlack, "touching",
+                    $"gap {Mathf.Max(0f, bestGap):F1}px — counts within {MergeSim.KinTouchSlack:F1}px");
+            GateRow(a.spawnT > 0.55f && c.spawnT > 0.55f, "grown in",
+                    $"{a.spawnT:P0} / {c.spawnT:P0} — both need >55% of Merge grow time");
+            string AgeStr(Body b) => b.bornOfMerge ? $"{sim.Now - b.bornAt:F1}s" : "dropped";
+            GateRow((!a.bornOfMerge || sim.Now - a.bornAt > age) &&
+                    (!c.bornOfMerge || sim.Now - c.bornAt > age), "old enough",
+                    $"{AgeStr(a)} / {AgeStr(c)} — only merge-born wait Min age {age:F1}s");
+            GateRow(a.squeezed && c.squeezed, "squeezed",
+                    needPx <= 0f ? "squeeze 0% — any real touch counts"
+                                 : $"needs one press ≥ {needPx:F1}px during this contact (a landing drop or a shake)");
+            bool struck = a.struck && c.struck;
+            float needSec = struck ? cfg.MergeTouchSec : Mathf.Max(cfg.IdleMergeSec, cfg.MergeTouchSec);
+            GateRow(a.kinTouchT >= needSec && c.kinTouchT >= needSec, "touch time",
+                    $"{Mathf.Min(a.kinTouchT, c.kinTouchT):F2}s of {needSec:F2}s — " +
+                    (struck ? "struck (thrown/knocked): fast lane"
+                            : $"idle contact: slow lane (a strike ≥ {MergeSim.StrikeSpeed:F0}px/s would fast-lane it)"));
+        }
+
+        static void GateRow(bool ok, string label, string detail)
+            => EditorGUILayout.LabelField($"   {(ok ? "✓" : "✗")} {label} — {detail}",
+                                          EditorStyles.miniLabel);
+
         // ------------------------------------------------------------ buttons
 
         void Buttons(TuningConfig cfg, SimConfigData d)
@@ -230,6 +324,7 @@ namespace PanDulce.Editor
                 EditorGUILayout.LabelField(
                     $"Coins: {g.Purse.Coins}   Served: {g.Shop.Served}   Physics: {g.PhysicsMs:F1} ms",
                     EditorStyles.miniLabel);
+                MergeGateReadout(cfg, g.Sim);
             }
 
             using (new EditorGUI.DisabledScope(g == null))

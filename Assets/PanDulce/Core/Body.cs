@@ -53,6 +53,28 @@ namespace PanDulce.Core
         /// <summary>Sim seconds of sustained same-tier contact, for the merge touch delay.</summary>
         public float kinTouchT;
 
+        /// <summary>Sim seconds since kin contact was last seen — resting neighbours chatter
+        /// around exact contact, so the touch timer forgives sub-quarter-second gaps
+        /// instead of resetting on every flicker.</summary>
+        public float kinGapT;
+
+        /// <summary>Born from a merge (not dropped/spawned). Only these wait out the
+        /// combo delay — the brake targets chain reactions, never a player's throw.</summary>
+        public bool bornOfMerge;
+
+        /// <summary>The current kin contact BEGAN with a real impact — a throw, a knock, a
+        /// shake (relative speed past MergeSim.StrikeSpeed). Struck contacts merge on the
+        /// fast lane (MergeTouchSec); contacts that drifted together at rest take the slow
+        /// lane (IdleMergeSec). Latched for the life of the contact, like squeezed.</summary>
+        public bool struck;
+
+        /// <summary>The current kin contact was pressed past the merge-squeeze requirement
+        /// at least once — latched for the life of the contact, cleared when it breaks.
+        /// Pressure is an instant (a landing drop, pile weight, a shake); the touch timer
+        /// is a duration. Without the latch the two knobs could never both be satisfied
+        /// in the same frame, and squeeze>0 + touch>0 meant nothing ever merged.</summary>
+        public bool squeezed;
+
         public bool dead;
 
         public void Reset()
@@ -70,6 +92,10 @@ namespace PanDulce.Core
             atRest = false;
             kinTouch = false;
             kinTouchT = 0f;
+            kinGapT = 999f;
+            bornOfMerge = false;
+            struck = false;
+            squeezed = false;
             dead = false;
         }
 
