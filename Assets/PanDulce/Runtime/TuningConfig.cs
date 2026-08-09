@@ -38,6 +38,7 @@ namespace PanDulce.Runtime
         public float StartCalmSec => data.StartCalmSec;
         public float StartCalmScale => data.StartCalmScale;
         public int StartDiscovered => data.StartDiscovered;
+        public int DiscoverMerges => data.DiscoverMerges;
         public float EntranceTime => data.EntranceTime;
         public bool EndOfDay => data.EndOfDay;
         public bool BoostsOn => data.BoostsOn;
@@ -66,7 +67,10 @@ namespace PanDulce.Runtime
 
         public float MergeOverlapPct => data.MergeOverlapPct;
         public float MergeTouchSec => data.MergeTouchSec;
+        public float IdleMergeSec => data.IdleMergeSec;
         public float KinPull => data.KinPull;
+        public float SpawnBias => data.SpawnBias;
+        public float BigDealDelaySec => data.BigDealDelaySec;
 
         public int CoinBase => data.CoinBase;
         public int CoinPerTier => data.CoinPerTier;

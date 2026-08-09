@@ -37,7 +37,7 @@ namespace PanDulce.Runtime
 
         readonly SpriteRenderer[] icons = new SpriteRenderer[Slots];
         readonly TextMeshPro[] labels = new TextMeshPro[Slots];
-        int shownStart, shownMax;
+        int shownStart, shownMax, shownProgress;
 
         protected override void Build()
         {
@@ -71,9 +71,15 @@ namespace PanDulce.Runtime
             while (maxD > start + Slots - 1 && start < TierTable.Count - Slots)
                 start = Mathf.Min(start + Slots - 2, TierTable.Count - Slots);
 
-            if (start == shownStart && maxD == shownMax) return;
+            // Silhouette seats count up toward their reveal, so a repaint is also due
+            // whenever any tier's merge tally moves — not only on a discovery.
+            int progress = 0;
+            for (int t = 0; t < TierTable.Count; t++) progress += sim.MergeCount(t);
+
+            if (start == shownStart && maxD == shownMax && progress == shownProgress) return;
             shownStart = start;
             shownMax = maxD;
+            shownProgress = progress;
 
             for (int i = 0; i < Slots; i++)
             {
@@ -87,9 +93,12 @@ namespace PanDulce.Runtime
                     icons[i].sprite = database.Pastry(tier);
                     ViewFactory.SetIcon(icons[i], IconRadius, database.DisplaySize(tier));
                 }
-                // Undiscovered entries render the sprite as a dark silhouette, label '?'.
+                // Undiscovered entries render the sprite as a dark silhouette; the label
+                // teases '?' until the first merge, then counts up ("1/3") to the reveal.
                 icons[i].color = found ? Color.white : Silhouette;
-                labels[i].text = found ? (database != null ? database.Name(tier) : TierTable.Names[tier]) : "?";
+                labels[i].text = found ? (database != null ? database.Name(tier) : TierTable.Names[tier])
+                    : sim.MergeCount(tier) > 0 ? $"{sim.MergeCount(tier)}/{sim.DiscoverNeed}"
+                    : "?";
             }
         }
 

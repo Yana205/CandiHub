@@ -1163,8 +1163,9 @@ MonoBehaviour:
   database: {fileID: 0}
   skin: {fileID: 0}
   tuning: {fileID: 11400000, guid: 130b65c563dcf47f99921efebccb32f4, type: 2}
-  floorCurve: 1
-  container: 1
+  floorCurve: 0
+  boxLine: 1
+  container: 0
   canvasFrame: 0
   spawnLine: 0
   topOutLine: 0

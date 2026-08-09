@@ -24,6 +24,7 @@ namespace PanDulce.Core
         public float startCalmSec = 0f;
         public float startCalmScale = 0.55f;
         public int startDiscovered = 4;
+        public int discoverMerges = 1;
         public float entranceTime = 1.3f;
         public bool endOfDay = false;
         public bool boostsOn = true;
@@ -61,7 +62,13 @@ namespace PanDulce.Core
         // so a fresh config still reproduces the mock exactly.
         public float mergeOverlapPct = 0f;
         public float mergeTouchSec = 0f;
+        public float idleMergeSec = 0f;
         public float kinPull = 0f;
+
+        // The deal (2026-08-09) — mock defaults; the shipped 20–30s-run values (bias 2,
+        // 12s big-deal wait) live in Tuning.asset.
+        public float spawnBias = 1f;
+        public float bigDealDelaySec = 0f;
 
         // Economy — coins from serves buy boosts (spec 2026-08-04). A tier-2..5 order
         // pays 11..20, so the 30-coin clearance costs about two serves.
@@ -99,6 +106,7 @@ namespace PanDulce.Core
         public float StartCalmSec => startCalmSec;
         public float StartCalmScale => startCalmScale;
         public int StartDiscovered => startDiscovered;
+        public int DiscoverMerges => discoverMerges;
         public float EntranceTime => entranceTime;
         public bool EndOfDay => endOfDay;
         public bool BoostsOn => boostsOn;
@@ -126,7 +134,10 @@ namespace PanDulce.Core
 
         public float MergeOverlapPct => mergeOverlapPct;
         public float MergeTouchSec => mergeTouchSec;
+        public float IdleMergeSec => idleMergeSec;
         public float KinPull => kinPull;
+        public float SpawnBias => spawnBias;
+        public float BigDealDelaySec => bigDealDelaySec;
 
         public int CoinBase => coinBase;
         public int CoinPerTier => coinPerTier;

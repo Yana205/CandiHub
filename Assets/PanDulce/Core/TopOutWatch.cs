@@ -4,7 +4,12 @@ using UnityEngine;
 namespace PanDulce.Core
 {
     /// <summary>
-    /// The fail state, ported verbatim from Docs/web-reference/js/game.js checkTopOut().
+    /// The fail state, ported from Docs/web-reference/js/game.js checkTopOut() — with one
+    /// deviation: a body is over the line when its CENTER crosses, not its top edge. The
+    /// reference's edge check assumed the bowl world's headroom (sizeScale 1.3, sagging
+    /// floor); in the v2 flat box a Mochi resting on a Roll Cake poked 11px over and ended
+    /// a two-dessert run mid-aim. The center check scales the slack with the dessert —
+    /// half of it must show past the line before the clock starts.
     ///
     /// The three filters below are what make this fair rather than infuriating: a pastry
     /// that is still growing in, freshly born, or moving fast cannot end the run. Only a
@@ -40,7 +45,7 @@ namespace PanDulce.Core
                 if (b.spawnT < 1f) continue;                        // still popping in
                 if (now - b.bornAt < SettledAge) continue;          // too young to blame
                 if (Mathf.Abs(b.vy) > SettledSpeed) continue;       // still in motion
-                if (b.y - TierTable.Er(b, cfg) < line) { over = true; break; }
+                if (b.y < line) { over = true; break; }
             }
 
             if (over)
