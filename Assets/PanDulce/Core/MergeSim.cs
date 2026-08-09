@@ -72,14 +72,22 @@ namespace PanDulce.Core
         /// <summary>Colored spawns are live once the donut has been made this run.</summary>
         public bool SkinsLive => discovered[SkinUnlockTier];
 
+        /// <summary>Mochi wears its colors from the very first deal (Yana, 2026-08-09);
+        /// every other tier still waits for the donut milestone.</summary>
+        bool SkinsLiveFor(int tier) => tier == 0 || SkinsLive;
+
         int NormalizeSkin(int tier, int skin)
             => skin > 0 && SkinHasArt != null && SkinHasArt(tier, skin) ? skin : 0;
 
-        /// <summary>Even roll over all tracks for a fresh spawn — or Original before the
-        /// donut milestone / for tiers with no variant art.</summary>
+        /// <summary>Color roll for a fresh spawn. Original carries double weight, so a
+        /// colored dessert is a bit more rare than a plain one; tiers with no variant
+        /// art (and tiers whose colors aren't live yet) stay Original.</summary>
         int RollSkin(int tier)
-            => !SkinsLive || SkinTrackCount <= 1 ? 0
-             : NormalizeSkin(tier, rng.Next(0, SkinTrackCount));
+        {
+            if (!SkinsLiveFor(tier) || SkinTrackCount <= 1) return 0;
+            int roll = rng.Next(0, SkinTrackCount + 1);   // 0,1 → Original; 2.. → a track
+            return NormalizeSkin(tier, roll <= 1 ? 0 : roll - 1);
+        }
 
         // --- coming to rest -----------------------------------------------------------
         // A settled pastry has THREE things still feeding it spin, and all three have to be
@@ -159,7 +167,22 @@ namespace PanDulce.Core
         /// penetration and exact separation every substep; without the slack the timer
         /// would reset mid-hug and MergeTouchSec would never be reached on the floor.
         /// </summary>
-        const float KinTouchSlack = 1.5f;
+        public const float KinTouchSlack = 1.5f;
+
+        /// <summary>
+        /// The touch timer forgives contact gaps shorter than this — resting neighbours
+        /// chatter in and out of the slack band, and a hard reset on every flicker meant
+        /// the timer never accumulated (observed live: 0.16s after minutes side by side).
+        /// </summary>
+        public const float KinTouchForgiveSec = 0.25f;
+
+        /// <summary>
+        /// Relative speed (sim px/s) past which a kin contact counts as STRUCK — a throw,
+        /// a knock, a shake — and merges on the fast lane. Chosen between the merge pop
+        /// (~70) and the gentlest real drop (~350+), so cascades and settle drift stay on
+        /// the idle lane while every deliberate action lands on the fast one.
+        /// </summary>
+        public const float StrikeSpeed = 150f;
 
         /// <summary>
         /// Tolerance on the merge overlap requirement (sim px). The solver parks settled
@@ -205,6 +228,7 @@ namespace PanDulce.Core
             float e = cfg.Bounciness;
             float pull = cfg.KinPull;
             float touchSec = cfg.MergeTouchSec;
+            float idleSec = Mathf.Max(cfg.IdleMergeSec, cfg.MergeTouchSec);
             float overlapPct = cfg.MergeOverlapPct;
 
             // Approach speed that separates a real hit from the pile leaning on itself.
@@ -221,7 +245,11 @@ namespace PanDulce.Core
                 b.supported = false;
 
                 // Same-tier contact time, fed by the pair loop last substep.
-                if (b.kinTouch) b.kinTouchT += dt; else b.kinTouchT = 0f;
+                // Contact chatter forgiveness: a sub-quarter-second flicker out of the
+                // slack band pauses the touch timer instead of zeroing it.
+                if (b.kinTouch) { b.kinTouchT += dt; b.kinGapT = 0f; }
+                else if ((b.kinGapT += dt) > KinTouchForgiveSec)
+                { b.kinTouchT = 0f; b.squeezed = false; b.struck = false; }
                 b.kinTouch = false;
 
                 b.restSampleT += dt;
@@ -259,9 +287,11 @@ namespace PanDulce.Core
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
                     float min = ra + rc;
 
-                    // Kin = mergeable partners: same tier AND same color. A matcha mochi
-                    // courts and merges only another matcha mochi (Yana, 2026-08-08).
-                    bool kin = a.tier == c.tier && a.skin == c.skin && a.tier < TierTable.Max;
+                    // Kin = mergeable partners: same tier AND same color — except mochi,
+                    // where every color merges with every color (Yana, 2026-08-09). Higher
+                    // tiers still court only their own shade (2026-08-08).
+                    bool kin = a.tier == c.tier && a.tier < TierTable.Max
+                            && (a.tier == 0 || a.skin == c.skin);
 
                     if (kin && d < min + KinTouchSlack)
                     {
@@ -269,18 +299,37 @@ namespace PanDulce.Core
                         // penetration — resting neighbours chatter around exact contact.
                         a.kinTouch = true; c.kinTouch = true;
 
+                        // The squeeze LATCHES for the life of the contact: pressure is an
+                        // instant (a landing drop, pile weight, a shake) but the touch timer
+                        // is a duration — demanded in the same frame they could never both
+                        // hold, and squeeze>0 + touch>0 meant nothing ever merged. At 0%
+                        // squeeze this latch is simply "they really touched" — the classic.
+                        if (min - d >= overlapPct * Mathf.Min(ra, rc) - MergeContactEps)
+                        { a.squeezed = true; c.squeezed = true; }
+
+                        // A contact arriving at real impact speed is STRUCK — a throw, a
+                        // knock, a shake — and merges on the fast lane. Settle drift and
+                        // merge pops stay under StrikeSpeed, so the pile's own quiet
+                        // progress takes the idle lane instead.
+                        float rsx = c.vx - a.vx, rsy = c.vy - a.vy;
+                        if (rsx * rsx + rsy * rsy > StrikeSpeed * StrikeSpeed)
+                        { a.struck = true; c.struck = true; }
+
+                        float needSec = a.struck && c.struck ? touchSec : idleSec;
+
                         // merge gate — past the start grace, BOTH grown past 0.55, older
-                        // than comboDelay, pressed deep enough, and touching long enough.
-                        // Evaluated in the slack band because the solver parks settled
-                        // neighbours at EXACT contact: demanding true penetration here would
-                        // let a fully-served touch timer wait forever. The overlap condition
-                        // (with a hair of tolerance) still does the distance discrimination,
-                        // so a 0% squeeze remains "touching means merging" — the classic.
+                        // than comboDelay, pressed deep enough at some point in this
+                        // contact, and touching long enough. Evaluated in the slack band
+                        // because the solver parks settled neighbours at EXACT contact.
+                        // The combo delay brakes CHAIN reactions only: merge-born desserts
+                        // wait it out, a player's dropped dessert merges as soon as the
+                        // touch time is served — a throw onto a match must feel answered.
                         if (Now >= mergeLockUntil &&
                             a.spawnT > 0.55f && c.spawnT > 0.55f &&
-                            Now - a.bornAt > cfg.ComboDelay && Now - c.bornAt > cfg.ComboDelay &&
-                            min - d >= overlapPct * Mathf.Min(ra, rc) - MergeContactEps &&
-                            a.kinTouchT >= touchSec && c.kinTouchT >= touchSec)
+                            (!a.bornOfMerge || Now - a.bornAt > cfg.ComboDelay) &&
+                            (!c.bornOfMerge || Now - c.bornAt > cfg.ComboDelay) &&
+                            a.squeezed && c.squeezed &&
+                            a.kinTouchT >= needSec && c.kinTouchT >= needSec)
                         {
                             a.dead = true; c.dead = true;
                             mergeBuffer.Add((a, c));
@@ -437,9 +486,11 @@ namespace PanDulce.Core
             float y = (a.y * ra + c.y * rc) / (ra + rc);
 
             Body nb = MakeBody(x, y, t2, 0f);
+            nb.bornOfMerge = true;
             // The child keeps its parents' color where the next tier has variant art;
-            // shared tiers (Purin, Roll Cake) fold every color back to Original.
-            nb.skin = NormalizeSkin(t2, a.skin);
+            // shared tiers (Purin, Roll Cake) fold every color back to Original. Mixed
+            // parents (mochi's any-color merges) roll a surprise color instead.
+            nb.skin = a.skin == c.skin ? NormalizeSkin(t2, a.skin) : RollSkin(t2);
             nb.vy = cfg.MergePopVy;
             nb.vx = (a.vx + c.vx) * 0.3f;
 
@@ -483,33 +534,52 @@ namespace PanDulce.Core
 
         public void SetSpawnPool(int[] pool) => spawnPool = pool;
 
-        bool SpawnReady(int tier) => tier >= 0 && tier < TierTable.Count && discovered[tier];
+        /// <summary>Discovered AND — for the top two tiers — past the big-deal wait.
+        /// The wait shapes only the DEAL: merging up to a donut or roll cake creates
+        /// them whenever the player earns it.</summary>
+        bool SpawnReady(int tier)
+            => tier >= 0 && tier < TierTable.Count && discovered[tier]
+               && (tier < TierTable.Count - 2 || cfg == null || Now >= cfg.BigDealDelaySec);
 
         /// <summary>Spawn pick: descending weights over the case seats when a seat order is
-        /// authored, otherwise the mock's 4:3:2:1 over tiers 0–3 (§6.1).</summary>
+        /// authored, otherwise the mock's 4:3:2:1 over tiers 0–3 (§6.1). SpawnBias raises
+        /// every weight to a power, leaning the deal onto the low tiers; at 1 the classic
+        /// linear weights come back exactly.</summary>
         public int Pick()
         {
+            double bias = cfg != null ? Mathf.Max(0.25f, cfg.SpawnBias) : 1.0;
+
             if (spawnPool != null && spawnPool.Length > 0)
             {
-                int n = spawnPool.Length, total = 0;
+                int n = spawnPool.Length;
+                double total = 0;
                 for (int i = 0; i < n; i++)
-                    if (SpawnReady(spawnPool[i])) total += n - i;   // seat 1 of 5 weighs 5, seat 5 weighs 1
+                    if (SpawnReady(spawnPool[i])) total += Math.Pow(n - i, bias);   // seat 1 of 5 outweighs seat 5
                 if (total > 0)
                 {
-                    int roll = rng.Next(0, total);
+                    double roll = rng.NextDouble() * total;
                     for (int i = 0; i < n; i++)
                     {
                         if (!SpawnReady(spawnPool[i])) continue;
-                        roll -= n - i;
+                        roll -= Math.Pow(n - i, bias);
                         if (roll < 0) return spawnPool[i];
                     }
                 }
-                // Nothing in the pool discovered yet — fall through to the classic pick.
+                // Nothing in the pool ready yet — fall through to the classic pick.
             }
 
-            int r = rng.Next(0, 10);          // 0..9
-            int pick = r < 4 ? 0 : r < 7 ? 1 : r < 9 ? 2 : 3;
-            while (pick > 0 && !SpawnReady(pick)) pick--;   // never spawn an undiscovered tease
+            // The mock's roll over tiers 0–3 (weights 4:3:2:1, raised to the bias), then
+            // the classic walk-down so an unready roll lands on the best dessert below it.
+            double wTotal = 0;
+            for (int t = 0; t < 4; t++) wTotal += Math.Pow(4 - t, bias);
+            double r = rng.NextDouble() * wTotal;
+            int pick = 3;
+            for (int t = 0; t < 4; t++)
+            {
+                r -= Math.Pow(4 - t, bias);
+                if (r < 0) { pick = t; break; }
+            }
+            while (pick > 0 && !SpawnReady(pick)) pick--;   // never spawn an unready tease
             return pick;
         }
 

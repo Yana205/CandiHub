@@ -4,9 +4,13 @@ using PanDulce.Core;
 namespace PanDulce.Tests
 {
     /// <summary>
-    /// Color tracks in the pile (2026-08-08): after the donut is discovered, spawns roll a
-    /// color track; merging matches tier AND color; the merge child keeps its parents'
-    /// color where the next tier has variant art and folds to Original where it doesn't.
+    /// Color tracks in the pile (2026-08-08, mochi exception 2026-08-09): spawns roll a
+    /// color track — mochi from the very first deal, everything else after the donut is
+    /// discovered — with Original carrying double weight so colors stay a bit rare.
+    /// Merging matches tier AND color, EXCEPT mochi: every mochi merges with every mochi,
+    /// and mixed-color parents roll a surprise color for the child. The child keeps its
+    /// parents' color where the next tier has variant art and folds to Original where it
+    /// doesn't.
     /// </summary>
     public class SkinTests
     {
@@ -33,14 +37,47 @@ namespace PanDulce.Tests
         }
 
         [Test]
-        public void DifferentColors_NeverMerge()
+        public void DifferentColors_NeverMerge_AboveMochi()
+        {
+            var sim = Sim();
+            sim.MakeBody(200f, 200f, 2, 1f).skin = 1;
+            sim.MakeBody(210f, 200f, 2, 1f).skin = 2;
+            Settle(sim, 2f);   // well past the start grace — touching the whole time
+            Assert.That(sim.Bodies.Count, Is.EqualTo(2),
+                        "a matcha melon pan must not merge with a berry one");
+        }
+
+        [Test]
+        public void Mochi_MergesAcrossColors()
         {
             var sim = Sim();
             sim.MakeBody(200f, 200f, 0, 1f).skin = 1;
             sim.MakeBody(205f, 200f, 0, 1f).skin = 2;
-            Settle(sim, 2f);   // well past the start grace — touching the whole time
-            Assert.That(sim.Bodies.Count, Is.EqualTo(2),
-                        "a matcha mochi must not merge with a mango mochi");
+            Settle(sim, 2f);
+            Assert.That(sim.Bodies.Count, Is.EqualTo(1),
+                        "all mochi merge with all mochi, whatever they wear");
+            Assert.That(sim.Bodies[0].tier, Is.EqualTo(1));
+            Assert.That(sim.Bodies[0].skin, Is.Zero,
+                        "purin has no color variants — the surprise roll folds to Original");
+        }
+
+        [Test]
+        public void MixedColorParents_RollASurpriseColorForTheChild()
+        {
+            // Give purin variant art (test-only) so the surprise roll is observable.
+            var seen = new System.Collections.Generic.HashSet<int>();
+            for (int seed = 0; seed < 30; seed++)
+            {
+                var sim = Sim(seed);
+                sim.SkinHasArt = (tier, track) => track >= 1 && track <= 2;
+                sim.MakeBody(200f, 200f, 0, 1f).skin = 1;
+                sim.MakeBody(205f, 200f, 0, 1f).skin = 2;
+                Settle(sim, 2f);
+                Assert.That(sim.Bodies.Count, Is.EqualTo(1));
+                seen.Add(sim.Bodies[0].skin);
+            }
+            Assert.That(seen.Count, Is.GreaterThan(1),
+                        "mixed parents must not always hand back the same color");
         }
 
         [Test]
@@ -70,35 +107,47 @@ namespace PanDulce.Tests
         }
 
         [Test]
-        public void ColoredSpawns_OnlyAfterTheDonutIsDiscovered()
+        public void BeforeTheDonut_OnlyMochiWearsColors()
         {
-            var cfg = new SimConfigData { startingBodies = 0, startDiscovered = 1 };
+            var cfg = new SimConfigData { startingBodies = 0, startDiscovered = 3 };
             var sim = new MergeSim(cfg, new System.Random(7));
             sim.SkinTrackCount = 3;
             sim.SkinHasArt = ShippedArt;
 
-            for (int i = 0; i < 40; i++)
+            var mochiSkins = new System.Collections.Generic.HashSet<int>();
+            for (int i = 0; i < 400; i++)
             {
                 sim.EmptyCloth();          // keep the pile trivial — this tests the rolls
-                Assert.That(sim.CurSkin, Is.Zero, "no colored spawns before the donut");
-                Assert.That(sim.NextSkin, Is.Zero, "no colored spawns before the donut");
-                sim.Tick(1f);              // clear the drop cooldown
-                sim.Drop(SimField.CX, true);
+                sim.Tick(2f);              // clear the drop cooldown
+                if (!sim.Drop(SimField.CX, true)) continue;
+                if (sim.NextTier == 0) mochiSkins.Add(sim.NextSkin);
+                else Assert.That(sim.NextSkin, Is.Zero,
+                                 "no colored deals above mochi before the donut");
             }
+            Assert.That(mochiSkins.Contains(1), Is.True, "matcha mochi deals from the start");
+            Assert.That(mochiSkins.Contains(2), Is.True, "berry mochi deals from the start");
+        }
 
-            sim.RevealTier(MergeSim.SkinUnlockTier);
-            Assert.That(sim.SkinsLive, Is.True);
+        [Test]
+        public void ColoredDeals_AreABitMoreRareThanOriginal()
+        {
+            var cfg = new SimConfigData { startingBodies = 0, startDiscovered = 1 };
+            var sim = new MergeSim(cfg, new System.Random(11));
+            sim.SkinTrackCount = 3;
+            sim.SkinHasArt = ShippedArt;
 
-            var seen = new System.Collections.Generic.HashSet<int>();
-            for (int i = 0; i < 300; i++)
+            var counts = new int[3];
+            for (int i = 0; i < 2000; i++)
             {
                 sim.EmptyCloth();
-                sim.Tick(1f);
-                if (sim.Drop(SimField.CX, true)) seen.Add(sim.NextSkin);
+                sim.Tick(2f);
+                if (sim.Drop(SimField.CX, true)) counts[sim.NextSkin]++;
             }
-            Assert.That(seen.Contains(0), Is.True, "Original must still appear among spawns");
-            Assert.That(seen.Contains(1), Is.True, "Matcha must appear after the donut");
-            Assert.That(seen.Contains(2), Is.True, "Berry must appear after the donut");
+            // Original carries double weight: ~50% plain, ~25% each color.
+            int total = counts[0] + counts[1] + counts[2];
+            Assert.That(counts[0] / (float)total, Is.EqualTo(0.5f).Within(0.05f));
+            Assert.That(counts[1], Is.GreaterThan(0));
+            Assert.That(counts[2], Is.GreaterThan(0));
         }
 
         [Test]
@@ -114,8 +163,10 @@ namespace PanDulce.Tests
 
             sim.ResetRun();
             Assert.That(sim.SkinsLive, Is.False, "the donut milestone is per-run");
-            Assert.That(sim.CurSkin, Is.Zero);
-            Assert.That(sim.NextSkin, Is.Zero);
+            // Mochi keeps its colors across runs; anything colored above mochi would
+            // mean the milestone leaked.
+            if (sim.CurSkin != 0) Assert.That(sim.CurTier, Is.Zero);
+            if (sim.NextSkin != 0) Assert.That(sim.NextTier, Is.Zero);
         }
     }
 }

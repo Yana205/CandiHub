@@ -26,9 +26,11 @@ namespace PanDulce.Runtime
         [SerializeField] TuningConfig tuning;
 
         [Header("Show")]
-        [SerializeField] bool floorCurve = true;
+        // The box world (2026-08-09): the straight BoxLine is the one shipping guide;
+        // the curved floor/container lines are legacy v1-bowl views, off by default.
+        [SerializeField] bool floorCurve = false;
         [SerializeField] bool boxLine = true;
-        [SerializeField] bool container = true;
+        [SerializeField] bool container = false;
         [SerializeField] bool canvasFrame = false;
         [SerializeField] bool spawnLine = false;
         [SerializeField] bool topOutLine = false;

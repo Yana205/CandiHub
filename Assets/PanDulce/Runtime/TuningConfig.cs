@@ -67,7 +67,10 @@ namespace PanDulce.Runtime
 
         public float MergeOverlapPct => data.MergeOverlapPct;
         public float MergeTouchSec => data.MergeTouchSec;
+        public float IdleMergeSec => data.IdleMergeSec;
         public float KinPull => data.KinPull;
+        public float SpawnBias => data.SpawnBias;
+        public float BigDealDelaySec => data.BigDealDelaySec;
 
         public int CoinBase => data.CoinBase;
         public int CoinPerTier => data.CoinPerTier;
