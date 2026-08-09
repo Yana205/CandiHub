@@ -8,12 +8,16 @@ namespace PanDulce.Editor
     /// <summary>
     /// One-shot import for the version-2 hand-drawn art.
     ///
-    /// The layout pieces in Art/layout-gray are lineart scans on white paper, all exported
-    /// on the same 860 × 1600 canvas — so once the paper is keyed out they self-align when
-    /// stacked at the same position. This tool keys the white away, writes sprites to
-    /// Art/Layout at PPU 200 (canvas renders 430 × 800 stage px at scale 1), and assembles
-    /// them into LayoutArt.prefab. The prefab is the designer surface: it is created only
-    /// when missing, so hand-tuned positions survive re-imports and stage rebuilds.
+    /// The finished layout lives in Art/BG: one Procreate painting exported a layer at a
+    /// time, every layer on the same 1376 × 2560 canvas, so the pieces self-align when
+    /// stacked at the same position. That canvas is the grey lineart's 860 × 1600 at
+    /// exactly 1.6×, which is why nothing had to be re-aligned when the paint landed —
+    /// importing at PPU 320 instead of 200 puts every piece back where the lineart was
+    /// (430 × 800 stage px at scale 1). The layer PNGs already carry their own alpha, so
+    /// unlike the grey scans there is nothing to key out: the tool only stamps import
+    /// settings on them and assembles LayoutArt.prefab. The prefab is the designer
+    /// surface: it is created only when missing, so hand-tuned positions survive
+    /// re-imports and stage rebuilds — delete it to regenerate.
     ///
     /// The final desserts replace placeholder pastry sprites in place, renormalized to the
     /// §8.1 convention (content fits a 400 px box centered in a 512² canvas) so
@@ -21,22 +25,87 @@ namespace PanDulce.Editor
     /// </summary>
     public static class Version2ArtImport
     {
-        const string LayoutSrcDir = "Assets/PanDulce/Art/layout-gray";
-        const string LayoutOutDir = "Assets/PanDulce/Art/Layout";
+        const string LayoutDir = "Assets/PanDulce/Art/BG";
+        const string WideDir = "Assets/PanDulce/Art/Layout";   // generated, never hand-edited
         const string DessertDir = "Assets/PanDulce/Art/final-desserts";
         const string PrefabPath = "Assets/PanDulce/Prefabs/LayoutArt.prefab";
 
-        // Piece order: back to front, with the canvas stacked so every piece lands where the
-        // full mock (example-layout-full.jpeg) put it.
-        static readonly (string src, string name)[] LayoutPieces =
+        const string Src = LayoutDir + "/";
+        const string Wide = WideDir + "/";
+
+        /// <summary>
+        /// The painting, back to front — the Procreate stack read bottom-up (see
+        /// BG/full-layers.png), grouped into the three things the scene cares about:
+        /// the room behind the customer, the case the customer stands behind, and the
+        /// counter the player plays on.
+        ///
+        /// Two of Yana's filenames say something other than what they draw, so the node
+        /// name is the truth here: `glass-container-blush1` is the 菓子パン lettering that
+        /// belongs on the noren (its alpha sits at canvas y 280–558, up at the curtain),
+        /// and `IMG_1392` is the hairline seam where the wall meets the desk.
+        /// `IMG_1377` — the four red registration ticks — is deliberately not imported.
+        ///
+        /// Sorting is where filled paint differs from lineart: you could see the bear
+        /// through the grey outlines, so everything could sit on Background. Now the case
+        /// has to occlude the bear, which means Furniture (above Customer) for its body,
+        /// and Case+20 for the glass so the wash reads as glass OVER the shelf desserts.
+        /// </summary>
+        static readonly (string asset, string group, string node, string layer, int order)[] LayoutPieces =
         {
-            ("layout-street-window.jpeg", "street-window"),
-            ("layout-hanging-entrance.jpeg", "hanging-entrance"),
-            ("layout-glass-container.jpeg", "glass-container"),
-            ("layout-deskline.jpeg", "deskline"),
-            ("layout-furoshiki.jpeg", "furoshiki"),
-            ("layout-candybox.jpeg", "candybox"),
+            // The room — all of it behind the bear.
+            (Wide + "wall-wide.png",                   "Room",        "Wall",        "Background", 0),
+            (Src + "streen-window.png",                "Room",        "WindowView",  "Background", 2),
+            (Src + "street-window-wood.png",           "Room",        "WindowFrame", "Background", 3),
+            (Src + "entrance-windows.png",             "Room",        "Noren",       "Background", 6),
+            (Src + "glass-container-blush1.png",       "Room",        "NorenSign",   "Background", 7),
+
+            // The counter the bear stands behind: desk, seam, then the case body on top.
+            (Wide + "desk-wide.png",                   "Counter",     "Desk",        "Furniture",  2),
+            (Src + "IMG_1392.PNG",                     "Counter",     "DeskSeam",    "Furniture",  3),
+            (Src + "glass-container.png",              "GlassCase",   "CaseBody",    "Furniture",  4),
+
+            // Shelf desserts draw at Case/10 with their labels at 13 — the glass goes over
+            // both, so the pastries are seen THROUGH it.
+            (Src + "glass-container-galsseffect2.png", "GlassCase",   "CaseGlass",   "Case",      20),
+
+            // The play surface. Pastries fall at PlayArea/30, in front of the box.
+            (Src + "furoshiki.png",                    "PlaySurface", "Furoshiki",   "PlayArea",   2),
+            (Src + "candybox.png",                     "PlaySurface", "CandyBox",    "PlayArea",   5),
         };
+
+        /// <summary>Group nodes, in the order they should appear in the hierarchy.</summary>
+        static readonly string[] LayoutGroups = { "Room", "GlassCase", "Counter", "PlaySurface" };
+
+        /// <summary>
+        /// The cloth and the box are one prop, and they are the only pieces that need to be
+        /// bigger than Yana painted them: the canvas is exactly the 430 px frame width, so
+        /// the furoshiki's left and right points get sliced off by the canvas edge a few px
+        /// inside the screen. This node scales the pair about the desk line (so the cloth
+        /// stays seated on the counter) until the slice is safely off-screen — 430 × 1.10
+        /// spans 473 px against the 446 px the widest supported phone shows.
+        ///
+        /// Enlarging the box is now free: <see cref="PanDulce.Runtime.PlayBoundsFromArt"/>
+        /// on CandyBox re-derives the sim's walls and floor from wherever the art ends up,
+        /// so this number can be changed in the Inspector without touching Tuning.
+        /// </summary>
+        const float PlaySurfaceScale = 1.10f;
+
+        /// <summary>
+        /// Pieces that must reach past the canvas into letterbox slack. The wall and the
+        /// floor are vertical gradients, so no flat backdrop colour meets their edge without
+        /// a seam — but neither has horizontal detail worth keeping, so widening the canvas
+        /// and repeating the outermost column outwards extends them exactly. (The first cut
+        /// at this stretched the whole sprite behind itself, which smeared the desk's centre
+        /// shading across the bleed and read as the desk drawn twice.)
+        /// </summary>
+        static readonly (string src, string dst)[] WidenedPieces =
+        {
+            ("background.png", "wall-wide.png"),
+            ("desk.png", "desk-wide.png"),
+        };
+
+        /// <summary>How much wider than the source canvas the widened pieces are baked.</summary>
+        const float WidenFactor = 1.6f;
 
         // The full merge chain is hand-drawn: the color variants are tiers of their own,
         // so each family reads as a progression (pink → matcha → mango mochi, …). Ordered
@@ -56,8 +125,10 @@ namespace PanDulce.Editor
             ("melonpan_original.PNG", "pastry_10_melonpan.png"),
         };
 
-        // The mock's desk line sits at canvas y 950 (475 at half scale); the sim's counter
-        // top is stage y 424. This offset lines the two up as a starting point.
+        // The painted desk line sits at canvas y 1520 of 2560 — stage y 475 once the canvas
+        // is mapped onto its 800 px height. The sim's counter top is stage y 424, so the
+        // canvas rides 51 px up and the two coincide. (Same number as the grey lineart:
+        // its desk line was at canvas y 950 of 1600, which is the identical fraction.)
         const float CanvasOffsetY = -51f;
 
         [MenuItem("Pan Dulce/Import V2 Art")]
@@ -69,7 +140,7 @@ namespace PanDulce.Editor
                 return;
             }
 
-            ProcessLayout();
+            WidenPieces();
             ProcessDesserts();
             AssetDatabase.Refresh();
             ApplyLayoutImportSettings();
@@ -79,60 +150,73 @@ namespace PanDulce.Editor
             Debug.Log("[PanDulce] V2 art imported.");
         }
 
-        // ------------------------------------------------------------- layout lineart
-
-        static void ProcessLayout()
-        {
-            Directory.CreateDirectory(LayoutOutDir);
-            foreach (var (src, name) in LayoutPieces)
-            {
-                var tex = LoadTex(Path.Combine(LayoutSrcDir, src));
-                var keyed = KeyOutPaper(tex);
-                File.WriteAllBytes($"{LayoutOutDir}/{name}.png", keyed.EncodeToPNG());
-                Object.DestroyImmediate(tex);
-                Object.DestroyImmediate(keyed);
-            }
-        }
+        // ------------------------------------------------------------- layout art
 
         /// <summary>
-        /// Paper → transparent. The scans are brown ink on near-white paper; alpha comes
-        /// from how far the brightest channel falls below the paper point, which keeps the
-        /// anti-aliased edge of every stroke.
+        /// PPU for the finished painting: the 1376 × 2560 canvas renders 430 × 800 stage
+        /// px, the same footprint the 860 × 1600 lineart had at PPU 200.
         /// </summary>
-        static Texture2D KeyOutPaper(Texture2D tex)
+        const float LayoutPPU = 320f;
+
+        /// <summary>
+        /// Re-bake the widened wall and floor: the source canvas centred in a wider one, with
+        /// its outermost column repeated outwards. Centring is what keeps the piece's pivot
+        /// on the canvas centre, so the widened sprite drops straight into the same position
+        /// at the same PPU as every other piece.
+        /// </summary>
+        static void WidenPieces()
         {
-            const float paper = 0.90f, ink = 0.60f;
-            var px = tex.GetPixels32();
-            for (int i = 0; i < px.Length; i++)
+            Directory.CreateDirectory(WideDir);
+            foreach (var (src, dst) in WidenedPieces)
             {
-                var c = px[i];
-                float maxc = Mathf.Max(c.r, Mathf.Max(c.g, c.b)) / 255f;
-                float a = Mathf.Clamp01((paper - maxc) / (paper - ink));
-                px[i].a = (byte)(a * 255f);
+                var tex = LoadTex(Path.Combine(LayoutDir, src));
+                int w = tex.width, h = tex.height;
+                int ow = Mathf.RoundToInt(w * WidenFactor) & ~1;   // keep it even so the centring is exact
+                int ox = (ow - w) / 2;
+
+                var px = tex.GetPixels32();
+                var outPx = new Color32[ow * h];
+                for (int y = 0; y < h; y++)
+                {
+                    int row = y * w;
+                    Color32 left = px[row], right = px[row + w - 1];
+                    int orow = y * ow;
+                    for (int x = 0; x < ox; x++) outPx[orow + x] = left;
+                    System.Array.Copy(px, row, outPx, orow + ox, w);
+                    for (int x = ox + w; x < ow; x++) outPx[orow + x] = right;
+                }
+
+                var wide = new Texture2D(ow, h, TextureFormat.RGBA32, false);
+                wide.SetPixels32(outPx);
+                File.WriteAllBytes(Path.Combine(WideDir, dst), wide.EncodeToPNG());
+                Object.DestroyImmediate(tex);
+                Object.DestroyImmediate(wide);
             }
-            // LoadImage decodes JPEG into an RGB24 texture, which silently drops any alpha
-            // written back into it — the keyed pixels need an RGBA32 home to survive.
-            var keyed = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false);
-            keyed.SetPixels32(px);
-            return keyed;
         }
 
         static void ApplyLayoutImportSettings()
         {
-            foreach (string path in Directory.GetFiles(LayoutOutDir, "*.png"))
+            foreach (var piece in LayoutPieces)
             {
-                string assetPath = path.Replace('\\', '/');
+                string assetPath = piece.asset;
                 var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-                if (importer == null) continue;
+                if (importer == null)
+                {
+                    Debug.LogWarning($"[PanDulce] layout piece missing: {assetPath}");
+                    continue;
+                }
 
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
-                importer.spritePixelsPerUnit = 200f;   // 860 × 1600 canvas → 430 × 800 stage px
+                importer.spritePixelsPerUnit = LayoutPPU;
                 importer.mipmapEnabled = false;
                 importer.filterMode = FilterMode.Bilinear;
                 importer.alphaIsTransparency = true;
                 importer.wrapMode = TextureWrapMode.Clamp;
+                // Uncompressed while authoring — every piece is a smooth watercolour wash,
+                // and block compression bands the pink wall badly. Mobile still ships ASTC.
                 importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.maxTextureSize = 2048;   // matches the platform overrides below
 
                 var settings = new TextureImporterSettings();
                 importer.ReadTextureSettings(settings);
@@ -259,19 +343,24 @@ namespace PanDulce.Editor
             {
                 root.transform.localPosition = StageCoords.Stage(0f, CanvasOffsetY);
 
-                var backdrop = Node(root.transform, "Backdrop");
-                Piece(backdrop, "StreetWindow", "street-window", "Background", 4);
-                Piece(backdrop, "HangingEntrance", "hanging-entrance", "Background", 6);
+                var groups = new System.Collections.Generic.Dictionary<string, Transform>();
+                foreach (string g in LayoutGroups) groups[g] = Node(root.transform, g);
 
-                var glass = Node(root.transform, "GlassDisplay");
-                Piece(glass, "GlassContainer", "glass-container", "Background", 10);
+                // PlaySurface pivots on the desk line and scales the cloth + box together.
+                // Its children sit at the canvas centre relative to that pivot, so the pair
+                // grows about the counter edge rather than drifting off it.
+                var surface = groups["PlaySurface"];
+                surface.localPosition = StageCoords.Stage(215f, 424f - CanvasOffsetY);
+                surface.localScale = new Vector3(PlaySurfaceScale, PlaySurfaceScale, 1f);
 
-                // The customer draws on the Customer layer — above Background, below
-                // Furniture — which is exactly "in front of the glass, behind the desk".
-                var play = Node(root.transform, "PlayAreaArt");
-                Piece(play, "DeskLine", "deskline", "Furniture", 5);
-                Piece(play, "Furoshiki", "furoshiki", "PlayArea", 2);
-                Piece(play, "CandyBox", "candybox", "PlayArea", 5);   // pastries draw at 30, in front
+                // Table order is paint order, so siblings read back-to-front top-to-bottom
+                // in the hierarchy the same way the Procreate stack does.
+                foreach (var (asset, group, node, layer, order) in LayoutPieces)
+                    Piece(groups[group], node, asset, layer, order);
+
+                // The box is the play area's authority now — see PlayBoundsFromArt.
+                var candyBox = surface.Find("CandyBox");
+                if (candyBox != null) candyBox.gameObject.AddComponent<PlayBoundsFromArt>();
 
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
                 Debug.Log($"[PanDulce] created {PrefabPath}");
@@ -289,14 +378,16 @@ namespace PanDulce.Editor
             return go.transform;
         }
 
-        static void Piece(Transform parent, string name, string file, string layer, int order)
+        static void Piece(Transform parent, string name, string asset, string layer, int order)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            // Every piece shares the canvas, so every piece sits at the canvas center.
-            go.transform.localPosition = StageCoords.Stage(215f, 400f);
+            // Every piece shares the canvas, so every piece sits at the canvas centre —
+            // expressed relative to its group, which is what lets PlaySurface pivot
+            // somewhere else entirely without shifting what it holds.
+            go.transform.localPosition = StageCoords.Stage(215f, 400f) - parent.localPosition;
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{LayoutOutDir}/{file}.png");
+            sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(asset);
             sr.sortingLayerName = layer;
             sr.sortingOrder = order;
             // The unlit material is HideAndDontSave and cannot be serialized into the

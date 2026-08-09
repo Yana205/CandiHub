@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: aa8f3f3250e634e46944d1d5d26c6f41
+guid: b777f3b6caf874b62b6acd4ad889f153
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 350963841365548209
-    second: street-window_0
+      213: 4848639249331890459
+    second: desk-wide_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 200
+  spritePixelsToUnits: 320
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: street-window_0
+      name: desk-wide_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 860
-        height: 1600
+        width: 2202
+        height: 1043
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1bc999511cfded400800000000000000
-      internalID: 350963841365548209
+      spriteID: b19a17445b3d94340800000000000000
+      internalID: 4848639249331890459
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      street-window_0: 350963841365548209
+      desk-wide_0: 4848639249331890459
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

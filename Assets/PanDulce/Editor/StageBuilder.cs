@@ -91,6 +91,11 @@ namespace PanDulce.Editor
                 var inst = (GameObject)PrefabUtility.InstantiatePrefab(layoutArt);
                 inst.name = "[ 22 · LAYOUT ART ]";
                 inst.transform.SetParent(stage.transform, false);
+
+                // The drawn candy box is what the sim's walls and floor are measured from,
+                // so it needs the asset it writes those numbers into.
+                var artBounds = inst.GetComponentInChildren<PlayBoundsFromArt>(true);
+                if (artBounds != null) artBounds.EditorAssign(tuning);
             }
 
             // 23 · CUSTOMER — the bear plus its two satellites: the speech bubble showing
@@ -197,6 +202,9 @@ namespace PanDulce.Editor
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
+            // Tuning is dirtied here (TierSize wiring) and by PlayBoundsFromArt as it
+            // re-derives the walls from the box art — commit both with the scene.
+            AssetDatabase.SaveAssets();
 
             foreach (var v in views) v.Rebuild();
 

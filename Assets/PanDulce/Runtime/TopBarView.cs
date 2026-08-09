@@ -4,9 +4,14 @@ using UnityEngine;
 namespace PanDulce.Runtime
 {
     /// <summary>
-    /// Top bar — stage (0,0) 430 × 56 (§8.2).
+    /// Top HUD — stage (0,0) 430 × 56 (§8.2).
     ///
     /// The centre carries the "Sweet Bakery" title per the mock; score lives on the run-end card.
+    ///
+    /// Bar-less since the painted art landed (2026-08-09, Yana's call): the brown panel and
+    /// its border used to be the backdrop for these widgets, but they covered the noren and
+    /// the 菓子パン sign, which is the shop's real signage. The chips carry their own fill,
+    /// and the title keeps its dark drop, so each widget still reads against the pink wall.
     /// </summary>
     public sealed class TopBarView : GeneratedView
     {
@@ -18,11 +23,6 @@ namespace PanDulce.Runtime
             shownServed = -1;
             shownCoins = -1;
             var t = Content;
-
-            ViewFactory.Rect(t, "Background", Shapes.VerticalGradient(64, 1f, 0.89f),
-                             0f, -60f, 430f, 116f, Palette.BarTop, "Overlay", 0);
-            ViewFactory.Rect(t, "BottomBorder", Shapes.White, 0f, 52f, 430f, 4f,
-                             Palette.BarBorder, "Overlay", 1);
 
             ViewFactory.Panel(t, "CustomersChip", 10f, 14f, 104f, 28f, 10, Palette.ChipFill, "Overlay", 2);
             customersLabel = ViewFactory.Label(t, "CustomersLabel", "Customers: 0",

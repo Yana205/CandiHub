@@ -52,8 +52,10 @@ namespace PanDulce.Runtime
                 float cx = CaseLeft + slotW * (i + 0.5f);
                 var slot = ViewFactory.Node(desserts, $"Slot_{i}", cx, IconY).transform;
                 icons[i] = ViewFactory.Icon(slot, "Icon", database, i, 0f, 0f, IconRadius, "Case", 10);
+                // The name band lands on the case's dark wooden lip now that the art is
+                // painted rather than lineart — brown-on-brown vanished, so it reads cream.
                 labels[i] = ViewFactory.Label(slot, "Label", "?", -30f, 32f, 60f, 9f,
-                                              Palette.Hex("#7a5735"), "Case", 13);
+                                              Palette.Cream, "Case", 13);
             }
         }
 
