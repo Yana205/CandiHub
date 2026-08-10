@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: d4b5d8b1345668e44933714e82b92aee
+guid: 38376352f4c6469469e92cc3f6ee8cde
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2045770761078223462
-    second: Next customer_0
+      213: -2139910390551111845
+    second: Next customer 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,23 +126,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Next customer_0
+      name: Next customer 1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 822
+        width: 1004
         height: 606
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 337, y: 158, z: 355, w: 330}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 662b2f11ba9046c10800000000000000
-      internalID: 2045770761078223462
+      spriteID: b57980866d28d42e0800000000000000
+      internalID: -2139910390551111845
       vertices: []
       indices: 
       edges: []
@@ -151,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: fcbacd3b5f75f6a4a881cfc40da58f89
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Next customer_0: 2045770761078223462
+      Next customer 1_0: -2139910390551111845
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -68,7 +68,11 @@ namespace PanDulce.Runtime
         /// carries the icons, labels, charge track and both badges along with them.
         /// </summary>
         const float ButtonShiftX = -11f;
-        const float ButtonShiftY = 26f;
+
+        /// 14 stage px = local y -0.14, the resting height both roots were set to
+        /// (Lital, 2026-08-10). The hit rects below read this same constant, so the tap
+        /// targets travel with the faces.
+        const float ButtonShiftY = 14f;
 
         /// <summary>
         /// The roots' resting local positions, read back from the scene at the end of Build.

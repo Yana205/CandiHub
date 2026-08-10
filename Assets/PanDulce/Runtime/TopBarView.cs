@@ -19,10 +19,20 @@ namespace PanDulce.Runtime
         /// Chip band, in stage px. Authored placement (Lital, 2026-08-08): both plates and
         /// both figures centre on local y -0.281, so the plate top is that centre less half
         /// its height and the labels sit straight on it.
+        ///
+        /// Trimmed 11% from the original 104 × 38 (Lital, 2026-08-10). Each chip shrinks
+        /// toward its OWN centre, so neither moves — only the margins around them open up.
+        /// The width follows the height so the drawing keeps its aspect: the plates are
+        /// sliced with a zero border, which makes any off-aspect rect a straight stretch of
+        /// the panda and the coin.
         /// </summary>
-        const float ChipH = 38f;
+        const float ChipW = 93f;
+        const float ChipH = 34f;
         const float ChipMidY = 28.1f;
         const float ChipY = ChipMidY - ChipH * 0.5f;
+
+        /// <summary>Figure size, scaled with the plate so it keeps clear of the pill's edge.</summary>
+        const float ChipLabelSize = 13.4f;
 
         /// <summary>
         /// The slab, in stage px. Authored by hand in the scene (Lital, 2026-08-09) and read
@@ -66,9 +76,10 @@ namespace PanDulce.Runtime
             // carry the bare figure — a "Customers: n" caption would run over the face.
             Sprite customersArt = skin != null ? skin.CustomersChip : null;
             ViewFactory.Plate(t, "CustomersChip", customersArt,
-                              10f, ChipY, 104f, ChipH, 10, ChipTint(customersArt), "Overlay", 2);
+                              15.5f, ChipY, ChipW, ChipH, 10, ChipTint(customersArt), "Overlay", 2);
             customersLabel = ViewFactory.Label(t, "CustomersLabel", "0",
-                                               50f, ChipMidY, 58f, 15f, ChipInk(customersArt), "Overlay", 3);
+                                               48.2f, ChipMidY, 58f, ChipLabelSize,
+                                               ChipInk(customersArt), "Overlay", 3);
 
             // Sweet Bakery — 22px 800 cream with a 2px dark drop (§8.2)
             ViewFactory.Label(t, "TitleShadow", "Sweet Bakery", 115f, 32f, 200f, 22f,
@@ -79,10 +90,13 @@ namespace PanDulce.Runtime
 
             // Coin chip on the right — serves pay in, the clearance boost draws out.
             Sprite coinArt = skin != null ? skin.CoinChip : null;
+            // Both chips keep the centres they were authored on, so the pair stays symmetric
+            // about the frame centre the title is set on; the trim shows as wider margins.
             ViewFactory.Plate(t, "CoinChip", coinArt,
-                              316f, ChipY, 104f, ChipH, 10, ChipTint(coinArt), "Overlay", 2);
+                              321.5f, ChipY, ChipW, ChipH, 10, ChipTint(coinArt), "Overlay", 2);
             coinsLabel = ViewFactory.Label(t, "CoinsLabel", "$0",
-                                           356f, ChipMidY, 60f, 15f, ChipInk(coinArt), "Overlay", 3);
+                                           354.1f, ChipMidY, 60f, ChipLabelSize,
+                                           ChipInk(coinArt), "Overlay", 3);
         }
 
         /// <summary>Untinted when the drawing carries its own colour, else the flat chip fill.</summary>

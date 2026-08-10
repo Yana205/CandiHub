@@ -43,7 +43,8 @@ namespace PanDulce.Editor
             {
                 { "Button",        400f },   // faces, drawn 46 px tall
                 { "Button 2",      800f },   // badges, drawn 21 px tall
-                { "Next customer", 700f },   // the sign, drawn 140 × 103
+                { "Next customer new", 700f },   // the sign, drawn 171 × 103
+                { "Next customer",     700f },   // its retired, board-centred predecessor
                 { "Next pastry",   500f },   // the NEXT plaque, drawn 70 × 60
             };
 

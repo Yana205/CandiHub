@@ -470,11 +470,13 @@ namespace PanDulce.Editor
                               LoadUiSprite("coin counter"),
                               LoadUiSprite("Button"),
                               LoadUiSprite("Button 2"),
-                              LoadUiSprite("Next customer"),
+                              LoadUiSprite("Next customer new"),
                               LoadUiSprite("Next pastry"),
                               LoadUiSprite("Coin"),
-                              LoadUiSprite("Top Bar"),
-                              LoadUiSprite("Bottom Bar"));
+                              // One slab drawing serves both bars — the top and bottom rects
+                              // are near enough in size that a second file bought nothing.
+                              LoadUiSprite("Bar"),
+                              LoadUiSprite("Bar"));
 
             EditorUtility.SetDirty(skin);
             AssetDatabase.SaveAssets();

@@ -180,8 +180,14 @@ namespace PanDulce.Runtime
                 t.fontSize = sizeStagePx * StageCoords.PX * 10f;
                 t.rectTransform.sizeDelta =
                     new Vector2(w * StageCoords.PX, sizeStagePx * 1.6f * StageCoords.PX);
-                t.transform.localPosition = new Vector3((x + w * 0.5f) * StageCoords.PX,
-                                                        -y * StageCoords.PX, 0f);
+
+                // A TMP transform IS a RectTransform, and the scene file carries its
+                // anchoredPosition, not its localPosition — writing localPosition alone holds
+                // for the session and then saves as (0,0), dropping every authored label onto
+                // its view's origin the next time the scene is loaded. Equivalent here: the
+                // parent is a plain Transform, so the anchor rect is a point.
+                t.rectTransform.anchoredPosition3D =
+                    new Vector3((x + w * 0.5f) * StageCoords.PX, -y * StageCoords.PX, 0f);
             }
             return t;
         }

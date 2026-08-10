@@ -11,9 +11,17 @@ namespace PanDulce.Runtime
     /// </summary>
     public sealed class SignView : GeneratedView
     {
-        /// <summary>Drawn sign footprint in stage px, at the art's own 822 × 606 aspect.</summary>
-        const float SignW = 140f;
+        /// <summary>Drawn sign footprint in stage px, at the art's own 1004 × 606 aspect.</summary>
+        const float SignW = 171f;
         const float SignH = 103f;
+
+        /// <summary>
+        /// Left edge of the drawing, and negative on purpose: the art carries ~180 px of bare
+        /// rail to the left of the board, drawn to run off the screen edge rather than end in
+        /// a finial. Shifting the rect left by that much leaves the board itself — and so the
+        /// countdown on it — exactly where the previous, board-centred drawing put it.
+        /// </summary>
+        const float SignX = -23f;
 
         TextMeshPro topLine, bigLine;
         string shownTop, shownBig;
@@ -30,14 +38,14 @@ namespace PanDulce.Runtime
             if (Authoring) transform.localRotation = Quaternion.identity;
 
             // The drawing holds rail, ropes and board in one piece, so it replaces all five
-            // primitives the sign used to be built from. Drawn at its own aspect (822×606) so
+            // primitives the sign used to be built from. Drawn at its own aspect (1004×606) so
             // the ropes stay round, and a size up from the flat board's 118 × 76: the carved
-            // frame and the rail eat most of the sprite, leaving a cream centre only 65% × 50%
+            // frame and the rail eat most of the sprite, leaving a cream centre only 53% × 48%
             // of it, and the countdown has to keep its old presence inside that.
             Sprite art = skin != null ? skin.Sign : null;
             if (art != null)
             {
-                ViewFactory.Rect(t, "Board", art, 8f, 54f, SignW, SignH, Color.white, "Furniture", 10);
+                ViewFactory.Rect(t, "Board", art, SignX, 54f, SignW, SignH, Color.white, "Furniture", 10);
             }
             else
             {
@@ -58,8 +66,8 @@ namespace PanDulce.Runtime
             // Authored placement (Lital, 2026-08-08): local y -1.051 and -1.271.
             float top = art != null ? 105.1f : 98f;
             float big = art != null ? 127.1f : 130f;
-            float x = art != null ? 8f + SignW * 0.19f : 8f;
-            float w = art != null ? SignW * 0.62f : 118f;
+            float x = art != null ? SignX + SignW * 0.334f : 8f;
+            float w = art != null ? SignW * 0.528f : 118f;
 
             topLine = ViewFactory.Label(t, "TopLabel", "next customer in", x, top, w, 12f,
                                         Palette.Hex("#a58358"), "Furniture", 13,

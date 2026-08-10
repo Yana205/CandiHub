@@ -16,8 +16,8 @@ MonoBehaviour:
   coinChip: {fileID: 7054930476551290961, guid: 0d140375cbad2c24785da4f99e319db6, type: 3}
   button: {fileID: 649223268058989734, guid: 8d9196300af731a4794448370ba98639, type: 3}
   plate: {fileID: -66490268015967822, guid: 299d82e0810eaca4481bb5059f6015b7, type: 3}
-  sign: {fileID: 2045770761078223462, guid: d4b5d8b1345668e44933714e82b92aee, type: 3}
+  sign: {fileID: -2139910390551111845, guid: 38376352f4c6469469e92cc3f6ee8cde, type: 3}
   nextPlaque: {fileID: 7901986634849129017, guid: 0115ecd00c355674d8f8b026b521c1fd, type: 3}
   coin: {fileID: -3338749442709606003, guid: 0edcfb260b8440544a06e4c12990e0c6, type: 3}
-  topBar: {fileID: -8977018415951212830, guid: 1ee95e4c504ebe7449c7597cf47d756d, type: 3}
-  bottomBar: {fileID: 50688351700371559, guid: 57781464d881f3e4d8a4538b4c8cd9de, type: 3}
+  topBar: {fileID: 8056269757015164320, guid: 064355f2a5cfd0349a1cf34be602859a, type: 3}
+  bottomBar: {fileID: 8056269757015164320, guid: 064355f2a5cfd0349a1cf34be602859a, type: 3}
