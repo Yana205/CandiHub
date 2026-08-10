@@ -25,7 +25,7 @@ namespace PanDulce.Runtime
             SetVisible(enabled && (alwaysShow || blinking));
             if (!Content.gameObject.activeSelf || line == null) return;
 
-            float a = blinking ? 0.35f + 0.45f * Mathf.Abs(Mathf.Sin(now * 7f)) : 0.28f;
+            float a = blinking ? 0.55f + 0.45f * Mathf.Abs(Mathf.Sin(now * 7f)) : 0.28f;
             line.color = Palette.WithAlpha(Palette.Danger, a);
             line.transform.localPosition = new Vector3(
                 (SimField.BL + (SimField.BR - SimField.BL) * 0.5f) * StageCoords.PX,

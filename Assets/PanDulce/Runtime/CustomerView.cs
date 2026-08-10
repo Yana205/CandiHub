@@ -27,31 +27,37 @@ namespace PanDulce.Runtime
             return drawnWorldH > 0f ? RenderHeight * StageCoords.PX / drawnWorldH : 1f;
         }
 
-        // Entrance. The customer shows up AT THE WINDOW, so they rise into frame and sink back
-        // out of it rather than walking in along the wall — a sideways walk read as sliding
-        // across the wallpaper, because WindowFrame is on Background and draws BEHIND the
-        // Customer layer, so the frame cannot hide the approach. Downwards costs nothing to
-        // mask: CaseBody (Furniture/4) and Desk (Furniture/2) both draw in front.
-        const float SwayPx = 5f;       // gentle side-to-side while moving
-        const float SwayDeg = 3f;      // matching tilt, damped out as they settle
-
-        // Leaving is NOT the entrance reversed. Sinking back down travelled the full rise to
-        // reach the case before anything could hide it, which read as dropping behind the
-        // counter. Instead they step back from the glass and fade where they stand — nothing
-        // draws in front of the Customer layer at window height (WindowFrame is Background),
-        // so the exit has to end itself rather than duck behind something.
+        // Entrance and exit are the same move played in opposite directions: fade in standing
+        // at the window and settle forward onto the glass, then step back and fade out.
+        //
+        // Neither end can duck behind scenery. Nothing draws in front of the Customer layer at
+        // window height — WindowFrame is on Background — so a walk-in has nothing to emerge
+        // from and the exit has to end itself. Rising into frame from below the sill was worse
+        // still: the climb crossed the whole display case in plain view, which read as the bear
+        // sliding up from behind the glass rather than stepping up to the counter.
+        const float EnterScale = 0.94f;   // how far back they stand as they appear
+        const float EnterDriftPx = 6f;    // and the small settle down onto their feet
         const float ExitScale = 0.92f;    // how far back they step
         const float ExitDriftPx = 6f;     // slight lift as they turn away
+
+        // The waiting nudge: after NudgeDelay with nobody handing anything over, a small hop,
+        // repeating on NudgeGap, to pull the eye back to the window. Deliberately half the
+        // celebrate bounce's height and a single hop rather than two, so it reads as "still
+        // waiting" and never as the reward for a serve.
+        //
+        // The gap matters more than it looks: a customer has no patience timer and stands at
+        // the window until served, so this is a loop that can run for a whole game. Five
+        // seconds keeps it a slow heartbeat instead of a nag.
+        const float NudgeDelay = 5f;
+        const float NudgeGap = 5f;
+        const float NudgeRisePx = 7f;
+        const float NudgeTime = 0.4f;
 
         // Where the bear stands at the counter, in stage px. Serialized so the scene owns it:
         // edit it in the Inspector / Studio window, or drag the bear in the Scene view (the
         // editor folds the drag back into this field on save / play). The walk animation
         // reads it live, so play mode always lands on the authored spot.
         [SerializeField] Vector2 anchor = new Vector2(215f, 355f);
-
-        [Tooltip("How far BELOW the anchor the customer starts and ends, in stage px. Needs to " +
-                 "be enough that the display case hides them completely before they rise.")]
-        [SerializeField] float entranceRisePx = 190f;
 
         // Edit-mode only: show the real generated bear standing at the anchor, so the Scene
         // and Game views preview exactly what play mode will render. Ignored during play.
@@ -102,11 +108,10 @@ namespace PanDulce.Runtime
             duration = Mathf.Max(0.05f, entranceTime);
             entranceStart = Time.time;
             happyStart = departStart = idleStart = -1f;
-            // Our Update may not run again this frame — never flash a customer already standing.
-            bearAnchor.localPosition = StageCoords.Stage(anchor.x, anchor.y + entranceRisePx);
-            // Undo whatever the last exit's fade left behind, or they rise in invisible.
-            bearAnchor.localScale = Vector3.one;
-            SetAlpha(1f);
+            // Our Update may not run again this frame, so seed frame zero of the fade here —
+            // otherwise the previous exit's leftover transform flashes for one frame, fully
+            // opaque, before the entrance takes over.
+            FadeIn(0f);
         }
 
         public void Celebrate()
@@ -173,9 +178,10 @@ namespace PanDulce.Runtime
                     bearAnchor.localPosition = Base();
                     bearAnchor.localRotation = Quaternion.identity;
                     bearAnchor.localScale = Vector3.one;
+                    SetAlpha(1f);
                     return;
                 }
-                Rise(t);
+                FadeIn(t);
                 return;
             }
 
@@ -183,10 +189,28 @@ namespace PanDulce.Runtime
             // Phase starts at zero when the idle begins, so there is no pop out of a walk
             // or bounce; the amplitude stays under the happy bounce's so it reads as rest.
             if (idleStart < 0f) idleStart = Time.time;
-            float br = Mathf.Sin((Time.time - idleStart) * (2f * Mathf.PI / 3.4f));
-            bearAnchor.localPosition = Base();
+            float waited = Time.time - idleStart;
+            float br = Mathf.Sin(waited * (2f * Mathf.PI / 3.4f));
+            float hop = Nudge(waited);
+
+            bearAnchor.localPosition = Base() + new Vector3(0f, hop * NudgeRisePx * StageCoords.PX, 0f);
             bearAnchor.localRotation = Quaternion.identity;
-            bearAnchor.localScale = new Vector3(1f + 0.012f * br, 1f - 0.012f * br, 1f);
+            // Breathe and hop share the squash axis rather than multiplying: the hop is the
+            // louder of the two and would otherwise beat against the breathe's own rhythm.
+            float squash = 0.012f * br + 0.02f * hop;
+            bearAnchor.localScale = new Vector3(1f + squash, 1f - squash, 1f);
+        }
+
+        /// <summary>
+        /// The waiting hop, as a 0→1→0 arc. <paramref name="waited"/> is seconds of unbroken
+        /// idle; the result is 0 until the first nudge is due, so a customer served promptly
+        /// never hops at all.
+        /// </summary>
+        static float Nudge(float waited)
+        {
+            if (waited < NudgeDelay) return 0f;
+            float since = Mathf.Repeat(waited - NudgeDelay, NudgeGap);
+            return since < NudgeTime ? Mathf.Sin(since / NudgeTime * Mathf.PI) : 0f;
         }
 
         /// <summary>
@@ -212,22 +236,23 @@ namespace PanDulce.Runtime
         }
 
         /// <summary>
-        /// Rise: t runs 0 (hidden below the sill) → 1 (standing at the anchor).
+        /// The entrance, the exit run backwards: t goes 0 (invisible, standing back from the
+        /// glass) → 1 (opaque, settled at the anchor).
         ///
-        /// Both the sway and the tilt are scaled by (1 − eased), which lands them on exactly
-        /// zero at t = 1 — the customer settles square in the window instead of stopping
-        /// mid-lean, and the idle breathe picks up from rest with nothing to pop out of.
+        /// Position, scale and alpha all land on their rest values at exactly t = 1, so the
+        /// idle breathe picks up from rest with nothing to pop out of. Alpha leads the move
+        /// slightly — squared easing on the transform, plain on the fade — so the bear is
+        /// already readable while the last of the settle plays.
         /// </summary>
-        void Rise(float t)
+        void FadeIn(float t)
         {
             float e = Mathf.SmoothStep(0f, 1f, t);
             float settling = 1f - e;
-            float sway = Mathf.Sin(t * Mathf.PI * 2f) * settling;
 
-            bearAnchor.localPosition = StageCoords.Stage(anchor.x + sway * SwayPx,
-                                                         anchor.y + settling * entranceRisePx);
-            bearAnchor.localRotation = Quaternion.Euler(0f, 0f, sway * SwayDeg);
-            bearAnchor.localScale = Vector3.one;
+            bearAnchor.localPosition = StageCoords.Stage(anchor.x, anchor.y - settling * EnterDriftPx);
+            bearAnchor.localRotation = Quaternion.identity;
+            bearAnchor.localScale = Vector3.one * Mathf.Lerp(EnterScale, 1f, e);
+            SetAlpha(t);
         }
 
         Vector3 Base() => StageCoords.Stage(anchor);

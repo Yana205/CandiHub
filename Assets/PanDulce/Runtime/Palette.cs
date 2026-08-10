@@ -25,7 +25,7 @@ namespace PanDulce.Runtime
         public static readonly Color ChipFill  = Hex("#7c5231");
         public static readonly Color Amber     = Hex("#f0b64f");
         public static readonly Color AmberDeep = Hex("#dd9a2e");
-        public static readonly Color Danger    = Hex("#d94f43");
+        public static readonly Color Danger    = Hex("#e8301c");
         public static readonly Color Locked    = Hex("#c3ae93");
 
         /// <summary>The four furoshiki swatches (§6.2).</summary>

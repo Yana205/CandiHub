@@ -128,9 +128,7 @@ namespace PanDulce.Runtime
                                            float x, float y, float w, float h, int radius,
                                            Color color, string layer, int order,
                                            float rotationDeg = 0f)
-            => Rect(parent, name, Shapes.RoundedRect(Mathf.Max(4, radius * 2 + 4),
-                                                     Mathf.Max(4, radius * 2 + 4), radius),
-                    x, y, w, h, color, layer, order, rotationDeg);
+            => Rect(parent, name, Shapes.Panel(radius), x, y, w, h, color, layer, order, rotationDeg);
 
         /// <summary>
         /// A chrome plate: the hand-drawn art when the skin carries it, otherwise the

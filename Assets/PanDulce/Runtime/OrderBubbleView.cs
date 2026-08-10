@@ -7,6 +7,56 @@ namespace PanDulce.Runtime
     /// <summary>Order bubble — pops in beside the bear after he arrives (§8.4).</summary>
     public sealed class OrderBubbleView : GeneratedView
     {
+        // Content layout inside the cream face, in stage px.
+        //
+        // The icon used to sit at x 212 with its drawn left edge 47 px inside the face, so the
+        // bubble opened with a wide empty gap and pushed the label into the right-hand corner —
+        // and the label's band ran 51 px PAST the face, so its size was capped by the overflow
+        // rather than by the space. Reclaiming that gap is where the room for a bigger label
+        // comes from; the font alone had nowhere to grow.
+        //
+        // Two measured facts drive the numbers, both taken in the FACE's own space (the stage
+        // root is scaled, so world-space bounds are ~0.585× and will mislead you):
+        //  · the pastry sprites draw about 1.4× past CanonicalSpriteRadius, so a SetIcon radius
+        //    of 16 lands ~44 px across — IconHalf, which is what the layout has to reserve.
+        //    Sized so the widest case multiplier (roll cake, 1.15) plus the ±8% breathe in
+        //    Update still clears the 64 px face.
+        //  · the longest order the game can ask for, "Choco Donut, please!", renders 145 px at
+        //    font 17 — inside the 156 px band beside the icon, with 11 px to spare.
+        // Re-measure both from MeshRenderer.bounds via Content.InverseTransformPoint if a
+        // longer dessert name or a fatter sprite is ever added. TMP's preferredWidth is no use
+        // here: it reports roughly three times the truth for this font.
+        const float IconRadius = 18f;   // SetIcon radius, before the dessert's case-size multiplier
+        const float IconHalf = 25f;     // and the drawn half-width that radius actually produces
+        const float FontSize = 19f;
+        const float PadX = 14f;         // face edge → icon, and label band → face edge
+        const float Gap = 10f;          // icon → label
+
+        // The cream face the two sit inside, and the slots derived from it.
+        //
+        // The face grew from 238 × 64 to 266 × 76 (centre held, so it opens outwards evenly)
+        // because the icon and label were already at the ceiling of the old one — height is
+        // the binding constraint, and trimming padding buys width the icon cannot use. Every
+        // number below is sized off this face, so widening it again is the one edit needed to
+        // grow the contents further.
+        const float FaceX = 129f, FaceY = 157f, FaceW = 266f, FaceH = 76f;
+        const float MidY = FaceY + FaceH * 0.5f;
+        const float IconX = FaceX + PadX + IconHalf;
+        const float TextX = IconX + IconHalf + Gap;
+        const float TextW = FaceX + FaceW - PadX - TextX;
+
+        // The chrome around the face: a 3 px border ring, and a shadow of the same plate
+        // dropped 4 px. Derived from the face so the three can never drift apart.
+        const float Rim = 3f, ShadowDrop = 4f;
+        const float PlateX = FaceX - Rim, PlateY = FaceY - Rim;
+        const float PlateW = FaceW + Rim * 2f, PlateH = FaceH + Rim * 2f;
+        const float FaceRadius = 25f, PlateRadius = FaceRadius + Rim;
+
+        // The tail hangs off the bottom edge: an 18 px square turned 45°, so half of it shows
+        // below the face and the other half is buried in it.
+        const float TailSize = 18f, TailCx = 205f;
+        const float TailCy = FaceY + FaceH;
+
         SpriteRenderer icon;
         TextMeshPro nameLabel;
         float shownAt;
@@ -19,16 +69,26 @@ namespace PanDulce.Runtime
             shownTier = -1;
             var t = Content;
 
-            ViewFactory.Panel(t, "Shadow", 140f, 164f, 244f, 70f, 18,
+            // Radii are a third of the panel height rather than the 18/16 they were: the old
+            // numbers were read through a sprite that got stretched 6× across, so they landed
+            // on screen as a long lozenge. Now that Panel 9-slices, the authored radius is the
+            // radius you get, and these keep the soft bubble the stretch used to fake. The
+            // inner face is Rim smaller in radius as well as in rect, so the border reads the
+            // same width around the corners as it does along the edges.
+            ViewFactory.Panel(t, "Shadow", PlateX, PlateY + ShadowDrop, PlateW, PlateH, (int)PlateRadius,
                               new Color(122f/255f, 84f/255f, 49f/255f, 0.25f), "Overlay", 9);
-            ViewFactory.Panel(t, "Border", 140f, 160f, 244f, 70f, 18, Palette.Hex("#e0cba6"), "Overlay", 10);
-            ViewFactory.Panel(t, "Box", 143f, 163f, 238f, 64f, 16, Palette.Hex("#fffaf0"), "Overlay", 11);
-            ViewFactory.Panel(t, "Tail", 196f, 218f, 18f, 18f, 3, Palette.Hex("#fffaf0"),
-                              "Overlay", 11, 45f);
+            ViewFactory.Panel(t, "Border", PlateX, PlateY, PlateW, PlateH, (int)PlateRadius,
+                              Palette.Hex("#e0cba6"), "Overlay", 10);
+            ViewFactory.Panel(t, "Box", FaceX, FaceY, FaceW, FaceH, (int)FaceRadius,
+                              Palette.Hex("#fffaf0"), "Overlay", 11);
+            ViewFactory.Panel(t, "Tail", TailCx - TailSize * 0.5f, TailCy - TailSize * 0.5f,
+                              TailSize, TailSize, 3, Palette.Hex("#fffaf0"), "Overlay", 11, 45f);
 
-            icon = ViewFactory.Icon(t, "Icon", database, 2, 170f, 195f, 16f, "Overlay", 12);
+            // Both sit on the face's midline. Label y is its vertical centre, not a baseline —
+            // TextAlignmentOptions.Left is middle-left — so the same MidY centres both.
+            icon = ViewFactory.Icon(t, "Icon", database, 2, IconX, MidY, IconRadius, "Overlay", 12);
             iconBaseScale = icon != null ? icon.transform.localScale.x : 1f;
-            nameLabel = ViewFactory.Label(t, "Name", "", 192f, 188f, 180f, 15f,
+            nameLabel = ViewFactory.Label(t, "Name", "", TextX, MidY, TextW, FontSize,
                                           Palette.Hex("#6b4a2e"), "Overlay", 12,
                                           TextAlignmentOptions.Left);
             ViewFactory.Label(t, "Hint", "press & hold one to hand it over",
@@ -51,9 +111,12 @@ namespace PanDulce.Runtime
             if (database != null && icon != null)
             {
                 icon.sprite = database.Pastry(tier);
-                // Fixed 16 px bubble icon, scaled by the dessert's case size % so it reads as
-                // the same dessert; the breathing in Update pulses around that.
-                ViewFactory.SetIcon(icon, 16f, database.DisplaySize(tier));
+                // Fixed bubble radius, scaled by the dessert's case size % so it reads as the
+                // same dessert; the breathing in Update pulses around that. This has to be the
+                // SAME constant Build authored with — it ran at a hardcoded 16 against a scene
+                // authored at 22, so the Scene view previewed an icon 1.4× the one play mode
+                // actually served, and neither view could be trusted while tuning the other.
+                ViewFactory.SetIcon(icon, IconRadius, database.DisplaySize(tier));
                 iconBaseScale = icon.transform.localScale.x;
             }
             if (nameLabel != null)

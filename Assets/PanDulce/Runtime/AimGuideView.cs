@@ -26,7 +26,14 @@ namespace PanDulce.Runtime
             shownTier = shownSkin = -1;
             // Defaults to the cloth centre so the guide reads correctly in the Editor too,
             // before PointerInput has ever run.
-            line = ViewFactory.Rect(Content, "AimLine", Shapes.Dashes(4, 10, 3),
+            // A SOLID white line, not the dashed sprite this used to pass. The dashes never
+            // reached the screen as dashes: Rect draws Sliced, the dash sprite carries no
+            // 9-slice border, so a 14 × 3 pattern was stretched across a 3 × 306 rect. Only
+            // 4 px in every 14 are opaque, so squeezing the pattern into 3 px of width
+            // averaged the alpha down to ~29%, and 0.8 × 0.29 left the guide at roughly a
+            // fifth of the opacity it was written for — a washed-out grey smear rather than
+            // the white line the tint asks for. A plain white sprite has no pattern to lose.
+            line = ViewFactory.Rect(Content, "AimLine", Shapes.White,
                                     SimField.CX, 66f, 3f, 306f,
                                     new Color(1f, 1f, 1f, 0.8f), "PlayArea", 20);
             held = ViewFactory.Icon(Content, "HeldPastry", database, 0, SimField.CX, HeldY, 20f,

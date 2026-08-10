@@ -20,7 +20,53 @@ namespace PanDulce.Runtime
         /// <summary>All generated sprites use PPU 100 so 1 texture px = 1 stage px.</summary>
         public const float PPU = 100f;
 
+        /// <summary>
+        /// Texture px per stage px for shapes with a visible curve in them.
+        ///
+        /// The stage is a 446-px-wide design frame contain-fit to the screen, so a phone hands
+        /// us roughly 2.6 device px per stage px (1170 / 446) and a tablet more. Rasterising a
+        /// curve 1:1 in stage px therefore ships it pre-blurred: every generated corner arrives
+        /// on screen upscaled past its own antialiasing. Three covers current phones with room
+        /// over, and the shapes that use it are corner tiles of a few thousand px.
+        /// </summary>
+        public const int Supersample = 3;
+
         public static Sprite White => RoundedRect(8, 8, 0);
+
+        /// <summary>
+        /// The rounded rect behind <see cref="ViewFactory.Panel"/>, as a true 9-slice: the
+        /// texture holds the four corners plus a 2 px seam, and the sprite carries a border so
+        /// Sliced draw mode stretches only the flat middle.
+        ///
+        /// The border is what makes this different from feeding a plain rounded rect to a
+        /// sliced renderer. Without one, Unity has no slices to hold fixed and simply scales
+        /// the whole sprite to the renderer's size — so a 40 × 40 tile became the 244 × 70
+        /// order bubble by being stretched 6× across and 1.75× down. That both smeared the
+        /// corners into ellipses and blew a 40 px texture up past 600 device px, which is the
+        /// soft, stair-stepped edge the bubble had. With a border the corners keep their
+        /// authored radius at any panel size, and only the straight edges — which have nothing
+        /// to lose — are stretched.
+        /// </summary>
+        public static Sprite Panel(int radius)
+        {
+            radius = Mathf.Max(0, radius);
+            int r = radius * Supersample;
+            int size = r * 2 + 2 * Supersample;   // corners + a 2 stage-px seam to stretch
+
+            string key = $"panel:{radius}";
+            if (cache.TryGetValue(key, out var cached) && cached != null) return cached;
+
+            var tex = NewTexture(size, size);
+            var px = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+                px[y * size + x] = new Color32(255, 255, 255,
+                                               (byte)(RoundedCoverage(x, y, size, size, r) * 255f));
+
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            return Store(key, tex, PPU * Supersample, new Vector4(r, r, r, r));
+        }
 
         public static Sprite RoundedRect(int w, int h, int radius, int border = 0)
         {
@@ -201,11 +247,11 @@ namespace PanDulce.Runtime
             return tex;
         }
 
-        static Sprite Store(string key, Texture2D tex)
+        static Sprite Store(string key, Texture2D tex, float ppu = PPU, Vector4 border = default)
         {
             var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
-                                       new Vector2(0.5f, 0.5f), PPU, 0,
-                                       SpriteMeshType.FullRect);
+                                       new Vector2(0.5f, 0.5f), ppu, 0,
+                                       SpriteMeshType.FullRect, border);
             sprite.hideFlags = HideFlags.HideAndDontSave;
             cache[key] = sprite;
             return sprite;
