@@ -70,9 +70,15 @@ namespace PanDulce.Runtime
         const float ButtonShiftX = -11f;
         const float ButtonShiftY = 26f;
 
-        /// <summary>The roots' resting local position. Sync composes the wiggle and the ready
-        /// pulse onto this, so the shift cannot be overwritten a frame later.</summary>
-        static Vector3 ButtonHome => StageCoords.Stage(ButtonShiftX, ButtonShiftY);
+        /// <summary>
+        /// The roots' resting local positions, read back from the scene at the end of Build.
+        ///
+        /// Read rather than computed: the constants above only decide where the roots FIRST
+        /// land, and from then on the scene owns them. Sync composes the wiggle and the ready
+        /// pulse onto whatever is read here, so an animation can never drag a hand-placed
+        /// button back to ButtonShiftX/Y a frame later.
+        /// </summary>
+        Vector3 buttonHome, clearHome;
 
         SpriteRenderer button, chargeFill, clearFace, badge, badgeBorder;
         TextMeshPro label, badgeLabel, clearLabel, priceLabel;
@@ -122,7 +128,7 @@ namespace PanDulce.Runtime
             readyTint = faceArt != null ? Color.white : Palette.Amber;
             idleTint = faceArt != null ? Color.white : Palette.AmberDeep;
 
-            buttonRoot = ViewFactory.Node(t, "ShakeButton", ButtonShiftX, ButtonShiftY).transform;
+            buttonRoot = ViewFactory.NodeTransform(t, "ShakeButton", ButtonShiftX, ButtonShiftY);
 
             // The shadow reuses the face drawing so its corners match; only the tint differs.
             ViewFactory.Plate(buttonRoot, "Shadow", faceArt, 12f, 836f, 226f, 46f, 15,
@@ -131,9 +137,8 @@ namespace PanDulce.Runtime
                                        readyTint, "Overlay", 32);
 
             // shaker icon: rotated cream square + knot circle + two motion dashes (§8.7)
-            var square = ViewFactory.Panel(buttonRoot, "IconSquare", 25f, 845f, 17f, 17f, 4,
-                                           Palette.Cream, "Overlay", 33);
-            square.transform.localRotation = Quaternion.Euler(0f, 0f, -12f);
+            ViewFactory.Panel(buttonRoot, "IconSquare", 25f, 845f, 17f, 17f, 4,
+                              Palette.Cream, "Overlay", 33, -12f);
             ViewFactory.Rect(buttonRoot, "IconKnotRim", Shapes.Circle(32), 28f, 838f, 12f, 12f,
                              Palette.Hex("#c07f1c"), "Overlay", 33);
             ViewFactory.Rect(buttonRoot, "IconKnot", Shapes.Circle(32), 29f, 839f, 10f, 10f,
@@ -168,7 +173,7 @@ namespace PanDulce.Runtime
             FitBadge();
 
             // --- Day-old clearance: coin-priced, pops every tier-0/1 pastry ---
-            clearRoot = ViewFactory.Node(t, "ClearanceButton", ButtonShiftX, ButtonShiftY).transform;
+            clearRoot = ViewFactory.NodeTransform(t, "ClearanceButton", ButtonShiftX, ButtonShiftY);
 
             ViewFactory.Plate(clearRoot, "Shadow", faceArt, 250f, 836f, 168f, 46f, 15,
                               Palette.Hex("#6f4a2c"), "Overlay", 31);
@@ -210,6 +215,9 @@ namespace PanDulce.Runtime
                 priceLabel = ViewFactory.Label(clearRoot, "PriceLabel", "$30", 390f, 838f, 36f, 11f,
                                                BadgeInk(plateArt), "Overlay", 37);
             }
+
+            buttonHome = buttonRoot != null ? buttonRoot.localPosition : Vector3.zero;
+            clearHome = clearRoot != null ? clearRoot.localPosition : Vector3.zero;
         }
 
         /// <summary>
@@ -218,6 +226,8 @@ namespace PanDulce.Runtime
         /// </summary>
         void FitBadge()
         {
+            if (badgeLabel == null) return;
+
             // GetPreferredValues measures in local units; wrapping is off, so this is the
             // unwrapped run. A font asset that is not ready yet reports 0, and the minimum
             // width covers that — the next Sync re-fits with a real measurement.
@@ -252,7 +262,7 @@ namespace PanDulce.Runtime
             // Keyed on the string, not on charge: the badge has to re-fit on every width
             // change, and "99%" → "READY!" is the widest jump of all.
             string badgeText = ready ? "READY!" : $"{Mathf.RoundToInt(charge * 100f)}%";
-            if (badgeText != shownBadge)
+            if (badgeText != shownBadge && badgeLabel != null)
             {
                 shownBadge = badgeText;
                 badgeLabel.text = badgeText;
@@ -262,23 +272,28 @@ namespace PanDulce.Runtime
             if (ready != shownReady)
             {
                 shownReady = ready;
-                label.text = ready ? "Shake the furoshiki!" : "Merge desserts to charge!";
+                if (label != null)
+                    label.text = ready ? "Shake the furoshiki!" : "Merge desserts to charge!";
             }
 
             // Charging reads at 0.72 opacity; ready breathes over ReadyPulsePeriod (§8.7).
             float alpha = ready ? 1f : 0.72f;
-            button.color = Palette.WithAlpha(ready ? readyTint : idleTint, alpha);
-            label.alpha = alpha;
+            if (button != null) button.color = Palette.WithAlpha(ready ? readyTint : idleTint, alpha);
+            if (label != null) label.alpha = alpha;
 
             // Deny wiggle: a decaying side-shake after a tap on the uncharged button.
             float wiggle = DenyWiggle(ref denyAt, now);
 
             // Ready breathe: composes with the wiggle above — wiggle owns x, pulse owns y.
+            // Both offset buttonHome, which is wherever the button was placed in the scene.
             float pulse = ready ? Mathf.Sin(now / ReadyPulsePeriod * Mathf.PI * 2f) : 0f;
-            buttonRoot.localPosition = ButtonHome
-                                     + new Vector3(wiggle * StageCoords.PX,
-                                                   pulse * ReadyPulseBobPx * StageCoords.PX, 0f);
-            buttonRoot.localScale = Vector3.one * (1f + Mathf.Max(0f, pulse) * ReadyPulseScale);
+            if (buttonRoot != null)
+            {
+                buttonRoot.localPosition = buttonHome
+                                         + new Vector3(wiggle * StageCoords.PX,
+                                                       pulse * ReadyPulseBobPx * StageCoords.PX, 0f);
+                buttonRoot.localScale = Vector3.one * (1f + Mathf.Max(0f, pulse) * ReadyPulseScale);
+            }
         }
 
         /// <summary>Affordability + availability drive the clearance button's read.</summary>
@@ -289,7 +304,7 @@ namespace PanDulce.Runtime
             if (cost != shownCost)
             {
                 shownCost = cost;
-                priceLabel.text = $"${cost}";
+                if (priceLabel != null) priceLabel.text = $"${cost}";
             }
 
             bool canBuy = coins >= cost && hasTargets;
@@ -297,13 +312,15 @@ namespace PanDulce.Runtime
             {
                 shownCanBuy = canBuy;
                 float alpha = canBuy ? 1f : 0.55f;
-                clearFace.color = Palette.WithAlpha(canBuy ? readyTint : idleTint, alpha);
-                clearLabel.alpha = alpha;
+                if (clearFace != null)
+                    clearFace.color = Palette.WithAlpha(canBuy ? readyTint : idleTint, alpha);
+                if (clearLabel != null) clearLabel.alpha = alpha;
             }
 
-            // Same deny grammar as the shake button: a decaying side-shake.
+            // Same deny grammar as the shake button: a decaying side-shake, off clearHome.
             float wiggle = DenyWiggle(ref clearDenyAt, now);
-            clearRoot.localPosition = ButtonHome + new Vector3(wiggle * StageCoords.PX, 0f, 0f);
+            if (clearRoot != null)
+                clearRoot.localPosition = clearHome + new Vector3(wiggle * StageCoords.PX, 0f, 0f);
         }
 
         /// <summary>

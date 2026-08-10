@@ -41,8 +41,8 @@ namespace PanDulce.Runtime
         {
             if (!IsBuilt) return;
             SetVisible(true);
-            scoreLabel.text = score.ToString("N0");
-            bestLabel.text = newBest ? "new best!" : $"best {best:N0}";
+            if (scoreLabel != null) scoreLabel.text = score.ToString("N0");
+            if (bestLabel != null) bestLabel.text = newBest ? "new best!" : $"best {best:N0}";
         }
 
         public void Hide() => SetVisible(false);

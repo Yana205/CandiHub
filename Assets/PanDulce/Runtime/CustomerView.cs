@@ -35,6 +35,12 @@ namespace PanDulce.Runtime
         float idleStart = -1f;          // idle breathing phase-zeroes when a walk/bounce ends
         bool present;
 
+        /// <summary>
+        /// The bear is walked from the sim every frame and is created here directly rather than
+        /// through ViewFactory, so authoring it into the scene would duplicate it on each bind.
+        /// </summary>
+        protected override bool Authorable => false;
+
         protected override void Build()
         {
             entranceStart = happyStart = departStart = idleStart = -1f;

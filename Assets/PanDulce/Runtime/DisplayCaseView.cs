@@ -46,11 +46,11 @@ namespace PanDulce.Runtime
             // One Desserts node holds a Slot_i folder per dessert, pivoted at the icon
             // centre, so the whole shelf — or a single slot — moves as one unit.
             float slotW = CaseWidth / Slots;
-            var desserts = ViewFactory.Node(Content, "Desserts").transform;
+            var desserts = ViewFactory.NodeTransform(Content, "Desserts");
             for (int i = 0; i < Slots; i++)
             {
                 float cx = CaseLeft + slotW * (i + 0.5f);
-                var slot = ViewFactory.Node(desserts, $"Slot_{i}", cx, IconY).transform;
+                var slot = ViewFactory.NodeTransform(desserts, $"Slot_{i}", cx, IconY);
                 icons[i] = ViewFactory.Icon(slot, "Icon", database, i, 0f, 0f, IconRadius, "Case", 10);
                 // The name band lands on the case's dark wooden lip now that the art is
                 // painted rather than lineart — brown-on-brown vanished, so it reads cream.
@@ -90,17 +90,18 @@ namespace PanDulce.Runtime
                     : Mathf.Clamp(seatTiers != null && i < seatTiers.Length ? seatTiers[i] : i,
                                   0, TierTable.Count - 1);
                 bool found = sim.IsDiscovered(tier);
-                if (database != null)
+                if (database != null && icons[i] != null)
                 {
                     icons[i].sprite = database.Pastry(tier);
                     ViewFactory.SetIcon(icons[i], IconRadius, database.DisplaySize(tier));
                 }
                 // Undiscovered entries render the sprite as a dark silhouette; the label
                 // teases '?' until the first merge, then counts up ("1/3") to the reveal.
-                icons[i].color = found ? Color.white : Silhouette;
-                labels[i].text = found ? (database != null ? database.Name(tier) : TierTable.Names[tier])
-                    : sim.MergeCount(tier) > 0 ? $"{sim.MergeCount(tier)}/{sim.DiscoverNeed}"
-                    : "?";
+                if (icons[i] != null) icons[i].color = found ? Color.white : Silhouette;
+                if (labels[i] != null)
+                    labels[i].text = found ? (database != null ? database.Name(tier) : TierTable.Names[tier])
+                        : sim.MergeCount(tier) > 0 ? $"{sim.MergeCount(tier)}/{sim.DiscoverNeed}"
+                        : "?";
             }
         }
 

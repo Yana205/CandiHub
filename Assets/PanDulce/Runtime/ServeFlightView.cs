@@ -19,6 +19,12 @@ namespace PanDulce.Runtime
         /// <summary>The active flyer sprite's transform — the serve trail follows it.</summary>
         public Transform FlyerTransform => sprite != null ? sprite.transform : null;
 
+        /// <summary>
+        /// The flyer is driven along its arc by the sim and is created here directly rather
+        /// than through ViewFactory — authoring it would duplicate it on each bind.
+        /// </summary>
+        protected override bool Authorable => false;
+
         protected override void Build()
         {
             startTime = -1f;

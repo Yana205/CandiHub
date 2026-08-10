@@ -23,11 +23,11 @@ namespace PanDulce.Runtime
                               new Color(122f/255f, 84f/255f, 49f/255f, 0.25f), "Overlay", 9);
             ViewFactory.Panel(t, "Border", 140f, 160f, 244f, 70f, 18, Palette.Hex("#e0cba6"), "Overlay", 10);
             ViewFactory.Panel(t, "Box", 143f, 163f, 238f, 64f, 16, Palette.Hex("#fffaf0"), "Overlay", 11);
-            var tail = ViewFactory.Panel(t, "Tail", 196f, 218f, 18f, 18f, 3, Palette.Hex("#fffaf0"), "Overlay", 11);
-            tail.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            ViewFactory.Panel(t, "Tail", 196f, 218f, 18f, 18f, 3, Palette.Hex("#fffaf0"),
+                              "Overlay", 11, 45f);
 
             icon = ViewFactory.Icon(t, "Icon", database, 2, 170f, 195f, 16f, "Overlay", 12);
-            iconBaseScale = icon.transform.localScale.x;
+            iconBaseScale = icon != null ? icon.transform.localScale.x : 1f;
             nameLabel = ViewFactory.Label(t, "Name", "", 192f, 188f, 180f, 15f,
                                           Palette.Hex("#6b4a2e"), "Overlay", 12,
                                           TextAlignmentOptions.Left);
@@ -48,7 +48,7 @@ namespace PanDulce.Runtime
         void Apply(int tier)
         {
             shownTier = tier;
-            if (database != null)
+            if (database != null && icon != null)
             {
                 icon.sprite = database.Pastry(tier);
                 // Fixed 16 px bubble icon, scaled by the dessert's case size % so it reads as
@@ -56,7 +56,8 @@ namespace PanDulce.Runtime
                 ViewFactory.SetIcon(icon, 16f, database.DisplaySize(tier));
                 iconBaseScale = icon.transform.localScale.x;
             }
-            nameLabel.text = $"{(database != null ? database.Name(tier) : TierTable.Names[tier])}, please!";
+            if (nameLabel != null)
+                nameLabel.text = $"{(database != null ? database.Name(tier) : TierTable.Names[tier])}, please!";
         }
 
         public void Hide()
@@ -76,6 +77,7 @@ namespace PanDulce.Runtime
             Content.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, e);
 
             // once the pop settles, the wanted dessert breathes ±8% to pull the eye
+            if (icon == null) return;
             float s = iconBaseScale;
             if (k >= 1f)
                 s *= 1f + 0.08f * Mathf.Sin((Time.time - shownAt - 0.35f) * (2f * Mathf.PI / 1.1f));
