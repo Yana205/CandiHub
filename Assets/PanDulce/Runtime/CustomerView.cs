@@ -35,6 +35,14 @@ namespace PanDulce.Runtime
         const float SwayPx = 5f;       // gentle side-to-side while moving
         const float SwayDeg = 3f;      // matching tilt, damped out as they settle
 
+        // Leaving is NOT the entrance reversed. Sinking back down travelled the full rise to
+        // reach the case before anything could hide it, which read as dropping behind the
+        // counter. Instead they step back from the glass and fade where they stand — nothing
+        // draws in front of the Customer layer at window height (WindowFrame is Background),
+        // so the exit has to end itself rather than duck behind something.
+        const float ExitScale = 0.92f;    // how far back they step
+        const float ExitDriftPx = 6f;     // slight lift as they turn away
+
         // Where the bear stands at the counter, in stage px. Serialized so the scene owns it:
         // edit it in the Inspector / Studio window, or drag the bear in the Scene view (the
         // editor folds the drag back into this field on save / play). The walk animation
@@ -96,13 +104,18 @@ namespace PanDulce.Runtime
             happyStart = departStart = idleStart = -1f;
             // Our Update may not run again this frame — never flash a customer already standing.
             bearAnchor.localPosition = StageCoords.Stage(anchor.x, anchor.y + entranceRisePx);
+            // Undo whatever the last exit's fade left behind, or they rise in invisible.
+            bearAnchor.localScale = Vector3.one;
+            SetAlpha(1f);
         }
 
         public void Celebrate()
         {
-            // A serve can land mid-walk; finish the entrance so the bounce plays at the counter.
+            // A serve can land mid-move; finish the entrance so the bounce plays at the window.
+            // That can interrupt a fade too, so the exit's alpha is cleared here as well.
             entranceStart = departStart = idleStart = -1f;
             happyStart = Time.time;
+            SetAlpha(1f);
         }
 
         /// <summary>The visit is over: sink back down the way they came up.</summary>
@@ -118,6 +131,8 @@ namespace PanDulce.Runtime
         {
             present = false;
             entranceStart = happyStart = departStart = idleStart = -1f;
+            SetAlpha(1f);
+            if (bearAnchor != null) bearAnchor.localScale = Vector3.one;
             if (bear != null) bear.gameObject.SetActive(false);
         }
 
@@ -145,7 +160,7 @@ namespace PanDulce.Runtime
             {
                 float k = Mathf.Clamp01((Time.time - departStart) / duration);
                 if (k >= 1f) { Leave(); return; }
-                Rise(1f - k);          // same move, played backwards
+                StepBack(k);
                 return;
             }
 
@@ -175,8 +190,29 @@ namespace PanDulce.Runtime
         }
 
         /// <summary>
-        /// Rise: t runs 0 (hidden below the sill) → 1 (standing at the anchor). The exit passes
-        /// the reversed t, so coming and going are the same move played in opposite directions.
+        /// The exit: step back from the glass and fade out on the spot, at window height.
+        /// k runs 0 (standing) → 1 (gone).
+        /// </summary>
+        void StepBack(float k)
+        {
+            float e = Mathf.SmoothStep(0f, 1f, k);
+            bearAnchor.localPosition = StageCoords.Stage(anchor.x, anchor.y - e * ExitDriftPx);
+            bearAnchor.localRotation = Quaternion.identity;
+            bearAnchor.localScale = Vector3.one * Mathf.Lerp(1f, ExitScale, e);
+            SetAlpha(1f - e);
+        }
+
+        /// <summary>The fade is on the renderer, so it has to be undone before the next visit.</summary>
+        void SetAlpha(float a)
+        {
+            if (bear == null) return;
+            var c = bear.color;
+            c.a = Mathf.Clamp01(a);
+            bear.color = c;
+        }
+
+        /// <summary>
+        /// Rise: t runs 0 (hidden below the sill) → 1 (standing at the anchor).
         ///
         /// Both the sway and the tilt are scaled by (1 − eased), which lands them on exactly
         /// zero at t = 1 — the customer settles square in the window instead of stopping
