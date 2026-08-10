@@ -53,6 +53,13 @@ namespace PanDulce.Runtime
         float WallL => tuning != null ? tuning.WallLeft : SimField.WL;
         float WallR => tuning != null ? tuning.WallRight : SimField.WR;
 
+        /// <summary>
+        /// A truth overlay: every vertex is resampled from the sim, so there is nothing here to
+        /// place by hand. Its lines are also built directly rather than through ViewFactory,
+        /// which authoring would duplicate on each bind.
+        /// </summary>
+        protected override bool Authorable => false;
+
         protected override void Build()
         {
             floorLr = MakeLine("FloorCurve", new Color(1f, 0.34f, 0.13f, 0.85f), 91, 3f);

@@ -94,8 +94,10 @@ namespace PanDulce.Runtime
         public void Sync(int served, int coins)
         {
             if (!IsBuilt) return;
-            if (served != shownServed) { shownServed = served; customersLabel.text = served.ToString(); }
-            if (coins != shownCoins) { shownCoins = coins; coinsLabel.text = $"${coins}"; }
+            if (served != shownServed && customersLabel != null)
+            { shownServed = served; customersLabel.text = served.ToString(); }
+            if (coins != shownCoins && coinsLabel != null)
+            { shownCoins = coins; coinsLabel.text = $"${coins}"; }
         }
     }
 }

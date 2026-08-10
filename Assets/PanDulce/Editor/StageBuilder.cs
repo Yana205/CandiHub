@@ -13,12 +13,31 @@ namespace PanDulce.Editor
     /// Builds Main.unity's hierarchy from §4, reproducibly.
     ///
     /// The scene is authored by this script rather than by hand so it stays merge-safe and
-    /// can be rebuilt after any layout change. Folder objects keep identity transforms; the
-    /// numeric prefixes preserve ordering; view components construct their own internals so
-    /// the committed scene stays thin.
+    /// can be rebuilt after any layout change. Folder objects keep identity transforms and the
+    /// numeric prefixes preserve ordering.
+    ///
+    /// A rebuild is destructive: it clears the stage, so every view writes its children out
+    /// from code again and hand placements under them are lost. Use "Re-author Views From
+    /// Code" to reset views alone, and PlayLayoutTool to carry placements across a rebuild.
     /// </summary>
     public static class StageBuilder
     {
+        /// <summary>
+        /// Puts every view's children back the way code describes them, discarding hand edits.
+        /// The escape hatch after a layout edit goes wrong — narrower than a full stage
+        /// rebuild, which also rewires components and re-imports art.
+        /// </summary>
+        [MenuItem("Pan Dulce/Re-author Views From Code")]
+        public static void ReAuthorViews()
+        {
+            var views = Object.FindObjectsByType<GeneratedView>(FindObjectsInactive.Include);
+            foreach (var v in views) v.ReAuthor();
+
+            var active = SceneManager.GetActiveScene();
+            if (active.IsValid()) EditorSceneManager.MarkSceneDirty(active);
+            Debug.Log($"[PanDulce] re-authored {views.Length} views from code");
+        }
+
         const string ConfigDir = "Assets/PanDulce/Config";
         const string TuningPath = ConfigDir + "/Tuning.asset";
         const string PastriesPath = ConfigDir + "/Pastries.asset";
@@ -203,7 +222,8 @@ namespace PanDulce.Editor
             // Hand-tuned placement captured from play mode wins over the defaults above.
             PlayLayoutTool.Apply();
 
-            // Strip generated content, save a clean scene, then put the preview back.
+            // Chrome children are authored scene objects now and are meant to be saved; only
+            // the sim-driven views still hold DontSave content, and ClearForSave strips that.
             var views = Object.FindObjectsByType<GeneratedView>(FindObjectsInactive.Include);
             foreach (var v in views) v.ClearForSave();
 

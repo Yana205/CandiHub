@@ -23,7 +23,7 @@ namespace PanDulce.Runtime
         {
             if (!IsBuilt) return;
             SetVisible(enabled && (alwaysShow || blinking));
-            if (!Content.gameObject.activeSelf) return;
+            if (!Content.gameObject.activeSelf || line == null) return;
 
             float a = blinking ? 0.35f + 0.45f * Mathf.Abs(Mathf.Sin(now * 7f)) : 0.28f;
             line.color = Palette.WithAlpha(Palette.Danger, a);

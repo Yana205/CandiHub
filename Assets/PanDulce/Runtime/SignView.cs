@@ -24,9 +24,10 @@ namespace PanDulce.Runtime
             var t = Content;
 
             // The sign hangs still. It used to swing ±1.2°, which the drawing's own rail
-            // swung with — a rail bolted to the wall cannot tilt. Cleared here as well as
-            // removed, so a scene saved mid-swing does not keep the stale tilt.
-            transform.localRotation = Quaternion.identity;
+            // swung with — a rail bolted to the wall cannot tilt. Cleared when the view is
+            // first written out, so a scene saved mid-swing does not keep the stale tilt;
+            // only then, because past that point the tilt is the designer's to set.
+            if (Authoring) transform.localRotation = Quaternion.identity;
 
             // The drawing holds rail, ropes and board in one piece, so it replaces all five
             // primitives the sign used to be built from. Drawn at its own aspect (822×606) so
@@ -40,12 +41,10 @@ namespace PanDulce.Runtime
             }
             else
             {
-                var ropeL = ViewFactory.Rect(t, "RopeLeft", Shapes.White, 40f, 54f, 3f, 26f,
-                                             Palette.ChipFill, "Furniture", 10);
-                ropeL.transform.localRotation = Quaternion.Euler(0f, 0f, 16f);
-                var ropeR = ViewFactory.Rect(t, "RopeRight", Shapes.White, 88f, 54f, 3f, 26f,
-                                             Palette.ChipFill, "Furniture", 10);
-                ropeR.transform.localRotation = Quaternion.Euler(0f, 0f, -16f);
+                ViewFactory.Rect(t, "RopeLeft", Shapes.White, 40f, 54f, 3f, 26f,
+                                 Palette.ChipFill, "Furniture", 10, 16f);
+                ViewFactory.Rect(t, "RopeRight", Shapes.White, 88f, 54f, 3f, 26f,
+                                 Palette.ChipFill, "Furniture", 10, -16f);
 
                 // drop shadow, border, face — three stacked panels fake border+shadow (§8.4)
                 ViewFactory.Panel(t, "BoardShadow", 8f, 80f, 118f, 76f, 10, Palette.Crust, "Furniture", 10);
@@ -76,8 +75,8 @@ namespace PanDulce.Runtime
                        : arriving                  ? "here they come!" : "now serving";
             string big = state == ShopState.Closed ? $"{secondsShown}s"
                        : arriving                  ? "…" : "♥";
-            if (top != shownTop) { shownTop = top; topLine.text = top; }
-            if (big != shownBig) { shownBig = big; bigLine.text = big; }
+            if (top != shownTop && topLine != null) { shownTop = top; topLine.text = top; }
+            if (big != shownBig && bigLine != null) { shownBig = big; bigLine.text = big; }
         }
     }
 }

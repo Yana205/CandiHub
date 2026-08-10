@@ -50,7 +50,8 @@ namespace PanDulce.Runtime
 
         public void Sync(int nextTier, int nextSkin)
         {
-            if (!IsBuilt || (nextTier == shownTier && nextSkin == shownSkin)) return;
+            if (!IsBuilt || icon == null) return;
+            if (nextTier == shownTier && nextSkin == shownSkin) return;
             shownTier = nextTier;
             shownSkin = nextSkin;
             if (database != null)
