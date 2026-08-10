@@ -55,6 +55,7 @@ MonoBehaviour:
     kinPull: 0
     spawnBias: 2
     bigDealDelaySec: 12
+    dealTopMargin: 1
     coinBase: 5
     coinPerTier: 3
     clearanceCost: 30

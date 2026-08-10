@@ -205,7 +205,7 @@ namespace PanDulce.Tests
         // ---------------------------------------------------------------- shop loop
 
         [Test]
-        public void Shop_OpensOnTimerAndOrdersTiersTwoToFive()
+        public void Shop_OpensOnTimerAndOrdersSomethingOnTheChain()
         {
             var cfg = Cfg();
             cfg.customerEverySec = 5;
@@ -219,7 +219,8 @@ namespace PanDulce.Tests
             }
 
             Assert.That(shop.State, Is.EqualTo(ShopState.Open));
-            Assert.That(shop.OrderTier, Is.InRange(2, 5));
+            // The band is the whole chain now (2026-08-10) — simple desserts are orders too.
+            Assert.That(shop.OrderTier, Is.InRange(0, TierTable.Max));
         }
 
         [Test]

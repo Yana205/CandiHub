@@ -14,7 +14,7 @@ before implementation.
 | Danger line | Does not exist | **y = 82**, always visible at α 0.28, blinks when threatened |
 | Top bar centre | `Sweet Bakery` title | **Score**, with `best NNNN` beneath it |
 | Persistence | Open question | **None at runtime.** Best score and case discovery reset on launch, matching both existing builds. Only `Tuning.asset` persists |
-| Run end | n/a | A top-out **closes the bakery**: `closeT` is forced to 1 so the existing fold and knot play, then a `Sold out!` card reports score/best |
+| Run end | n/a | A top-out shows a `Sold out!` card reporting score/best. It used to force `closeT` to 1 and play the fold too — dropped 2026-08-10, the flaps read as two capsules under the card. `GameOver` already blocks drops, shakes and the customer timer |
 
 `topOutLine` was re-anchored from the reference's `92`: that sat 14% down a `DROP_Y 36 →
 FLOOR 442` column, and this frame's column is `36 → 372`.

@@ -69,6 +69,7 @@ namespace PanDulce.Core
         // 12s big-deal wait) live in Tuning.asset.
         public float spawnBias = 1f;
         public float bigDealDelaySec = 0f;
+        public int dealTopMargin = 0;
 
         // Economy — coins from serves buy boosts (spec 2026-08-04). A tier-2..5 order
         // pays 11..20, so the 30-coin clearance costs about two serves.
@@ -138,6 +139,7 @@ namespace PanDulce.Core
         public float KinPull => kinPull;
         public float SpawnBias => spawnBias;
         public float BigDealDelaySec => bigDealDelaySec;
+        public int DealTopMargin => dealTopMargin;
 
         public int CoinBase => coinBase;
         public int CoinPerTier => coinPerTier;

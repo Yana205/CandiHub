@@ -138,6 +138,11 @@ namespace PanDulce.Editor
                    "dessert. Merging up to them is untouched — this only keeps the " +
                    "early hand small. 0 = off.",
                    d.bigDealDelaySec, 0f, 30f, v => d.bigDealDelaySec = v);
+            IntSlider(cfg, "Hold back newest",
+                      "How many of the newest reveals stay OUT of the hand. 1 = the dessert " +
+                      "you just unlocked must be merged for, never dealt, until the next one " +
+                      "colours in — the deal opens one step behind the case. 0 = off.",
+                      d.dealTopMargin, 0, 3, v => d.dealTopMargin = v);
 
             EditorGUILayout.Space(6f);
             EditorGUILayout.LabelField("Customers", EditorStyles.boldLabel);
@@ -363,7 +368,7 @@ namespace PanDulce.Editor
                     d.endOfDay = !d.endOfDay;
                     EditorUtility.SetDirty(cfg);
                 }
-                Help("Folds the cloth shut with the knot, or opens it back up.");
+                Help("Folds the cloth shut, or opens it back up.");
 
                 if (GUILayout.Button("Screenshot the stage"))
                 {

@@ -29,8 +29,9 @@ namespace PanDulce.Core
 
         /// <summary>
         /// Which tiers a customer may ask for — wired to MergeSim.IsDiscovered by GameRoot,
-        /// so the bear never orders a dessert the player has not merged into existence yet.
-        /// Null (tests, bare setups) keeps the classic unfiltered 2..5 roll.
+        /// so the bear never orders a dessert the player has never seen. Discovery, not the
+        /// current pile: an order for something not on the cloth yet is the ask to go build it.
+        /// Null (tests, bare setups) keeps an unfiltered roll over the whole chain.
         /// </summary>
         public Func<int, bool> Orderable;
 
@@ -66,7 +67,7 @@ namespace PanDulce.Core
             }
         }
 
-        /// <summary>A customer arrives and asks for a tier in 2..5 inclusive.</summary>
+        /// <summary>A customer arrives and asks for one of the revealed desserts.</summary>
         public void OpenWindow()
         {
             OrderTier = PickOrder();
@@ -76,23 +77,26 @@ namespace PanDulce.Core
         }
 
         /// <summary>
-        /// A roll over the upper half of the chain (2..Max), filtered to discovered tiers so
-        /// every order is servable. If the whole band is still silhouettes, ask for the best
-        /// dessert the player CAN make — never an impossible one.
+        /// An even roll over EVERY revealed dessert, simple ones included (Yana, 2026-08-10).
+        /// The band used to start at tier 2, so the bear only ever wanted the hard half and a
+        /// pile full of mochi was never worth anything. Revealed — not "sitting in the box":
+        /// a colour in the glass case is a promise the player can build it, so asking for a
+        /// dessert that is not on the cloth yet is the order doing its job, not a bug.
+        /// If somehow nothing is revealed, ask for the best dessert the player CAN make.
         /// </summary>
         int PickOrder()
         {
-            if (Orderable == null) return rng.Next(2, TierTable.Max + 1);
+            if (Orderable == null) return rng.Next(0, TierTable.Max + 1);
 
             int n = 0;
             Span<int> band = stackalloc int[TierTable.Count];
-            for (int t = 2; t <= TierTable.Max; t++)
+            for (int t = 0; t <= TierTable.Max; t++)
                 if (Orderable(t)) band[n++] = t;
             if (n > 0) return band[rng.Next(0, n)];
 
             for (int t = TierTable.Max; t >= 0; t--)
                 if (Orderable(t)) return t;
-            return rng.Next(2, TierTable.Max + 1);
+            return 0;
         }
 
         public void ForceOrder(int tier)

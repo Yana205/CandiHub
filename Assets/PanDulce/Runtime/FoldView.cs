@@ -4,7 +4,13 @@ using UnityEngine;
 
 namespace PanDulce.Runtime
 {
-    /// <summary>The two flaps, the knot and the "Closing time" card, driven by CloseT (§8.5).</summary>
+    /// <summary>
+    /// The two flaps, the knot and the "Closing time" card, driven by CloseT (§8.5).
+    ///
+    /// Only the end-of-day toggle drives this now — a top-out shows the "Sold out!" card
+    /// on an open shop (Yana, 2026-08-10). The flaps rotate almost flat and read as two
+    /// stacked capsules under the card, which is not the note a run should end on.
+    /// </summary>
     public sealed class FoldView : GeneratedView
     {
         Transform flapLeft, flapRight, knot;

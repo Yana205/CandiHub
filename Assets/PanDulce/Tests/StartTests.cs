@@ -71,21 +71,51 @@ namespace PanDulce.Tests
         {
             var shop = new ShopDirector(new System.Random(4));
             shop.Orderable = t => t <= 2;
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < 200; i++)
             {
                 shop.OpenWindow();
-                Assert.That(shop.OrderTier, Is.EqualTo(2),
-                            "band 2..Max filtered by discovery leaves only tier 2");
+                Assert.That(shop.OrderTier, Is.LessThanOrEqualTo(2),
+                            "a silhouette must never be ordered");
+                Assert.That(shop.OrderTier, Is.GreaterThanOrEqualTo(0));
             }
         }
 
         [Test]
-        public void Orders_FallBackToBestMakeable_WhenBandIsAllSilhouettes()
+        public void Orders_AskForSimpleDessertsToo()
+        {
+            // The band covers the WHOLE revealed chain (2026-08-10) — mochi and purin are
+            // orders in their own right, not just merge fodder.
+            var shop = new ShopDirector(new System.Random(4));
+            shop.Orderable = t => true;
+            var seen = new bool[TierTable.Count];
+            for (int i = 0; i < 400; i++) { shop.OpenWindow(); seen[shop.OrderTier] = true; }
+
+            for (int t = 0; t < TierTable.Count; t++)
+                Assert.That(seen[t], Is.True, $"tier {t} must be orderable");
+        }
+
+        [Test]
+        public void Orders_IgnoreThePile_OnlyTheCase()
+        {
+            // Orders are gated on discovery, never on what is currently on the cloth: a
+            // revealed dessert with none in the box is exactly the ask to go build one.
+            var shop = new ShopDirector(new System.Random(9));
+            shop.Orderable = t => t == 0 || t == 3;
+            for (int i = 0; i < 100; i++)
+            {
+                shop.OpenWindow();
+                Assert.That(shop.OrderTier == 0 || shop.OrderTier == 3, Is.True,
+                            $"tier {shop.OrderTier} is not in the case");
+            }
+        }
+
+        [Test]
+        public void Orders_FallBackToBestMakeable_WhenNothingIsRevealed()
         {
             var shop = new ShopDirector(new System.Random(5));
-            shop.Orderable = t => t <= 1;
+            shop.Orderable = t => false;
             shop.OpenWindow();
-            Assert.That(shop.OrderTier, Is.EqualTo(1));
+            Assert.That(shop.OrderTier, Is.EqualTo(0));
         }
     }
 }

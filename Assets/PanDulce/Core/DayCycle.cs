@@ -4,7 +4,8 @@ namespace PanDulce.Core
 {
     /// <summary>
     /// Eases closeT 0↔1 over 1.1s and answers the three gating questions (§7.8).
-    /// Also the game-over presentation: a top-out forces the cloth shut, reusing the fold.
+    /// The end-of-day toggle is its only live driver — the game over used to force the
+    /// fold too, until the flaps read as two capsules under the card (Yana, 2026-08-10).
     /// </summary>
     public sealed class DayCycle
     {
@@ -12,7 +13,8 @@ namespace PanDulce.Core
 
         public float CloseT { get; private set; }
 
-        /// <summary>Set when the run has ended — forces the fold regardless of the endOfDay knob.</summary>
+        /// <summary>Forces the fold regardless of the endOfDay knob. Nothing in the game sets
+        /// it now that a top-out leaves the shop open — it is the one-line way back.</summary>
         public bool ForcedClosed { get; set; }
 
         public void Tick(float dt, bool endOfDay)

@@ -87,6 +87,11 @@ namespace PanDulce.Core
         /// the deal from handing out the big ones early. 0 = no wait (classic).</summary>
         float BigDealDelaySec { get; }
 
+        /// <summary>How many of the newest reveals stay OUT of the deal. 1 means the
+        /// dessert you just unlocked has to be merged for, not dealt, until the next one
+        /// colours in — so the hand opens up one step behind the case. 0 = classic.</summary>
+        int DealTopMargin { get; }
+
         // --- Economy: coins from serves buy boosts (spec 2026-08-04) ---
         int CoinBase { get; }
         int CoinPerTier { get; }

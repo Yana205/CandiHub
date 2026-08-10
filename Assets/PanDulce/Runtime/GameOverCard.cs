@@ -4,8 +4,8 @@ using UnityEngine;
 namespace PanDulce.Runtime
 {
     /// <summary>
-    /// The run-end card. A top-out closes the bakery rather than showing a failure screen —
-    /// the fold and knot already exist, so the ending reuses them and this card just reports.
+    /// The run-end card, and the whole of the run-end presentation since 2026-08-10: a
+    /// top-out reports here on an open shop instead of folding the cloth shut first.
     /// </summary>
     public sealed class GameOverCard : GeneratedView
     {

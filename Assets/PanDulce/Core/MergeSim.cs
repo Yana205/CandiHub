@@ -534,53 +534,71 @@ namespace PanDulce.Core
 
         public void SetSpawnPool(int[] pool) => spawnPool = pool;
 
-        /// <summary>Discovered AND — for the top two tiers — past the big-deal wait.
-        /// The wait shapes only the DEAL: merging up to a donut or roll cake creates
-        /// them whenever the player earns it.</summary>
+        /// <summary>
+        /// The highest tier the DEAL may hand out: the top revealed tier pulled down by
+        /// DealTopMargin, so the newest reveal stays a merge-only prize for a while instead
+        /// of dropping into the hand the moment it colours in (Yana, 2026-08-10). Tier 0 is
+        /// always dealable — the hand can never be empty. Margin 0 = classic.
+        /// </summary>
+        int DealCeiling
+            => Mathf.Max(0, HighestDiscovered - (cfg != null ? Mathf.Max(0, cfg.DealTopMargin) : 0));
+
+        /// <summary>Discovered, under the deal ceiling, AND — for the top two tiers — past
+        /// the big-deal wait. Both gates shape only the DEAL: merging up to a donut or roll
+        /// cake creates them whenever the player earns it.</summary>
         bool SpawnReady(int tier)
-            => tier >= 0 && tier < TierTable.Count && discovered[tier]
+            => tier >= 0 && tier < TierTable.Count && discovered[tier] && tier <= DealCeiling
                && (tier < TierTable.Count - 2 || cfg == null || Now >= cfg.BigDealDelaySec);
 
         /// <summary>Spawn pick: descending weights over the case seats when a seat order is
-        /// authored, otherwise the mock's 4:3:2:1 over tiers 0–3 (§6.1). SpawnBias raises
-        /// every weight to a power, leaning the deal onto the low tiers; at 1 the classic
-        /// linear weights come back exactly.</summary>
+        /// authored, otherwise the mock's menu of tiers 0–3 (§6.1) — in both cases counted
+        /// over the desserts that are actually dealable right now, so the hand grows with
+        /// the case. SpawnBias raises every weight to a power, leaning the deal onto the low
+        /// tiers; at 1 the classic linear weights come back exactly.</summary>
         public int Pick()
         {
             double bias = cfg != null ? Mathf.Max(0.25f, cfg.SpawnBias) : 1.0;
 
+            Span<int> band = stackalloc int[TierTable.Count];
+            int n = 0;
+
             if (spawnPool != null && spawnPool.Length > 0)
             {
-                int n = spawnPool.Length;
-                double total = 0;
-                for (int i = 0; i < n; i++)
-                    if (SpawnReady(spawnPool[i])) total += Math.Pow(n - i, bias);   // seat 1 of 5 outweighs seat 5
-                if (total > 0)
-                {
-                    double roll = rng.NextDouble() * total;
-                    for (int i = 0; i < n; i++)
-                    {
-                        if (!SpawnReady(spawnPool[i])) continue;
-                        roll -= Math.Pow(n - i, bias);
-                        if (roll < 0) return spawnPool[i];
-                    }
-                }
-                // Nothing in the pool ready yet — fall through to the classic pick.
+                for (int i = 0; i < spawnPool.Length && n < band.Length; i++)
+                    if (SpawnReady(spawnPool[i])) band[n++] = spawnPool[i];
             }
 
-            // The mock's roll over tiers 0–3 (weights 4:3:2:1, raised to the bias), then
-            // the classic walk-down so an unready roll lands on the best dessert below it.
-            double wTotal = 0;
-            for (int t = 0; t < 4; t++) wTotal += Math.Pow(4 - t, bias);
-            double r = rng.NextDouble() * wTotal;
-            int pick = 3;
-            for (int t = 0; t < 4; t++)
+            // No seat menu authored, or nothing on it is dealable yet: the mock's own menu,
+            // tiers 0 up to just below the top — the deal never hands out the last dessert.
+            if (n == 0)
+                for (int t = 0; t < TierTable.Max; t++)
+                    if (SpawnReady(t)) band[n++] = t;
+
+            if (n == 0) return 0;   // the hand is never empty
+            return WeightedByRank(band, n, bias);
+        }
+
+        /// <summary>
+        /// Descending weights (n, n-1, … 1) raised to the bias, over the desserts that are
+        /// ACTUALLY dealable — rank, not seat index (Yana, 2026-08-10). Two unlocked deal
+        /// 4:1 mochi, three deal 9:4:1, four deal the classic 16:9:4:1, so the hand starts
+        /// tiny and widens one step per reveal. The old code weighted by position in the
+        /// full 5-seat case and let a blocked roll walk DOWN one tier, which handed the
+        /// blocked weight to its neighbour: with only mochi and purin revealed that came
+        /// out 53/47, a coin flip exactly when the player has the least room to work with.
+        /// </summary>
+        int WeightedByRank(Span<int> band, int n, double bias)
+        {
+            double total = 0;
+            for (int i = 0; i < n; i++) total += Math.Pow(n - i, bias);
+
+            double roll = rng.NextDouble() * total;
+            for (int i = 0; i < n; i++)
             {
-                r -= Math.Pow(4 - t, bias);
-                if (r < 0) { pick = t; break; }
+                roll -= Math.Pow(n - i, bias);
+                if (roll < 0) return band[i];
             }
-            while (pick > 0 && !SpawnReady(pick)) pick--;   // never spawn an unready tease
-            return pick;
+            return band[n - 1];   // rounding fell off the end
         }
 
         public Body MakeBody(float x, float y, int tier, float spawnT)

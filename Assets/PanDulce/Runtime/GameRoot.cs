@@ -405,7 +405,11 @@ namespace PanDulce.Runtime
         {
             if (GameOver) return;
             GameOver = true;
-            Day.ForcedClosed = true;                 // the bakery closes; the fold does the talking
+            // The run used to force the cloth shut here and let the fold do the talking.
+            // Rotated almost flat, those two flaps read as a pair of stacked capsules right
+            // under the "Sold out!" card — so the card talks and the shop stays open
+            // (Yana, 2026-08-10). GameOver already blocks drops, shakes and serves; the fold
+            // was never the thing enforcing that. End-of-day still folds as before.
             bool newBest = Score.CommitBest();
             if (serveFlight != null) serveFlight.Cancel();
             Shop.ServeInFlight = false;

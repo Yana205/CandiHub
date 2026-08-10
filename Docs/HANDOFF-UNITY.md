@@ -137,7 +137,7 @@ public interface ISimConfig {
 | `FloatingTextPool` | Pooled TMP labels for "Combo 3!", "New in the case!", "Shake!" |
 | `ClothView` | Draws the furoshiki; derives every highlight/shadow from `clothColor` |
 | `ClothShaker` | Offsets `ClothShakeRoot` during a shake |
-| `FoldView` | The two flaps, the knot, the "Closing time" label, driven by `DayCycle.CloseT` |
+| `FoldView` | The two flaps, the knot, the "Closing time" label, driven by `DayCycle.CloseT`. End-of-day only — a top-out no longer folds |
 | `CustomerView` | Sprite for the current regular + the four entrance animations |
 | `SignView` | The hanging sign's two lines |
 | `OrderBubbleView` | Bubble show/hide + icon + name |

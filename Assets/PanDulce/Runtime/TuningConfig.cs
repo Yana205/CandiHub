@@ -71,6 +71,7 @@ namespace PanDulce.Runtime
         public float KinPull => data.KinPull;
         public float SpawnBias => data.SpawnBias;
         public float BigDealDelaySec => data.BigDealDelaySec;
+        public int DealTopMargin => data.DealTopMargin;
 
         public int CoinBase => data.CoinBase;
         public int CoinPerTier => data.CoinPerTier;
