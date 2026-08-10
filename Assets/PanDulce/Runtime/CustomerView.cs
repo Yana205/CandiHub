@@ -2,25 +2,48 @@ using UnityEngine;
 
 namespace PanDulce.Runtime
 {
-    /// <summary>The bear, waddling in from the left behind the counter.</summary>
+    /// <summary>The customer, rising into the window behind the counter to place their order.</summary>
     public sealed class CustomerView : GeneratedView
     {
-        /// <summary>Bear sprite pivot is centred; the anchor is bottom-centre, so the sprite
-        /// sits half its rendered height (100 stage px) above it.</summary>
-        public const float SpriteLift = 100f;
+        /// <summary>
+        /// How tall the customer stands, in stage px.
+        ///
+        /// The drawing is FITTED to this rather than scaled by a fixed factor. The old
+        /// hardcoded 0.5 was only ever right for the 460 × 400 placeholder — a replacement
+        /// drawn at a different pixel size silently changed the character's height with it.
+        /// Fitting means any future art drops in at the same presence behind the counter.
+        /// </summary>
+        public const float RenderHeight = 200f;
 
-        // Entrance walk. StartX puts the bear's leading edge past the widest letterbox the
-        // fitter can show (left visible edge bottoms out at -122, half the bear is 115).
-        const float StartX = -240f;
-        const float StepPx = 65f;      // stride length → hop cadence
-        const float HopPx = 9f;        // hop height at mid-walk
-        const float WaddleDeg = 4f;    // side-to-side tilt per step
+        /// <summary>Sprite pivot is centred; the anchor is bottom-centre, so the sprite sits
+        /// half its rendered height above it.</summary>
+        public const float SpriteLift = RenderHeight * 0.5f;
+
+        /// <summary>The uniform scale that renders <paramref name="s"/> at RenderHeight.</summary>
+        static float FitScale(Sprite s)
+        {
+            if (s == null) return 1f;
+            float drawnWorldH = s.rect.height / s.pixelsPerUnit;
+            return drawnWorldH > 0f ? RenderHeight * StageCoords.PX / drawnWorldH : 1f;
+        }
+
+        // Entrance. The customer shows up AT THE WINDOW, so they rise into frame and sink back
+        // out of it rather than walking in along the wall — a sideways walk read as sliding
+        // across the wallpaper, because WindowFrame is on Background and draws BEHIND the
+        // Customer layer, so the frame cannot hide the approach. Downwards costs nothing to
+        // mask: CaseBody (Furniture/4) and Desk (Furniture/2) both draw in front.
+        const float SwayPx = 5f;       // gentle side-to-side while moving
+        const float SwayDeg = 3f;      // matching tilt, damped out as they settle
 
         // Where the bear stands at the counter, in stage px. Serialized so the scene owns it:
         // edit it in the Inspector / Studio window, or drag the bear in the Scene view (the
         // editor folds the drag back into this field on save / play). The walk animation
         // reads it live, so play mode always lands on the authored spot.
         [SerializeField] Vector2 anchor = new Vector2(215f, 355f);
+
+        [Tooltip("How far BELOW the anchor the customer starts and ends, in stage px. Needs to " +
+                 "be enough that the display case hides them completely before they rise.")]
+        [SerializeField] float entranceRisePx = 190f;
 
         // Edit-mode only: show the real generated bear standing at the anchor, so the Scene
         // and Game views preview exactly what play mode will render. Ignored during play.
@@ -55,10 +78,10 @@ namespace PanDulce.Runtime
             bear.sortingLayerName = "Customer";
             bear.sortingOrder = 0;
             if (database != null) bear.sprite = database.Customer(0);
-            // Baked at 2x with PPU 100 → world scale 0.5 renders 230×200 stage px. Centre
-            // pivot → lift half the RENDERED height (100 stage px) so the anchor is
-            // bottom-centre; the lift is in the anchor's space, unaffected by the child scale.
-            go.transform.localScale = Vector3.one * 0.5f;
+            // Fitted to RenderHeight whatever the art was drawn at. Centre pivot → lift half
+            // the RENDERED height so the anchor is bottom-centre; the lift is in the anchor's
+            // space, unaffected by the child scale.
+            go.transform.localScale = Vector3.one * FitScale(bear.sprite);
             go.transform.localPosition = new Vector3(0f, SpriteLift * StageCoords.PX, 0f);
             go.SetActive(!Application.isPlaying && editorPreview);
         }
@@ -71,8 +94,8 @@ namespace PanDulce.Runtime
             duration = Mathf.Max(0.05f, entranceTime);
             entranceStart = Time.time;
             happyStart = departStart = idleStart = -1f;
-            // Our Update may not run again this frame — never flash a centred bear.
-            bearAnchor.localPosition = StageCoords.Stage(StartX, anchor.y);
+            // Our Update may not run again this frame — never flash a customer already standing.
+            bearAnchor.localPosition = StageCoords.Stage(anchor.x, anchor.y + entranceRisePx);
         }
 
         public void Celebrate()
@@ -82,7 +105,7 @@ namespace PanDulce.Runtime
             happyStart = Time.time;
         }
 
-        /// <summary>The visit is over: waddle back out the way the bear came in.</summary>
+        /// <summary>The visit is over: sink back down the way they came up.</summary>
         public void Depart(float walkTime)
         {
             if (!IsBuilt || !present) { Leave(); return; }
@@ -122,7 +145,7 @@ namespace PanDulce.Runtime
             {
                 float k = Mathf.Clamp01((Time.time - departStart) / duration);
                 if (k >= 1f) { Leave(); return; }
-                Waddle(k, anchor.x, StartX);
+                Rise(1f - k);          // same move, played backwards
                 return;
             }
 
@@ -137,7 +160,7 @@ namespace PanDulce.Runtime
                     bearAnchor.localScale = Vector3.one;
                     return;
                 }
-                Waddle(t, StartX, anchor.x);
+                Rise(t);
                 return;
             }
 
@@ -152,19 +175,22 @@ namespace PanDulce.Runtime
         }
 
         /// <summary>
-        /// Waddle: glide eases in/out; an integer step count means the hop and tilt both
-        /// land on zero exactly at t=1, and the envelope keeps the first/last steps small.
-        /// Shared by the entrance and the walk-out (same walk, opposite direction).
+        /// Rise: t runs 0 (hidden below the sill) → 1 (standing at the anchor). The exit passes
+        /// the reversed t, so coming and going are the same move played in opposite directions.
+        ///
+        /// Both the sway and the tilt are scaled by (1 − eased), which lands them on exactly
+        /// zero at t = 1 — the customer settles square in the window instead of stopping
+        /// mid-lean, and the idle breathe picks up from rest with nothing to pop out of.
         /// </summary>
-        void Waddle(float t, float fromX, float toX)
+        void Rise(float t)
         {
-            float x = Mathf.SmoothStep(fromX, toX, t);
-            int steps = Mathf.Max(3, Mathf.RoundToInt(Mathf.Abs(toX - fromX) / StepPx));
-            float swing = Mathf.Sin(t * steps * Mathf.PI);       // signed: flips each step
-            float env = Mathf.Sin(t * Mathf.PI);
-            bearAnchor.localPosition = StageCoords.Stage(x, anchor.y)
-                                     + new Vector3(0f, HopPx * Mathf.Abs(swing) * env * StageCoords.PX, 0f);
-            bearAnchor.localRotation = Quaternion.Euler(0f, 0f, WaddleDeg * swing * env);
+            float e = Mathf.SmoothStep(0f, 1f, t);
+            float settling = 1f - e;
+            float sway = Mathf.Sin(t * Mathf.PI * 2f) * settling;
+
+            bearAnchor.localPosition = StageCoords.Stage(anchor.x + sway * SwayPx,
+                                                         anchor.y + settling * entranceRisePx);
+            bearAnchor.localRotation = Quaternion.Euler(0f, 0f, sway * SwayDeg);
             bearAnchor.localScale = Vector3.one;
         }
 
