@@ -512,7 +512,8 @@ namespace PanDulce.Core
                 {
                     discovered[t2] = true;
                     if (t2 > HighestDiscovered) HighestDiscovered = t2;
-                    AddFloat(x, y - r2 - 26f, "New in the case!");
+                    // The celebration text is the view's job now — GameRoot floats the
+                    // dessert's NAME on TierDiscovered; Core doesn't know names.
                     TierDiscovered?.Invoke(t2, new Vector2(x, y));
                 }
                 else
@@ -629,9 +630,14 @@ namespace PanDulce.Core
             b.skin = CurSkin;
             b.vy = cfg.DropVy;
             canDropAt = Now + cfg.DropCooldown;
+            int dropped = CurTier;
             CurTier = NextTier;
             CurSkin = NextSkin;
             NextTier = Pick();
+            // A third identical deal in a row gets one reroll — the weights still lean
+            // mochi overall, but the hand stops reading as a stuck dispenser. Lives here
+            // rather than in Pick() so bare Pick() rolls (and their tests) stay untouched.
+            if (NextTier == CurTier && NextTier == dropped) NextTier = Pick();
             NextSkin = RollSkin(NextTier);
             return true;
         }

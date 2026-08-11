@@ -37,6 +37,7 @@ namespace PanDulce.Core
 
         readonly System.Random rng;
         float happyUntil;
+        int lastOrder = -1;
 
         public ShopDirector(System.Random rng = null)
         {
@@ -71,6 +72,7 @@ namespace PanDulce.Core
         public void OpenWindow()
         {
             OrderTier = PickOrder();
+            lastOrder = OrderTier;
             CustomerIndex = Served % 3;
             SetState(ShopState.Open);
             CustomerArrived?.Invoke(OrderTier);
@@ -86,22 +88,31 @@ namespace PanDulce.Core
         /// </summary>
         int PickOrder()
         {
-            if (Orderable == null) return rng.Next(0, TierTable.Max + 1);
-
             int n = 0;
             Span<int> band = stackalloc int[TierTable.Count];
             for (int t = 0; t <= TierTable.Max; t++)
-                if (Orderable(t)) band[n++] = t;
-            if (n > 0) return band[rng.Next(0, n)];
+                if (Orderable == null || Orderable(t)) band[n++] = t;
 
-            for (int t = TierTable.Max; t >= 0; t--)
-                if (Orderable(t)) return t;
-            return 0;
+            if (n == 0)
+            {
+                for (int t = TierTable.Max; t >= 0; t--)
+                    if (Orderable(t)) return t;
+                return 0;
+            }
+
+            // No instant repeats: the same dessert twice running reads as a stuck shop,
+            // so the previous order sits this roll out whenever there is any choice.
+            if (n > 1 && lastOrder >= 0)
+                for (int i = 0; i < n; i++)
+                    if (band[i] == lastOrder) { band[i] = band[--n]; break; }
+
+            return band[rng.Next(0, n)];
         }
 
         public void ForceOrder(int tier)
         {
             OrderTier = Mathf.Clamp(tier, 0, TierTable.Max);
+            lastOrder = OrderTier;
             if (State != ShopState.Open) { CustomerIndex = Served % 3; SetState(ShopState.Open); }
         }
 
@@ -135,6 +146,7 @@ namespace PanDulce.Core
         {
             State = ShopState.Closed;
             OrderTier = -1;
+            lastOrder = -1;
             CustomerIndex = 0;
             Served = 0;
             ServeInFlight = false;
