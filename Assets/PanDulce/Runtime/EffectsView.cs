@@ -87,6 +87,18 @@ namespace PanDulce.Runtime
             sparkle.Emit(Count(18f, intensity));
         }
 
+        /// <summary>
+        /// Sparkles at a WORLD position — for chrome that lives outside sim space (the case
+        /// slot on a reveal, the boost button going ready). Callers hand a renderer/transform
+        /// position so the burst lands on the drawn thing wherever it was dragged.
+        /// </summary>
+        public void SparkleWorld(Vector3 worldPos, float intensity)
+        {
+            if (sparkle == null) return;
+            sparkle.transform.position = worldPos;
+            sparkle.Emit(Count(14f, intensity));
+        }
+
         public void ServeBurst(Vector2 simPos, int tier, float intensity)
         {
             if (serve == null) return;

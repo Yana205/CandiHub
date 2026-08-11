@@ -57,11 +57,29 @@ namespace PanDulce.Runtime
         const float TailSize = 18f, TailCx = 205f;
         const float TailCy = FaceY + FaceH;
 
-        SpriteRenderer icon;
-        TextMeshPro nameLabel;
+        /// <summary>Rendered text may run this close to the label band's end before the
+        /// bubble starts growing — a little slack so a hairline overshoot doesn't resize.</summary>
+        const float TextSlackPx = 8f;
+
+        /// <summary>Widening cap, split evenly left and right of the authored centre. At the
+        /// authored face (129…395 in a 430 frame) ±55 keeps both edges inside the stage.</summary>
+        const float MaxExtraPx = 110f;
+
+        SpriteRenderer icon, shadowPlate, borderPlate, boxFace;
+        TextMeshPro nameLabel, hintLabel;
+        Quaternion hintHomeRot = Quaternion.identity;
+        Vector3 hintHomeScale = Vector3.one;
         float shownAt;
         int shownTier;
         float iconBaseScale;
+
+        // The authored geometry, read back from the scene at the end of Build — the base the
+        // per-order widening grows from and shrinks back to. Computed rects would fight the
+        // designer; these follow wherever the bubble is dragged.
+        Rect shadowHome, borderHome, boxHome;
+        float nameHomeLeft, nameHomeY, nameHomeW;
+        float iconHomeX;
+        float extraShown;
 
         protected override void Build()
         {
@@ -75,12 +93,13 @@ namespace PanDulce.Runtime
             // radius you get, and these keep the soft bubble the stretch used to fake. The
             // inner face is Rim smaller in radius as well as in rect, so the border reads the
             // same width around the corners as it does along the edges.
-            ViewFactory.Panel(t, "Shadow", PlateX, PlateY + ShadowDrop, PlateW, PlateH, (int)PlateRadius,
-                              new Color(122f/255f, 84f/255f, 49f/255f, 0.25f), "Overlay", 9);
-            ViewFactory.Panel(t, "Border", PlateX, PlateY, PlateW, PlateH, (int)PlateRadius,
-                              Palette.Hex("#e0cba6"), "Overlay", 10);
-            ViewFactory.Panel(t, "Box", FaceX, FaceY, FaceW, FaceH, (int)FaceRadius,
-                              Palette.Hex("#fffaf0"), "Overlay", 11);
+            shadowPlate = ViewFactory.Panel(t, "Shadow", PlateX, PlateY + ShadowDrop, PlateW, PlateH,
+                                            (int)PlateRadius,
+                                            new Color(122f/255f, 84f/255f, 49f/255f, 0.25f), "Overlay", 9);
+            borderPlate = ViewFactory.Panel(t, "Border", PlateX, PlateY, PlateW, PlateH, (int)PlateRadius,
+                                            Palette.Hex("#e0cba6"), "Overlay", 10);
+            boxFace = ViewFactory.Panel(t, "Box", FaceX, FaceY, FaceW, FaceH, (int)FaceRadius,
+                                        Palette.Hex("#fffaf0"), "Overlay", 11);
             ViewFactory.Panel(t, "Tail", TailCx - TailSize * 0.5f, TailCy - TailSize * 0.5f,
                               TailSize, TailSize, 3, Palette.Hex("#fffaf0"), "Overlay", 11, 45f);
 
@@ -91,10 +110,73 @@ namespace PanDulce.Runtime
             nameLabel = ViewFactory.Label(t, "Name", "", TextX, MidY, TextW, FontSize,
                                           Palette.Hex("#6b4a2e"), "Overlay", 12,
                                           TextAlignmentOptions.Left);
-            ViewFactory.Label(t, "Hint", "press & hold one to hand it over",
-                              192f, 208f, 180f, 9f, Palette.Hex("#a58358"), "Overlay", 12,
-                              TextAlignmentOptions.Left, FontStyles.Normal);
+            hintLabel = ViewFactory.Label(t, "Hint", "Press & hold to give!",
+                                          192f, 208f, 180f, 11f, Color.white, "Overlay", 12,
+                                          TextAlignmentOptions.Left, FontStyles.Bold);
+            if (hintLabel != null)
+            {
+                // Code owns the hint's LOOK (Yana, 2026-08-11: the old sentence was too long
+                // and too beige) — re-applied every bind, unlike layout, so the scene's older
+                // wording cannot linger. Position stays whatever the scene says.
+                hintLabel.text = "Press & hold to give!";
+                hintLabel.color = Color.white;
+                hintLabel.fontStyle = FontStyles.Bold;
+                hintLabel.fontSize = 11f * StageCoords.PX * 10f;   // ViewFactory's TMP mapping
+                hintHomeRot = hintLabel.transform.localRotation;
+                hintHomeScale = hintLabel.transform.localScale;
+            }
+
+            // The authored base the per-order widening works from — read back from the scene,
+            // the way BoostBarView reads buttonHome, so a hand-dragged bubble stays the truth.
+            extraShown = 0f;
+            shadowHome = HomeRect(shadowPlate);
+            borderHome = HomeRect(borderPlate);
+            boxHome = HomeRect(boxFace);
+            if (icon != null) iconHomeX = icon.transform.localPosition.x / StageCoords.PX;
+            if (nameLabel != null)
+            {
+                nameHomeW = nameLabel.rectTransform.sizeDelta.x / StageCoords.PX;
+                nameHomeLeft = nameLabel.transform.localPosition.x / StageCoords.PX - nameHomeW * 0.5f;
+                nameHomeY = -nameLabel.transform.localPosition.y / StageCoords.PX;
+            }
             SetVisible(false);
+        }
+
+        /// <summary>A renderer's current stage-px rect (y-down, top-left), inverse of Place.</summary>
+        static Rect HomeRect(SpriteRenderer sr)
+        {
+            if (sr == null) return default;
+            float w = sr.size.x / StageCoords.PX, h = sr.size.y / StageCoords.PX;
+            return new Rect(sr.transform.localPosition.x / StageCoords.PX - w * 0.5f,
+                            -sr.transform.localPosition.y / StageCoords.PX - h * 0.5f, w, h);
+        }
+
+        /// <summary>
+        /// Widens the bubble by <paramref name="extra"/> stage px, split evenly around the
+        /// authored centre so the tail stays put — the plates stretch, the icon rides the
+        /// left edge, and the label band gains the full width. 0 restores the authored rects.
+        /// </summary>
+        void FitWidth(float extra)
+        {
+            extraShown = extra;
+            float half = extra * 0.5f;
+            if (shadowPlate != null)
+                ViewFactory.Place(shadowPlate, shadowHome.x - half, shadowHome.y,
+                                  shadowHome.width + extra, shadowHome.height);
+            if (borderPlate != null)
+                ViewFactory.Place(borderPlate, borderHome.x - half, borderHome.y,
+                                  borderHome.width + extra, borderHome.height);
+            if (boxFace != null)
+                ViewFactory.Place(boxFace, boxHome.x - half, boxHome.y,
+                                  boxHome.width + extra, boxHome.height);
+            if (icon != null)
+            {
+                Vector3 p = icon.transform.localPosition;
+                p.x = (iconHomeX - half) * StageCoords.PX;
+                icon.transform.localPosition = p;
+            }
+            if (nameLabel != null)
+                ViewFactory.Place(nameLabel, nameHomeLeft - half, nameHomeY, nameHomeW + extra);
         }
 
         public void Show(int tier, float now)
@@ -120,7 +202,19 @@ namespace PanDulce.Runtime
                 iconBaseScale = icon.transform.localScale.x;
             }
             if (nameLabel != null)
+            {
                 nameLabel.text = $"{(database != null ? database.Name(tier) : TierTable.Names[tier])}, please!";
+
+                // Fit the bubble to the order. Measured off the RENDERED mesh, never
+                // GetPreferredValues — for this font it reports ~1.5× the truth (307 px for
+                // a run that draws at 225). Show() has just activated Content, so the mesh
+                // is buildable here; a font asset still warming up measures 0 and simply
+                // keeps the authored width.
+                nameLabel.ForceMeshUpdate(true, true);
+                float textW = nameLabel.textBounds.size.x / StageCoords.PX;
+                float extra = Mathf.Clamp(textW + TextSlackPx - nameHomeW, 0f, MaxExtraPx);
+                if (!Mathf.Approximately(extra, extraShown)) FitWidth(extra);
+            }
         }
 
         public void Hide()
@@ -140,11 +234,32 @@ namespace PanDulce.Runtime
             Content.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, e);
 
             // once the pop settles, the wanted dessert breathes ±8% to pull the eye
-            if (icon == null) return;
-            float s = iconBaseScale;
-            if (k >= 1f)
-                s *= 1f + 0.08f * Mathf.Sin((Time.time - shownAt - 0.35f) * (2f * Mathf.PI / 1.1f));
-            icon.transform.localScale = new Vector3(s, s, 1f);
+            if (icon != null)
+            {
+                float s = iconBaseScale;
+                if (k >= 1f)
+                    s *= 1f + 0.08f * Mathf.Sin((Time.time - shownAt - 0.35f) * (2f * Mathf.PI / 1.1f));
+                icon.transform.localScale = new Vector3(s, s, 1f);
+            }
+
+            // ...and the hint rocks and pulses like a little shop sign. Composes off the
+            // home read at bind, so a hand-turned hint keeps its authored tilt underneath.
+            if (hintLabel != null)
+            {
+                if (k >= 1f)
+                {
+                    float w = Time.time - shownAt - 0.35f;
+                    hintLabel.transform.localRotation =
+                        hintHomeRot * Quaternion.Euler(0f, 0f, 3.5f * Mathf.Sin(w * (2f * Mathf.PI / 1.6f)));
+                    hintLabel.transform.localScale =
+                        hintHomeScale * (1f + 0.05f * Mathf.Sin(w * (2f * Mathf.PI / 0.8f)));
+                }
+                else
+                {
+                    hintLabel.transform.localRotation = hintHomeRot;
+                    hintLabel.transform.localScale = hintHomeScale;
+                }
+            }
         }
     }
 }

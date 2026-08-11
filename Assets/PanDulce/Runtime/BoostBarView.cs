@@ -80,6 +80,14 @@ namespace PanDulce.Runtime
         /// </summary>
         Vector3 buttonHome, clearHome;
 
+        /// <summary>
+        /// The shake root's resting scale, read back with buttonHome. The ready pulse used
+        /// to write <c>Vector3.one * (1 + pulse)</c>, which silently undid any scale the
+        /// designer set on the node — the button played 6% bigger than it was authored and
+        /// its face, hanging ~8.5 units below the pivot, sagged ~50 stage px out of the row.
+        /// </summary>
+        Vector3 buttonScaleHome = Vector3.one;
+
         SpriteRenderer button, chargeFill, clearFace, badge, badgeBorder;
         TextMeshPro label, badgeLabel, clearLabel, priceLabel;
         Transform buttonRoot, clearRoot;
@@ -87,6 +95,21 @@ namespace PanDulce.Runtime
         bool shownReady, shownCanBuy;
         int shownCost;
         string shownBadge;
+
+        /// <summary>Clearance root's resting scale — captured with clearHome, same reason.</summary>
+        Vector3 clearScaleHome = Vector3.one;
+
+        // Interaction feel (Yana, 2026-08-11: "the booster buttons are boring"). All of it
+        // composes multiplicatively onto the scale homes, and every sim-clock stamp gets the
+        // same future-stamp drop DenyWiggle needs — Restart rewinds Sim.Now.
+        const float PressScale = 0.93f;     // squash while the finger is down
+        const float PressDropPx = 2f;       // and sink a touch, like a real key
+        const float CelebrateSec = 0.55f;   // READY! bounce + badge flash
+        const float FirePunchSec = 0.35f;   // jolt when a boost actually fires
+        bool pressShake, pressClear;
+        float pressKShake = 1f, pressKClear = 1f;
+        float readyAt = -1f, shakeFiredAt = -1f, clearFiredAt = -1f;
+        Color badgeBase, badgeBorderBase;
 
         /// <summary>
         /// Face tints for the ready/idle states. The drawn button carries its own colour, so
@@ -189,9 +212,9 @@ namespace PanDulce.Runtime
             ViewFactory.Label(clearRoot, "CoinStamp", "$", 262f, 856f, 18f, 10f,
                               Palette.Hex("#c07f1c"), "Overlay", 35);
 
-            clearLabel = ViewFactory.Label(clearRoot, "Label", "Clear day-olds",
+            clearLabel = ViewFactory.Label(clearRoot, "Label", "Toss the minis",
                                            271f, 854.8f, 130f, 14f, Palette.Cream, "Overlay", 34);
-            clearLabel.alpha = 0.55f;
+            if (clearLabel != null) clearLabel.alpha = 0.55f;
 
             // Price badge overlapping the button's top-right corner. The coin-counter drawing
             // is a coin plus a number pill, so it takes the whole badge: the inner Price
@@ -217,7 +240,11 @@ namespace PanDulce.Runtime
             }
 
             buttonHome = buttonRoot != null ? buttonRoot.localPosition : Vector3.zero;
+            buttonScaleHome = buttonRoot != null ? buttonRoot.localScale : Vector3.one;
             clearHome = clearRoot != null ? clearRoot.localPosition : Vector3.zero;
+            clearScaleHome = clearRoot != null ? clearRoot.localScale : Vector3.one;
+            badgeBase = badge != null ? badge.color : Color.white;
+            badgeBorderBase = badgeBorder != null ? badgeBorder.color : Color.white;
         }
 
         /// <summary>
@@ -274,6 +301,7 @@ namespace PanDulce.Runtime
                 shownReady = ready;
                 if (label != null)
                     label.text = ready ? "Shake the furoshiki!" : "Merge desserts to charge!";
+                if (ready) readyAt = now;   // charging paid off — one big bounce + badge flash
             }
 
             // Charging reads at 0.72 opacity; ready breathes over ReadyPulsePeriod (§8.7).
@@ -284,6 +312,22 @@ namespace PanDulce.Runtime
             // Deny wiggle: a decaying side-shake after a tap on the uncharged button.
             float wiggle = DenyWiggle(ref denyAt, now);
 
+            // READY! celebration: one strong sinusoidal bounce while the badge blinks amber.
+            float celebrate = Punch(ref readyAt, now, CelebrateSec, 0.22f);
+            float blink = readyAt >= 0f
+                ? Mathf.Abs(Mathf.Sin((now - readyAt) / CelebrateSec * Mathf.PI * 3f))
+                  * (1f - Mathf.Clamp01((now - readyAt) / CelebrateSec))
+                : 0f;
+            if (badge != null) badge.color = Color.Lerp(badgeBase, Palette.Amber, blink);
+            if (badgeBorder != null)
+                badgeBorder.color = Color.Lerp(badgeBorderBase, Palette.Amber, blink * 0.6f);
+
+            // Press squash eases toward its target so release springs back, never snaps.
+            pressKShake = Squash(pressKShake, pressShake);
+
+            // Fire jolt: the moment a shake actually spends the meter.
+            float fired = Punch(ref shakeFiredAt, now, FirePunchSec, 0.15f);
+
             // Ready breathe: composes with the wiggle above — wiggle owns x, pulse owns y.
             // Both offset buttonHome, which is wherever the button was placed in the scene.
             float pulse = ready ? Mathf.Sin(now / ReadyPulsePeriod * Mathf.PI * 2f) : 0f;
@@ -291,10 +335,53 @@ namespace PanDulce.Runtime
             {
                 buttonRoot.localPosition = buttonHome
                                          + new Vector3(wiggle * StageCoords.PX,
-                                                       pulse * ReadyPulseBobPx * StageCoords.PX, 0f);
-                buttonRoot.localScale = Vector3.one * (1f + Mathf.Max(0f, pulse) * ReadyPulseScale);
+                                                       (pulse * ReadyPulseBobPx
+                                                        - (1f - pressKShake) / (1f - PressScale) * PressDropPx)
+                                                       * StageCoords.PX, 0f);
+                buttonRoot.localScale = buttonScaleHome
+                                      * (1f + Mathf.Max(0f, pulse) * ReadyPulseScale)
+                                      * pressKShake * (1f + celebrate + fired);
             }
         }
+
+        /// <summary>
+        /// A decaying sinusoidal scale punch off a sim-clock stamp — 0 when idle. Owns the
+        /// stamp's lifetime the way DenyWiggle does, future-stamp drop included.
+        /// </summary>
+        static float Punch(ref float stamp, float now, float duration, float strength)
+        {
+            if (now < stamp) stamp = -1f;
+            if (stamp < 0f) return 0f;
+            float k = (now - stamp) / duration;
+            if (k >= 1f) { stamp = -1f; return 0f; }
+            return Mathf.Sin(k * Mathf.PI) * (1f - k) * strength;
+        }
+
+        /// <summary>One step of the press squash — quick ease toward held/released.</summary>
+        static float Squash(float k, bool pressed)
+            => Mathf.Lerp(k, pressed ? PressScale : 1f,
+                          1f - Mathf.Exp(-18f * Time.deltaTime));
+
+        /// <summary>Finger state over each face, polled per frame by GameRoot.</summary>
+        public void SetPressed(bool shakeBtn, bool clearBtn)
+        {
+            pressShake = shakeBtn;
+            pressClear = clearBtn;
+        }
+
+        /// <summary>A shake that actually fired — jolt the button.</summary>
+        public void FireShake(float now) => shakeFiredAt = now;
+
+        /// <summary>A clearance that actually fired — jolt that button too.</summary>
+        public void FireClearance(float now) => clearFiredAt = now;
+
+        /// <summary>World centre of the shake face, for sparkles that land on the drawing.</summary>
+        public Vector3 ButtonWorldCenter
+            => button != null ? button.bounds.center : transform.position;
+
+        /// <summary>World centre of the clearance face.</summary>
+        public Vector3 ClearanceWorldCenter
+            => clearFace != null ? clearFace.bounds.center : transform.position;
 
         /// <summary>Affordability + availability drive the clearance button's read.</summary>
         public void SyncClearance(int coins, int cost, bool hasTargets, float now)
@@ -317,10 +404,19 @@ namespace PanDulce.Runtime
                 if (clearLabel != null) clearLabel.alpha = alpha;
             }
 
-            // Same deny grammar as the shake button: a decaying side-shake, off clearHome.
+            // Same deny grammar as the shake button: a decaying side-shake, off clearHome —
+            // and the same press squash and fire jolt, off clearScaleHome.
             float wiggle = DenyWiggle(ref clearDenyAt, now);
+            pressKClear = Squash(pressKClear, pressClear);
+            float fired = Punch(ref clearFiredAt, now, FirePunchSec, 0.15f);
             if (clearRoot != null)
-                clearRoot.localPosition = clearHome + new Vector3(wiggle * StageCoords.PX, 0f, 0f);
+            {
+                clearRoot.localPosition = clearHome
+                                        + new Vector3(wiggle * StageCoords.PX,
+                                                      -(1f - pressKClear) / (1f - PressScale)
+                                                       * PressDropPx * StageCoords.PX, 0f);
+                clearRoot.localScale = clearScaleHome * pressKClear * (1f + fired);
+            }
         }
 
         /// <summary>
@@ -362,25 +458,36 @@ namespace PanDulce.Runtime
             => new Vector2(transform.localPosition.x / StageCoords.PX,
                            -transform.localPosition.y / StageCoords.PX);
 
-        /// <summary>Stage-px rect of the shake button face, for hit testing without a Canvas.
-        /// Carries ButtonShift so taps follow the re-centred face, not where §8.7 drew it.</summary>
-        public Rect ButtonRect
+        /// <summary>
+        /// The stage-px rect a face renderer actually occupies, for hit testing without a
+        /// Canvas. Read from the renderer, not rebuilt from the §8.7 constants: the buttons
+        /// are hand-placed (and hand-scaled) in the scene, sometimes under folder nodes, and
+        /// a constant-based rect drifts off the drawing the moment the designer moves it —
+        /// taps were landing a full button-height below the face. The view's parent frame is
+        /// the stage frame, the same assumption StageOffset always made.
+        /// </summary>
+        Rect FaceStageRect(SpriteRenderer face, float fallbackX, float fallbackW)
         {
-            get
+            if (face == null)
             {
                 Vector2 o = StageOffset;
-                return new Rect(12f + ButtonShiftX + o.x, 833f + ButtonShiftY + o.y, 226f, 46f);
+                return new Rect(fallbackX + ButtonShiftX + o.x, 833f + ButtonShiftY + o.y,
+                                fallbackW, 46f);
             }
+
+            Transform space = transform.parent != null ? transform.parent : transform;
+            Vector3 c = space.InverseTransformPoint(face.transform.position);
+            Vector3 span = space.lossyScale, own = face.transform.lossyScale;
+            float w = face.size.x * Mathf.Abs(span.x > 0f ? own.x / span.x : own.x) / StageCoords.PX;
+            float h = face.size.y * Mathf.Abs(span.y > 0f ? own.y / span.y : own.y) / StageCoords.PX;
+            return new Rect(c.x / StageCoords.PX - w * 0.5f,
+                            -c.y / StageCoords.PX - h * 0.5f, w, h);
         }
 
+        /// <summary>Stage-px rect of the shake button face.</summary>
+        public Rect ButtonRect => FaceStageRect(button, 12f, 226f);
+
         /// <summary>Stage-px rect of the clearance button face.</summary>
-        public Rect ClearanceRect
-        {
-            get
-            {
-                Vector2 o = StageOffset;
-                return new Rect(250f + ButtonShiftX + o.x, 833f + ButtonShiftY + o.y, 168f, 46f);
-            }
-        }
+        public Rect ClearanceRect => FaceStageRect(clearFace, 250f, 168f);
     }
 }

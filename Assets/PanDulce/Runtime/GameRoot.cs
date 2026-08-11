@@ -69,8 +69,10 @@ namespace PanDulce.Runtime
         int flyingTier;
         int pendingBubbleTier = -1;     // bubble waits for the walk-in to finish
         float pendingBubbleAt;
+        float clockHoldUntil;           // countdown parks (real time) while the bear fades out
         bool heldShown;                 // last frame's aim-guide visibility, for the spawn cue
         float runClock;                 // real seconds since run start — feeds the opening calm
+        bool wasBoostReady;             // last frame's Boost.Ready, for the READY! sparkle edge
 
         // Hold-to-serve (Yana, 2026-08-08): a press on the wanted dessert swells it for
         // HoldServeSec, then it flies. Release early = cancel; and any press that BEGAN on
@@ -162,7 +164,11 @@ namespace PanDulce.Runtime
                 float sample = (float)watch.Elapsed.TotalMilliseconds;
                 PhysicsMs += (sample - PhysicsMs) * 0.1f;
 
-                Shop.Tick(dt, Sim.Now, tuning, Day.TimerRuns);
+                // The bear's exit and the next countdown used to run in parallel, so the
+                // sign was already ticking while the customer was still fading out. The
+                // hold (stamped when the shop closes) keeps the clock parked until the
+                // walk-out finishes; the sign shows the full wait, frozen, meanwhile.
+                Shop.Tick(dt, Sim.Now, tuning, Day.TimerRuns && Time.time >= clockHoldUntil);
 
                 if (TopOut.Tick(dt, Sim.Bodies, Sim.Now, tuning)) EndRun();
             }
@@ -248,12 +254,26 @@ namespace PanDulce.Runtime
 
             if (dangerLine != null)
                 dangerLine.Sync(tuning.TopOut, tuning.ShowDangerLine, tuning.TopOutLine,
-                                TopOut.Blinking, Sim.Now);
+                                TopOut.Blinking, Sim.Now, tuning.WallLeft, tuning.WallRight);
 
             if (fold != null) fold.Sync(Day.CloseT, CurrentClothColor);
             if (topBar != null) topBar.Sync(Shop.Served, Purse.Coins);
             if (boostBar != null)
             {
+                // Finger-on-face state feeds the press squash; the READY rising edge earns
+                // sparkles on the button so the charge-up visibly pays off.
+                bool down = pointer != null && pointer.IsDown && tuning.BoostsOn && !GameOver;
+                boostBar.SetPressed(down && HitStage(pointer.SimPosition, boostBar.ButtonRect),
+                                    down && HitStage(pointer.SimPosition, boostBar.ClearanceRect));
+                bool boostReady = Boost.Ready && tuning.BoostsOn && !GameOver;
+                if (boostReady && !wasBoostReady)
+                {
+                    if (effects != null)
+                        effects.SparkleWorld(boostBar.ButtonWorldCenter, tuning.ParticleScale);
+                    if (sfx != null) sfx.Play("pop");
+                }
+                wasBoostReady = boostReady;
+
                 boostBar.Sync(Boost.Charge, Boost.Ready, tuning.BoostsOn, Sim.Now);
                 boostBar.SyncClearance(Purse.Coins, tuning.ClearanceCost,
                                        Sim.HasAnyUpToTier(ClearanceMaxTier), Sim.Now);
@@ -262,7 +282,11 @@ namespace PanDulce.Runtime
             // covers the serve flight — the sign must keep reading "now serving" then.
             if (sign != null) sign.Sync(Shop.State, Shop.SecondsShown, pendingBubbleTier >= 0);
             if (displayCase != null) displayCase.Sync(Sim);
-            if (nextPlaque != null) nextPlaque.Sync(Sim.NextTier, Sim.NextSkin);
+            // The plaque keeps showing the OLD preview while the fresh deal is still hidden
+            // by the drop cooldown, and swaps on the same rising edge that pops the held
+            // dessert into view — Drop() advances NextTier instantly, and mirroring that
+            // frame put "NEXT" a beat ahead of what the player could see.
+            if (nextPlaque != null && canDrop) nextPlaque.Sync(Sim.NextTier, Sim.NextSkin);
         }
 
         Color CurrentClothColor
@@ -282,12 +306,19 @@ namespace PanDulce.Runtime
             if (boostBar != null && tuning.BoostsOn && HitStage(simPos, boostBar.ButtonRect))
             {
                 if (!TryShake()) boostBar.Deny(Sim.Now);
+                else boostBar.FireShake(Sim.Now);
                 return;
             }
 
             if (boostBar != null && tuning.BoostsOn && HitStage(simPos, boostBar.ClearanceRect))
             {
                 if (!TryClearance()) boostBar.DenyClearance(Sim.Now);
+                else
+                {
+                    boostBar.FireClearance(Sim.Now);
+                    if (effects != null)
+                        effects.SparkleWorld(boostBar.ClearanceWorldCenter, tuning.ParticleScale);
+                }
                 return;
             }
 
@@ -378,8 +409,15 @@ namespace PanDulce.Runtime
         {
             if (!Shop.ServeInFlight) return;
             serveTimeout = -1f;
-            if (effects != null) effects.StopFollow();
             int orderTier = Mathf.Max(0, Shop.OrderTier);
+            if (effects != null)
+            {
+                effects.StopFollow();
+                // The handover pops at the counter too — pickup already bursts, but the
+                // moment the pastry reaches the bear used to pass silently.
+                effects.ServeBurst(StageCoords.StageToSim(ServeFlightView.Target),
+                                   orderTier, tuning.ParticleScale);
+            }
             Shop.CompleteServe(Sim.Now, tuning);
             Score.AddServe(orderTier);
             Purse.Add(CoinPurse.ServePay(tuning, orderTier));
@@ -423,11 +461,13 @@ namespace PanDulce.Runtime
             pendingBubbleTier = -1;
             heldShown = false;          // the first pastry of the new run gets its cue
             runClock = 0f;              // the new run opens calm again
+            wasBoostReady = false;      // the new run's first READY! sparkles again
             holdTarget = null;
             pressOnDessert = false;
             Day.Reset();
             Sim.ResetRun();
             Shop.Reset(tuning);
+            clockHoldUntil = 0f;        // Reset's Closed event stamps a hold; the bear hard-Leaves
             Boost.Reset();
             Score.ResetRun();
             Purse.Reset();
@@ -446,15 +486,32 @@ namespace PanDulce.Runtime
             Boost.AddMerge(tuning.ChargePerMerge);
             Score.AddMerge(tier, comboN);
             // Burst radius follows the dessert's real size, so a 200% purin bursts 200% wide.
+            // Combos escalate the burst (capped at 2x) and a x3 chain earns the discovery
+            // sparkle — the sim already floats "Combo N!", this makes the pile agree.
+            float punch = tuning.ParticleScale * Mathf.Min(2f, 1f + 0.3f * (comboN - 1));
             if (effects != null)
-                effects.MergeBurst(pos, tier, TierTable.EffectiveRadius(tier, tuning), tuning.ParticleScale);
+            {
+                effects.MergeBurst(pos, tier, TierTable.EffectiveRadius(tier, tuning), punch);
+                if (comboN >= 3) effects.Discovery(pos, tuning.ParticleScale * 0.7f);
+            }
             if (sfx != null) sfx.Play("merge", tier);
         }
 
         void OnTierDiscovered(int tier, Vector2 pos)
         {
             Score.AddDiscovery();
+            // The celebration names the dessert — "New in the case!" never said WHAT was
+            // new, and the case reveal is easy to miss while watching the pile. "Recipe
+            // found" is the story frame: every discovery recovers a page of grandma's book.
+            string name = database != null ? database.Name(tier) : null;
+            Sim.AddFloat(pos.x, pos.y - TierTable.EffectiveRadius(tier, tuning) - 26f,
+                         string.IsNullOrEmpty(name) ? "Recipe found!" : $"Recipe found! {name}");
             if (effects != null) effects.Discovery(pos, tuning.ParticleScale);
+            // The case seat plays its reveal (silhouette → dessert) and earns sparkles of
+            // its own, sized by how loud the chosen reveal style wants to be.
+            if (displayCase != null && displayCase.TryReveal(tier, out Vector3 casePos)
+                && effects != null)
+                effects.SparkleWorld(casePos, tuning.ParticleScale * displayCase.RevealSparkle);
             if (sfx != null) sfx.Play("disco");
         }
 
@@ -479,6 +536,8 @@ namespace PanDulce.Runtime
             if (bubble != null) bubble.Hide();
             // Waddle out, don't vanish — Restart still hard-Leaves after this fires.
             if (customer != null) customer.Depart(tuning.EntranceTime);
+            // "next customer in" starts counting only once that walk-out has finished.
+            clockHoldUntil = Time.time + tuning.EntranceTime;
         }
 
         // ---------------------------------------------------------------- editor hooks

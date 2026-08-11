@@ -32,12 +32,34 @@ namespace PanDulce.Runtime
         [SerializeField] bool followProgress = true;
         [SerializeField] int[] seatTiers = { 0, 1, 2, 3, 4 };
 
+        /// <summary>How a silhouette turns into its dessert. Swap in the Inspector to taste-test.</summary>
+        public enum RevealStyle { FlashPop, GlowFade }
+
+        [Tooltip("FlashPop: white flash + scale pop + sparkles. GlowFade: soft glow crossfade.")]
+        [SerializeField] RevealStyle revealStyle = RevealStyle.FlashPop;
+
         public bool FollowProgress => followProgress;
         public int[] SeatTiers => seatTiers;
+
+        /// <summary>Sparkle punch the chosen style earns — the quiet style keeps a whisper.</summary>
+        public float RevealSparkle => revealStyle == RevealStyle.FlashPop ? 1f : 0.35f;
 
         readonly SpriteRenderer[] icons = new SpriteRenderer[Slots];
         readonly TextMeshPro[] labels = new TextMeshPro[Slots];
         int shownStart, shownMax, shownProgress;
+
+        // Reveal state, per seat. Stamps are Time.time (monotonic), never Sim.Now — a restart
+        // rewinds the sim clock and a future stamp would replay the animation (see the
+        // BoostBarView.DenyWiggle teleport bug for how that ends). The glow sprite is created
+        // lazily at RUNTIME with DontSave: it is animation chrome, not layout, so it must not
+        // land in the scene file or require re-authoring the case.
+        readonly float[] revealAt = { -1f, -1f, -1f, -1f, -1f };
+        readonly int[] slotTier = { -1, -1, -1, -1, -1 };
+        readonly float[] iconHome = { 1f, 1f, 1f, 1f, 1f };
+        readonly SpriteRenderer[] glows = new SpriteRenderer[Slots];
+
+        const float FlashPopSec = 0.6f;
+        const float GlowFadeSec = 0.9f;
 
         protected override void Build()
         {
@@ -90,11 +112,14 @@ namespace PanDulce.Runtime
                     : Mathf.Clamp(seatTiers != null && i < seatTiers.Length ? seatTiers[i] : i,
                                   0, TierTable.Count - 1);
                 bool found = sim.IsDiscovered(tier);
+                slotTier[i] = tier;
                 if (database != null && icons[i] != null)
                 {
                     icons[i].sprite = database.Pastry(tier);
                     ViewFactory.SetIcon(icons[i], IconRadius, database.DisplaySize(tier));
                 }
+                // The reveal pop in LateUpdate multiplies onto whatever SetIcon just wrote.
+                if (icons[i] != null) iconHome[i] = icons[i].transform.localScale.x;
                 // Undiscovered entries render the sprite as a dark silhouette; the label
                 // teases '?' until the first merge, then counts up ("1/3") to the reveal.
                 if (icons[i] != null) icons[i].color = found ? Color.white : Silhouette;
@@ -102,6 +127,101 @@ namespace PanDulce.Runtime
                     labels[i].text = found ? (database != null ? database.Name(tier) : TierTable.Names[tier])
                         : sim.MergeCount(tier) > 0 ? $"{sim.MergeCount(tier)}/{sim.DiscoverNeed}"
                         : "?";
+            }
+        }
+
+        // ---------------------------------------------------------------- reveal
+
+        /// <summary>
+        /// Starts the reveal on the seat currently showing <paramref name="tier"/> and hands
+        /// back its world position so the caller can land sparkles on it. Called from the
+        /// discovery event, which fires BEFORE this frame's Sync — the seat map is last
+        /// frame's, which is the frame the silhouette was still dark on, exactly the seat
+        /// the player watched.
+        /// </summary>
+        public bool TryReveal(int tier, out Vector3 worldPos)
+        {
+            worldPos = default;
+            if (!IsBuilt || !Application.isPlaying) return false;
+            for (int i = 0; i < Slots; i++)
+            {
+                if (slotTier[i] != tier || icons[i] == null) continue;
+                revealAt[i] = Time.time;
+                EnsureGlow(i);
+                worldPos = icons[i].transform.position;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// The flash/glow disc behind a reveal — runtime-only (DontSave) so it never lands in
+        /// the scene file and the case needs no re-authoring to gain it.
+        /// </summary>
+        void EnsureGlow(int i)
+        {
+            if (glows[i] != null || icons[i] == null) return;
+            var go = new GameObject("RevealGlow") { hideFlags = HideFlags.DontSave };
+            go.transform.SetParent(icons[i].transform.parent, false);
+            go.transform.localPosition = icons[i].transform.localPosition;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = Shapes.Circle(96);
+            sr.sharedMaterial = SpriteMaterials.Unlit;
+            sr.sortingLayerName = "Case";
+            sr.sortingOrder = 11;               // over the icon (10), under the name band (13)
+            sr.color = Color.clear;
+            // Cover the drawn icon: sprites run ~1.4× past IconRadius, so ~64 stage px across.
+            float d = 64f * StageCoords.PX / Mathf.Max(1e-4f, sr.sprite.bounds.size.x);
+            go.transform.localScale = new Vector3(d, d, 1f);
+            glows[i] = sr;
+        }
+
+        /// <summary>
+        /// Plays the reveal over whatever Sync wrote this frame — LateUpdate so the repaint
+        /// (which resets icon colour to flat white and scale to SetIcon's) always runs first.
+        /// </summary>
+        void LateUpdate()
+        {
+            if (!Application.isPlaying || !IsBuilt) return;
+            for (int i = 0; i < Slots; i++)
+            {
+                if (revealAt[i] < 0f || icons[i] == null) continue;
+                bool flash = revealStyle == RevealStyle.FlashPop;
+                float dur = flash ? FlashPopSec : GlowFadeSec;
+                float t = (Time.time - revealAt[i]) / dur;
+                if (t >= 1f)
+                {
+                    revealAt[i] = -1f;
+                    icons[i].transform.localScale = new Vector3(iconHome[i], iconHome[i], 1f);
+                    icons[i].color = Color.white;
+                    if (glows[i] != null) glows[i].color = Color.clear;
+                    continue;
+                }
+
+                float scale;
+                if (flash)
+                {
+                    // Same back-out the order bubble pops with, riding a 1.45× start.
+                    const float c1 = 1.70158f, c3 = c1 + 1f;
+                    float e = 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
+                    scale = Mathf.LerpUnclamped(1.45f, 1f, e);
+                    icons[i].color = Color.Lerp(Silhouette, Color.white, Mathf.Clamp01(t / 0.4f));
+                    if (glows[i] != null)
+                    {
+                        float a = 0.85f * (1f - Mathf.Clamp01(t / 0.35f));
+                        glows[i].color = new Color(1f, 1f, 1f, a);
+                    }
+                }
+                else
+                {
+                    scale = 1f + 0.08f * Mathf.Sin(t * Mathf.PI);
+                    icons[i].color = Color.Lerp(Silhouette, Color.white, t);
+                    if (glows[i] != null)
+                        glows[i].color = Palette.WithAlpha(Palette.Cream,
+                                                           0.55f * Mathf.Sin(t * Mathf.PI));
+                }
+                float s = iconHome[i] * scale;
+                icons[i].transform.localScale = new Vector3(s, s, 1f);
             }
         }
 
