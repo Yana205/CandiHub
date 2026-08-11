@@ -45,10 +45,15 @@ namespace PanDulce.Tests
         public void ServePay_MatchesFormula_ForOrderableTiers()
         {
             var cfg = Cfg();
-            // Customers order tiers 2..5 (ShopDirector.OpenWindow), paying 11..20 at defaults.
+            // Linear below the top of the chain; the top pays double — a roll cake can't
+            // merge on, so selling it is its whole payoff.
             for (int tier = 2; tier <= 5; tier++)
+            {
+                int linear = cfg.coinBase + tier * cfg.coinPerTier;
                 Assert.That(CoinPurse.ServePay(cfg, tier),
-                            Is.EqualTo(cfg.coinBase + tier * cfg.coinPerTier));
+                            Is.EqualTo(tier >= TierTable.Max
+                                       ? linear * CoinPurse.TopTierPayMult : linear));
+            }
         }
 
         // ---------------------------------------------------------------- clearance

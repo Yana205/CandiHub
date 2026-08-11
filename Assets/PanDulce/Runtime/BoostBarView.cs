@@ -104,7 +104,7 @@ namespace PanDulce.Runtime
         // same future-stamp drop DenyWiggle needs — Restart rewinds Sim.Now.
         const float PressScale = 0.93f;     // squash while the finger is down
         const float PressDropPx = 2f;       // and sink a touch, like a real key
-        const float CelebrateSec = 0.55f;   // READY! bounce + badge flash
+        const float CelebrateSec = 0.7f;    // READY! soft swell + cream badge glow
         const float FirePunchSec = 0.35f;   // jolt when a boost actually fires
         bool pressShake, pressClear;
         float pressKShake = 1f, pressKClear = 1f;
@@ -312,15 +312,24 @@ namespace PanDulce.Runtime
             // Deny wiggle: a decaying side-shake after a tap on the uncharged button.
             float wiggle = DenyWiggle(ref denyAt, now);
 
-            // READY! celebration: one strong sinusoidal bounce while the badge blinks amber.
-            float celebrate = Punch(ref readyAt, now, CelebrateSec, 0.22f);
-            float blink = readyAt >= 0f
-                ? Mathf.Abs(Mathf.Sin((now - readyAt) / CelebrateSec * Mathf.PI * 3f))
-                  * (1f - Mathf.Clamp01((now - readyAt) / CelebrateSec))
-                : 0f;
-            if (badge != null) badge.color = Color.Lerp(badgeBase, Palette.Amber, blink);
+            // READY! celebration: one soft happy swell while the badge warms to cream.
+            // The first cut bounced hard and blinked amber — it read as an alarm, not a
+            // treat (Yana, 2026-08-11: "kinda scary") — so no blinking, one gentle arc.
+            if (now < readyAt) readyAt = -1f;
+            float celebrate = 0f, glow = 0f;
+            if (readyAt >= 0f)
+            {
+                float ck = (now - readyAt) / CelebrateSec;
+                if (ck >= 1f) readyAt = -1f;
+                else
+                {
+                    celebrate = Mathf.Sin(ck * Mathf.PI) * 0.1f;
+                    glow = Mathf.Sin(ck * Mathf.PI) * 0.5f;
+                }
+            }
+            if (badge != null) badge.color = Color.Lerp(badgeBase, Palette.Cream, glow);
             if (badgeBorder != null)
-                badgeBorder.color = Color.Lerp(badgeBorderBase, Palette.Amber, blink * 0.6f);
+                badgeBorder.color = Color.Lerp(badgeBorderBase, Palette.Cream, glow * 0.6f);
 
             // Press squash eases toward its target so release springs back, never snaps.
             pressKShake = Squash(pressKShake, pressShake);

@@ -110,6 +110,9 @@ namespace PanDulce.Runtime
             Shop = new ShopDirector();
             // Orders only ever ask for desserts the pile can produce right now.
             Shop.Orderable = t => Sim.IsDiscovered(t);
+            // A roll cake can't merge further — while one clogs the box, the next
+            // customer wants exactly that (and the top of the chain pays double).
+            Shop.Craving = () => Sim.HasBodyOfTier(TierTable.Max) ? TierTable.Max : -1;
             // Which color tracks exist, and which tiers each has art for, is the painted
             // sprites' call — the sim just asks. Reaching the donut opens the color rolls.
             Sim.SkinTrackCount = database != null ? database.SkinCount : 1;

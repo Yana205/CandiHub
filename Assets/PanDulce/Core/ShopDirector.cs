@@ -35,6 +35,15 @@ namespace PanDulce.Core
         /// </summary>
         public Func<int, bool> Orderable;
 
+        /// <summary>
+        /// Tier the shop craves right now, or -1 for none — wired by GameRoot to "a roll
+        /// cake is sitting in the box". The top of the chain cannot merge further, so a
+        /// finished cake is pure dead weight until someone buys it; while one exists, the
+        /// next customer orders it, every time. Deliberately bypasses the no-repeat guard.
+        /// Null (tests, bare setups) means no cravings.
+        /// </summary>
+        public Func<int> Craving;
+
         readonly System.Random rng;
         float happyUntil;
         int lastOrder = -1;
@@ -88,6 +97,12 @@ namespace PanDulce.Core
         /// </summary>
         int PickOrder()
         {
+            // The craving trumps the roll — see Craving. Discovery still gates it (a
+            // debug-spawned cake in an early run must not conjure impossible orders).
+            int crave = Craving != null ? Craving() : -1;
+            if (crave >= 0 && crave <= TierTable.Max && (Orderable == null || Orderable(crave)))
+                return crave;
+
             int n = 0;
             Span<int> band = stackalloc int[TierTable.Count];
             for (int t = 0; t <= TierTable.Max; t++)

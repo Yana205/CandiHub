@@ -117,5 +117,38 @@ namespace PanDulce.Tests
             shop.OpenWindow();
             Assert.That(shop.OrderTier, Is.EqualTo(0));
         }
+
+        [Test]
+        public void Craving_OverridesTheRoll_EveryVisit()
+        {
+            // A roll cake can't merge on — while one sits in the box, EVERY customer
+            // wants it, repeats included (the no-repeat guard is deliberately bypassed).
+            var shop = new ShopDirector(new System.Random(5));
+            shop.Orderable = t => true;
+            shop.Craving = () => TierTable.Max;
+            for (int i = 0; i < 20; i++)
+            {
+                shop.OpenWindow();
+                Assert.That(shop.OrderTier, Is.EqualTo(TierTable.Max));
+            }
+        }
+
+        [Test]
+        public void Craving_StillGatedByDiscovery_AndStandsDownAtMinusOne()
+        {
+            var shop = new ShopDirector(new System.Random(5));
+            shop.Orderable = t => t <= 2;
+            shop.Craving = () => TierTable.Max;   // craved but never revealed → ignored
+            for (int i = 0; i < 50; i++)
+            {
+                shop.OpenWindow();
+                Assert.That(shop.OrderTier, Is.LessThanOrEqualTo(2));
+            }
+
+            shop.Craving = () => -1;              // nothing craved → the normal roll
+            var seen = new System.Collections.Generic.HashSet<int>();
+            for (int i = 0; i < 50; i++) { shop.OpenWindow(); seen.Add(shop.OrderTier); }
+            Assert.That(seen.Count, Is.GreaterThan(1));
+        }
     }
 }

@@ -14,9 +14,17 @@ namespace PanDulce.Core
 
         public event Action Changed;
 
-        /// <summary>What a serve pays: coinBase + orderTier * coinPerTier.</summary>
+        /// <summary>The top of the chain pays this multiple — a roll cake can't merge on,
+        /// so selling it is its whole payoff, and the payout says so (Yana, 2026-08-11).</summary>
+        public const int TopTierPayMult = 2;
+
+        /// <summary>What a serve pays: coinBase + orderTier * coinPerTier — doubled at the
+        /// top of the chain, where serving is the only thing the dessert is FOR.</summary>
         public static int ServePay(ISimConfig cfg, int orderTier)
-            => Mathf.Max(0, cfg.CoinBase + orderTier * cfg.CoinPerTier);
+        {
+            int pay = Mathf.Max(0, cfg.CoinBase + orderTier * cfg.CoinPerTier);
+            return orderTier >= TierTable.Max ? pay * TopTierPayMult : pay;
+        }
 
         public void Add(int amount)
         {

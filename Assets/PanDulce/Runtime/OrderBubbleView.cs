@@ -57,6 +57,13 @@ namespace PanDulce.Runtime
         const float TailSize = 18f, TailCx = 205f;
         const float TailCy = FaceY + FaceH;
 
+        // The serve hint sits centred UNDER the bubble, clear of the tail, sized against
+        // the order text (19) so it reads as its caption. Code-owned — see Build.
+        const float HintFont = 15f;
+        const float HintW = 240f;
+        const float HintX = FaceX + FaceW * 0.5f - HintW * 0.5f;
+        const float HintY = TailCy + TailSize * 0.5f + 14f;
+
         /// <summary>Rendered text may run this close to the label band's end before the
         /// bubble starts growing — a little slack so a hairline overshoot doesn't resize.</summary>
         const float TextSlackPx = 8f;
@@ -111,19 +118,36 @@ namespace PanDulce.Runtime
                                           Palette.Hex("#6b4a2e"), "Overlay", 12,
                                           TextAlignmentOptions.Left);
             hintLabel = ViewFactory.Label(t, "Hint", "Press & hold to give!",
-                                          192f, 208f, 180f, 11f, Color.white, "Overlay", 12,
-                                          TextAlignmentOptions.Left, FontStyles.Bold);
+                                          HintX, HintY, HintW, HintFont, Color.white, "Overlay", 12,
+                                          TextAlignmentOptions.Center, FontStyles.Bold);
             if (hintLabel != null)
             {
-                // Code owns the hint's LOOK (Yana, 2026-08-11: the old sentence was too long
-                // and too beige) — re-applied every bind, unlike layout, so the scene's older
-                // wording cannot linger. Position stays whatever the scene says.
+                // Code owns the hint COMPLETELY — look AND place (Yana, 2026-08-11: the
+                // dragged copy ended up tiny at the cloth's tip; "delete it and create a
+                // new instance below, proportional"). Re-applied every bind, so neither
+                // the old wording nor an old drag can linger. To hand it back to the
+                // scene, delete this block down to the home captures.
                 hintLabel.text = "Press & hold to give!";
                 hintLabel.color = Color.white;
                 hintLabel.fontStyle = FontStyles.Bold;
-                hintLabel.fontSize = 11f * StageCoords.PX * 10f;   // ViewFactory's TMP mapping
-                hintHomeRot = hintLabel.transform.localRotation;
-                hintHomeScale = hintLabel.transform.localScale;
+                hintLabel.alignment = TextAlignmentOptions.Center;
+                hintLabel.fontSize = HintFont * StageCoords.PX * 10f;  // ViewFactory's TMP mapping
+                hintLabel.rectTransform.sizeDelta = new Vector2(HintW * StageCoords.PX,
+                                                                HintFont * 1.6f * StageCoords.PX);
+                hintLabel.transform.localPosition = new Vector3((HintX + HintW * 0.5f) * StageCoords.PX,
+                                                                -HintY * StageCoords.PX, 0f);
+                hintLabel.transform.localRotation = Quaternion.identity;
+                hintLabel.transform.localScale = Vector3.one;
+                hintHomeRot = Quaternion.identity;
+                hintHomeScale = Vector3.one;
+                // White over the bright shop window needs an edge to read. outlineWidth
+                // instantiates the font material, so play mode only — the editor keeps
+                // the shared material clean.
+                if (Application.isPlaying)
+                {
+                    hintLabel.outlineColor = new Color32(0x6b, 0x4a, 0x2e, 0xff);
+                    hintLabel.outlineWidth = 0.22f;
+                }
             }
 
             // The authored base the per-order widening works from — read back from the scene,

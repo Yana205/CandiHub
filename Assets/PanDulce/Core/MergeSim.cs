@@ -675,6 +675,14 @@ namespace PanDulce.Core
             return true;
         }
 
+        /// <summary>Is at least one live body of this tier in the box right now?</summary>
+        public bool HasBodyOfTier(int tier)
+        {
+            for (int i = 0; i < Bodies.Count; i++)
+                if (!Bodies[i].dead && Bodies[i].tier == tier) return true;
+            return false;
+        }
+
         /// <summary>Nearest body of the ordered tier within tolerance, or null.</summary>
         public Body ServableAt(float x, float y, int orderTier, float tolerance)
         {
