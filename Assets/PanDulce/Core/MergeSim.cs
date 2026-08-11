@@ -79,48 +79,16 @@ namespace PanDulce.Core
         int NormalizeSkin(int tier, int skin)
             => skin > 0 && SkinHasArt != null && SkinHasArt(tier, skin) ? skin : 0;
 
-        /// <summary>Chance a spawn's color roll completes an unpaired color already in the
-        /// box, instead of rolling blind. See <see cref="RollSkin"/>.</summary>
-        public const float SkinMatchmakerBias = 0.7f;
-
         /// <summary>Color roll for a fresh spawn. Original carries double weight, so a
         /// colored dessert is a bit more rare than a plain one; tiers with no variant
-        /// art (and tiers whose colors aren't live yet) stay Original.
-        ///
-        /// The matchmaker (Yana, 2026-08-11: "skins don't merge well with others"): above
-        /// mochi, merges always hand back Original — colored pans and donuts exist ONLY
-        /// through spawn rolls, so a colored dessert whose color never rolls again is a
-        /// dead body in a small box. Any color sitting unpaired in the pile at this tier
-        /// therefore gets first claim on the roll. Mochi is exempt: it merges across
-        /// colors anyway, and matchmaking it would only wash its variety out.</summary>
+        /// art (and tiers whose colors aren't live yet) stay Original. No pair-matching
+        /// smarts: colors merge freely (2026-08-11), so the roll can stay blind.</summary>
         int RollSkin(int tier)
         {
             if (!SkinsLiveFor(tier) || SkinTrackCount <= 1) return 0;
-
-            if (tier > 0)
-            {
-                Span<int> counts = stackalloc int[SkinTrackCount];
-                for (int i = 0; i < Bodies.Count; i++)
-                {
-                    Body b = Bodies[i];
-                    if (!b.dead && b.tier == tier && b.skin >= 0 && b.skin < SkinTrackCount)
-                        counts[b.skin]++;
-                }
-                Span<int> odd = stackalloc int[SkinTrackCount];
-                int oddN = 0;
-                for (int s = 0; s < SkinTrackCount; s++)
-                    if ((counts[s] & 1) == 1) odd[oddN++] = s;
-                if (oddN > 0 && rng.NextDouble() < SkinMatchmakerBias)
-                    return NormalizeSkin(tier, odd[rng.Next(0, oddN)]);
-            }
-
             int roll = rng.Next(0, SkinTrackCount + 1);   // 0,1 → Original; 2.. → a track
             return NormalizeSkin(tier, roll <= 1 ? 0 : roll - 1);
         }
-
-        /// <summary>Test window into the spawn color roll — the matchmaker lives there.
-        /// Same debug tier as <see cref="RevealTier"/>; play flows never call it.</summary>
-        public int RollSkinDebug(int tier) => RollSkin(tier);
 
         // --- coming to rest -----------------------------------------------------------
         // A settled pastry has THREE things still feeding it spin, and all three have to be
@@ -320,11 +288,11 @@ namespace PanDulce.Core
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
                     float min = ra + rc;
 
-                    // Kin = mergeable partners: same tier AND same color — except mochi,
-                    // where every color merges with every color (Yana, 2026-08-09). Higher
-                    // tiers still court only their own shade (2026-08-08).
-                    bool kin = a.tier == c.tier && a.tier < TierTable.Max
-                            && (a.tier == 0 || a.skin == c.skin);
+                    // Kin = mergeable partners: same tier, ANY color (Yana, 2026-08-11 —
+                    // the same-shade rule "makes a junk of skins"; colors are cosmetic
+                    // now, a look and never a lock). Mixed parents roll a surprise color
+                    // in ApplyMerge, so matching shades still feels like it means something.
+                    bool kin = a.tier == c.tier && a.tier < TierTable.Max;
 
                     if (kin && d < min + KinTouchSlack)
                     {
@@ -522,7 +490,8 @@ namespace PanDulce.Core
             nb.bornOfMerge = true;
             // The child keeps its parents' color where the next tier has variant art;
             // shared tiers (Purin, Roll Cake) fold every color back to Original. Mixed
-            // parents (mochi's any-color merges) roll a surprise color instead.
+            // parents roll a surprise color instead — matching shades is a flourish,
+            // never a requirement.
             nb.skin = a.skin == c.skin ? NormalizeSkin(t2, a.skin) : RollSkin(t2);
             nb.vy = cfg.MergePopVy;
             nb.vx = (a.vx + c.vx) * 0.3f;

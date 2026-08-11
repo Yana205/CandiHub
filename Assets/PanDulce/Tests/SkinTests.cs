@@ -4,13 +4,13 @@ using PanDulce.Core;
 namespace PanDulce.Tests
 {
     /// <summary>
-    /// Color tracks in the pile (2026-08-08, mochi exception 2026-08-09): spawns roll a
-    /// color track — mochi from the very first deal, everything else after the donut is
+    /// Color tracks in the pile (2026-08-08; cosmetic-only since 2026-08-11): spawns roll
+    /// a color track — mochi from the very first deal, everything else after the donut is
     /// discovered — with Original carrying double weight so colors stay a bit rare.
-    /// Merging matches tier AND color, EXCEPT mochi: every mochi merges with every mochi,
-    /// and mixed-color parents roll a surprise color for the child. The child keeps its
-    /// parents' color where the next tier has variant art and folds to Original where it
-    /// doesn't.
+    /// Merging matches TIER ONLY: any colors merge (the same-shade gate "made a junk of
+    /// skins" — Yana). Same-color parents pass the color on where the next tier has
+    /// variant art (folding to Original where it doesn't); mixed-color parents roll a
+    /// surprise color for the child.
     /// </summary>
     public class SkinTests
     {
@@ -37,14 +37,15 @@ namespace PanDulce.Tests
         }
 
         [Test]
-        public void DifferentColors_NeverMerge_AboveMochi()
+        public void DifferentColors_Merge_AboveMochiToo()
         {
             var sim = Sim();
             sim.MakeBody(200f, 200f, 2, 1f).skin = 1;
             sim.MakeBody(210f, 200f, 2, 1f).skin = 2;
             Settle(sim, 2f);   // well past the start grace — touching the whole time
-            Assert.That(sim.Bodies.Count, Is.EqualTo(2),
-                        "a matcha melon pan must not merge with a berry one");
+            Assert.That(sim.Bodies.Count, Is.EqualTo(1),
+                        "colors are cosmetic — a matcha pan merges with a berry one");
+            Assert.That(sim.Bodies[0].tier, Is.EqualTo(3));
         }
 
         [Test]
@@ -170,34 +171,23 @@ namespace PanDulce.Tests
         }
 
         [Test]
-        public void Matchmaker_FavorsCompletingAnUnpairedColor()
+        public void MixedColors_ChildRollsASurprise_AtEveryTier()
         {
-            var sim = Sim(3);
-            sim.RevealTier(MergeSim.SkinUnlockTier);        // colors are live
-            sim.MakeBody(100f, 100f, 2, 1f).skin = 1;       // one lonely matcha pan
-
-            int matcha = 0;
-            for (int i = 0; i < 200; i++)
-                if (sim.RollSkinDebug(2) == 1) matcha++;
-            // Bias 0.7 with a single unpaired color → ~77% matcha vs the blind 25%.
-            Assert.That(matcha, Is.GreaterThan(120),
-                        "an unpaired color must dominate the spawn rolls at its tier");
-        }
-
-        [Test]
-        public void Matchmaker_StandsDownOnceTheColorIsPaired()
-        {
-            var sim = Sim(3);
-            sim.RevealTier(MergeSim.SkinUnlockTier);
-            sim.MakeBody(100f, 100f, 2, 1f).skin = 1;       // a matcha pan...
-            sim.MakeBody(300f, 100f, 2, 1f).skin = 1;       // ...and its partner, apart
-
-            int matcha = 0;
-            for (int i = 0; i < 200; i++)
-                if (sim.RollSkinDebug(2) == 1) matcha++;
-            // Both paired → the roll is blind again: ~25% matcha, nowhere near 60%.
-            Assert.That(matcha, Is.LessThan(90),
-                        "a paired color must not keep hogging the rolls");
+            // Not just mochi: a matcha pan + berry pan child must be a legal donut color,
+            // and across seeds the surprise roll must actually vary.
+            var seen = new System.Collections.Generic.HashSet<int>();
+            for (int seed = 0; seed < 30; seed++)
+            {
+                var sim = Sim(seed);
+                sim.MakeBody(200f, 200f, 2, 1f).skin = 1;
+                sim.MakeBody(210f, 200f, 2, 1f).skin = 2;
+                Settle(sim, 2f);
+                Assert.That(sim.Bodies.Count, Is.EqualTo(1));
+                Assert.That(sim.Bodies[0].skin, Is.InRange(0, 2));
+                seen.Add(sim.Bodies[0].skin);
+            }
+            Assert.That(seen.Count, Is.GreaterThan(1),
+                        "mixed pans must not always hand back the same donut color");
         }
     }
 }

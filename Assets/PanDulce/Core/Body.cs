@@ -10,9 +10,10 @@ namespace PanDulce.Core
         public int tier;
 
         /// <summary>Color track: 0 = Original, 1.. = skin tracks. Purely which art the
-        /// dessert wears — same radius, same physics — but merging matches on it: only
-        /// same-color desserts of a tier merge, and the child keeps the color (normalized
-        /// to 0 where the next tier has no variant art, so colors converge there).</summary>
+        /// dessert wears — same radius, same physics, and since 2026-08-11 no merge
+        /// gate either: any colors of a tier merge. Same-color parents pass the color
+        /// on (normalized to 0 where the next tier has no variant art); mixed parents
+        /// roll a surprise color.</summary>
         public int skin;
 
         /// <summary>0→1 grow-in progress. Drops start at 1; merge products start at 0.</summary>
