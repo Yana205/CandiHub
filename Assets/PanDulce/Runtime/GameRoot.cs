@@ -74,6 +74,17 @@ namespace PanDulce.Runtime
         float runClock;                 // real seconds since run start — feeds the opening calm
         bool wasBoostReady;             // last frame's Boost.Ready, for the READY! sparkle edge
 
+        // The last dropped body, watched until it lands (vy flips on the bounce) so the
+        // tap that placed it gets a visible plop. Cleared on landing, death, and Restart.
+        Body watchedDrop;
+
+        // Camera shake — real-time stamps, composing off the camera home read at Awake.
+        // Merges thump harder with tier and combo; the boost shake gets its own kick.
+        Vector3 camHome;
+        float camShakeAt = -1f;
+        float camShakeAmp;
+        const float CamShakeSec = 0.3f;
+
         // Hold-to-serve (Yana, 2026-08-08): a press on the wanted dessert swells it for
         // HoldServeSec, then it flies. Release early = cancel; and any press that BEGAN on
         // the dessert never falls through to a drop, so a mistimed tap can neither serve
@@ -93,6 +104,7 @@ namespace PanDulce.Runtime
             QualitySettings.vSyncCount = 0;
 
             if (tuning == null) tuning = ScriptableObject.CreateInstance<TuningConfig>();
+            camHome = cam != null ? cam.transform.localPosition : Vector3.zero;
 
             Sim = new MergeSim(tuning);
             Shop = new ShopDirector();
@@ -175,8 +187,50 @@ namespace PanDulce.Runtime
 
             UpdateHover();
             UpdateServeHold(rawDt);
+            WatchDropLanding();
             SyncViews();
+            ApplyCamShake();
             HandleServeTimeout(dt);
+        }
+
+        /// <summary>
+        /// The plop: the dropped body falls with vy &gt; 0 (y-down) until its first bounce
+        /// flips it — that flip is the landing, wherever it happens (cloth or pile). A
+        /// body that merged on arrival is dead by now and the merge burst covers it.
+        /// </summary>
+        void WatchDropLanding()
+        {
+            if (watchedDrop == null) return;
+            if (!watchedDrop.dead && watchedDrop.vy > 0f) return;
+            if (!watchedDrop.dead && effects != null)
+                effects.LandPuff(new Vector2(watchedDrop.x,
+                                             watchedDrop.y + TierTable.Er(watchedDrop, tuning)),
+                                 tuning.ParticleScale);
+            watchedDrop = null;
+        }
+
+        /// <summary>Decaying two-axis wobble around the camera's resting position.</summary>
+        void ApplyCamShake()
+        {
+            if (cam == null || camShakeAt < 0f) return;
+            float k = (Time.time - camShakeAt) / CamShakeSec;
+            if (k >= 1f)
+            {
+                cam.transform.localPosition = camHome;
+                camShakeAt = -1f;
+                return;
+            }
+            float px = camShakeAmp * (1f - k) * (1f - k) * StageCoords.PX;
+            cam.transform.localPosition = camHome + new Vector3(
+                Mathf.Sin(k * 25f) * px, Mathf.Sin(k * 33f + 1.7f) * px * 0.7f, 0f);
+        }
+
+        /// <summary>Thump the camera — later calls only ever raise the current amplitude.</summary>
+        void CamShake(float ampStagePx)
+        {
+            if (camShakeAt >= 0f && camShakeAmp > ampStagePx) return;
+            camShakeAt = Time.time;
+            camShakeAmp = ampStagePx;
         }
 
         /// <summary>
@@ -337,7 +391,12 @@ namespace PanDulce.Runtime
                 if (Sim.ServableAt(simPos.x, simPos.y, Shop.OrderTier, tol) != null) return;
             }
 
-            if (Day.CanDrop && Sim.Drop(pointer.AimX, true) && sfx != null) sfx.Play("drop");
+            if (Day.CanDrop && Sim.Drop(pointer.AimX, true))
+            {
+                // MakeBody appends, so the drop is the newest body — watch it for the plop.
+                watchedDrop = Sim.Bodies.Count > 0 ? Sim.Bodies[Sim.Bodies.Count - 1] : null;
+                if (sfx != null) sfx.Play("drop");
+            }
         }
 
         /// <summary>Stage-space hit test — the bars live in stage px, not sim px.</summary>
@@ -462,6 +521,7 @@ namespace PanDulce.Runtime
             heldShown = false;          // the first pastry of the new run gets its cue
             runClock = 0f;              // the new run opens calm again
             wasBoostReady = false;      // the new run's first READY! sparkles again
+            watchedDrop = null;
             holdTarget = null;
             pressOnDessert = false;
             Day.Reset();
@@ -494,6 +554,9 @@ namespace PanDulce.Runtime
                 effects.MergeBurst(pos, tier, TierTable.EffectiveRadius(tier, tuning), punch);
                 if (comboN >= 3) effects.Discovery(pos, tuning.ParticleScale * 0.7f);
             }
+            // Small merges stay quiet; big desserts and chains thump the screen a little.
+            if (tier >= 2 || comboN >= 2)
+                CamShake(Mathf.Min(5f, 1f + 0.8f * tier + 1.2f * (comboN - 1)));
             if (sfx != null) sfx.Play("merge", tier);
         }
 
@@ -518,6 +581,7 @@ namespace PanDulce.Runtime
         void OnShaken()
         {
             if (effects != null) effects.ShakeDust(tuning.ShakeDuration, tuning.ParticleScale);
+            CamShake(3.5f);
             if (sfx != null) sfx.Play("shake");
         }
 

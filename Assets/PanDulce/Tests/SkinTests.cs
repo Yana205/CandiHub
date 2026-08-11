@@ -168,5 +168,36 @@ namespace PanDulce.Tests
             if (sim.CurSkin != 0) Assert.That(sim.CurTier, Is.Zero);
             if (sim.NextSkin != 0) Assert.That(sim.NextTier, Is.Zero);
         }
+
+        [Test]
+        public void Matchmaker_FavorsCompletingAnUnpairedColor()
+        {
+            var sim = Sim(3);
+            sim.RevealTier(MergeSim.SkinUnlockTier);        // colors are live
+            sim.MakeBody(100f, 100f, 2, 1f).skin = 1;       // one lonely matcha pan
+
+            int matcha = 0;
+            for (int i = 0; i < 200; i++)
+                if (sim.RollSkinDebug(2) == 1) matcha++;
+            // Bias 0.7 with a single unpaired color → ~77% matcha vs the blind 25%.
+            Assert.That(matcha, Is.GreaterThan(120),
+                        "an unpaired color must dominate the spawn rolls at its tier");
+        }
+
+        [Test]
+        public void Matchmaker_StandsDownOnceTheColorIsPaired()
+        {
+            var sim = Sim(3);
+            sim.RevealTier(MergeSim.SkinUnlockTier);
+            sim.MakeBody(100f, 100f, 2, 1f).skin = 1;       // a matcha pan...
+            sim.MakeBody(300f, 100f, 2, 1f).skin = 1;       // ...and its partner, apart
+
+            int matcha = 0;
+            for (int i = 0; i < 200; i++)
+                if (sim.RollSkinDebug(2) == 1) matcha++;
+            // Both paired → the roll is blind again: ~25% matcha, nowhere near 60%.
+            Assert.That(matcha, Is.LessThan(90),
+                        "a paired color must not keep hogging the rolls");
+        }
     }
 }

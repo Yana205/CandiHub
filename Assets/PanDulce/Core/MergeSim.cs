@@ -79,15 +79,48 @@ namespace PanDulce.Core
         int NormalizeSkin(int tier, int skin)
             => skin > 0 && SkinHasArt != null && SkinHasArt(tier, skin) ? skin : 0;
 
+        /// <summary>Chance a spawn's color roll completes an unpaired color already in the
+        /// box, instead of rolling blind. See <see cref="RollSkin"/>.</summary>
+        public const float SkinMatchmakerBias = 0.7f;
+
         /// <summary>Color roll for a fresh spawn. Original carries double weight, so a
         /// colored dessert is a bit more rare than a plain one; tiers with no variant
-        /// art (and tiers whose colors aren't live yet) stay Original.</summary>
+        /// art (and tiers whose colors aren't live yet) stay Original.
+        ///
+        /// The matchmaker (Yana, 2026-08-11: "skins don't merge well with others"): above
+        /// mochi, merges always hand back Original — colored pans and donuts exist ONLY
+        /// through spawn rolls, so a colored dessert whose color never rolls again is a
+        /// dead body in a small box. Any color sitting unpaired in the pile at this tier
+        /// therefore gets first claim on the roll. Mochi is exempt: it merges across
+        /// colors anyway, and matchmaking it would only wash its variety out.</summary>
         int RollSkin(int tier)
         {
             if (!SkinsLiveFor(tier) || SkinTrackCount <= 1) return 0;
+
+            if (tier > 0)
+            {
+                Span<int> counts = stackalloc int[SkinTrackCount];
+                for (int i = 0; i < Bodies.Count; i++)
+                {
+                    Body b = Bodies[i];
+                    if (!b.dead && b.tier == tier && b.skin >= 0 && b.skin < SkinTrackCount)
+                        counts[b.skin]++;
+                }
+                Span<int> odd = stackalloc int[SkinTrackCount];
+                int oddN = 0;
+                for (int s = 0; s < SkinTrackCount; s++)
+                    if ((counts[s] & 1) == 1) odd[oddN++] = s;
+                if (oddN > 0 && rng.NextDouble() < SkinMatchmakerBias)
+                    return NormalizeSkin(tier, odd[rng.Next(0, oddN)]);
+            }
+
             int roll = rng.Next(0, SkinTrackCount + 1);   // 0,1 → Original; 2.. → a track
             return NormalizeSkin(tier, roll <= 1 ? 0 : roll - 1);
         }
+
+        /// <summary>Test window into the spawn color roll — the matchmaker lives there.
+        /// Same debug tier as <see cref="RevealTier"/>; play flows never call it.</summary>
+        public int RollSkinDebug(int tier) => RollSkin(tier);
 
         // --- coming to rest -----------------------------------------------------------
         // A settled pastry has THREE things still feeding it spin, and all three have to be

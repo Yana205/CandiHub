@@ -20,6 +20,15 @@ namespace PanDulce.Runtime
         Material unlit;
         bool initialised;
 
+        // Fresh merge products get a jelly wobble on top of the sim's grow-in — stretch
+        // wide, squash tall, settle. Keyed by Body reference because pool indices shift
+        // when bodies die; entries expire fast enough that a recycled Body can't inherit
+        // a live one. Real time, not sim time: the wobble is presentation.
+        const float WobbleSec = 0.45f;
+        const float WobbleAmp = 0.18f;
+        readonly Dictionary<Body, float> wobbleAt = new Dictionary<Body, float>(16);
+        readonly List<Body> wobbleDone = new List<Body>(16);
+
         // Ring sprite is baked at diameter 220 (radius 110 texture px, PPU 100).
         const float RingBakedRadius = 110f;
 
@@ -93,8 +102,14 @@ namespace PanDulce.Runtime
                 // handed over" — ease-out so most of the growth lands early in the press.
                 float highlight = b == holdTarget ? 1.2f + 0.25f * (1f - (1f - holdK) * (1f - holdK))
                                 : b == hovered    ? 1.2f : 1f;
-                sr.transform.localScale = new Vector3((1f + b.squish * 0.6f) * s * highlight,
-                                                       (1f - b.squish) * s * highlight, 1f);
+                // A body first seen at spawnT≈0 with bornOfMerge is this frame's merge
+                // product — start its jelly wobble. The sim owns squish (impacts); the
+                // wobble is the view's own celebration and composes with it.
+                if (b.bornOfMerge && b.spawnT < 0.05f && !wobbleAt.ContainsKey(b))
+                    wobbleAt[b] = Time.time;
+                float wob = Wobble(b);
+                sr.transform.localScale = new Vector3((1f + b.squish * 0.6f + wob) * s * highlight,
+                                                       (1f - b.squish - wob) * s * highlight, 1f);
                 sr.color = Color.white;
 
                 // The wanted dessert wears a pulsing ring until it is tapped (§7.6).
@@ -115,6 +130,21 @@ namespace PanDulce.Runtime
                 if (views[i].gameObject.activeSelf) views[i].gameObject.SetActive(false);
                 if (rings[i].gameObject.activeSelf) rings[i].gameObject.SetActive(false);
             }
+
+            // Expire finished wobbles — two-phase because the dictionary is being iterated.
+            wobbleDone.Clear();
+            foreach (var kv in wobbleAt)
+                if (Time.time - kv.Value >= WobbleSec) wobbleDone.Add(kv.Key);
+            for (int i = 0; i < wobbleDone.Count; i++) wobbleAt.Remove(wobbleDone[i]);
+        }
+
+        /// <summary>Signed damped stretch for a fresh merge product: wide → tall → settled.</summary>
+        float Wobble(Body b)
+        {
+            if (!wobbleAt.TryGetValue(b, out float at)) return 0f;
+            float k = (Time.time - at) / WobbleSec;
+            if (k >= 1f) return 0f;
+            return Mathf.Sin(k * Mathf.PI * 3f) * (1f - k) * WobbleAmp;
         }
 
         public void HideAll()

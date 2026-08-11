@@ -124,6 +124,21 @@ namespace PanDulce.Runtime
         }
 
         /// <summary>
+        /// The landing plop — a small cream puff where a dropped pastry first hits the
+        /// pile or the cloth. Same whisper register as NextReady: feedback, not fanfare.
+        /// </summary>
+        public void LandPuff(Vector2 simPos, float intensity)
+        {
+            if (spawn == null) return;
+            spawn.transform.localPosition = StageCoords.Stage(simPos.x, simPos.y);
+            var ep = new ParticleSystem.EmitParams
+            {
+                startColor = Palette.WithAlpha(Palette.Cream, 0.6f),
+            };
+            spawn.Emit(ep, Count(4f, intensity));
+        }
+
+        /// <summary>
         /// Parents the serve system to the flyer so rateOverDistance leaves a trail. The
         /// system simulates in world space, so the puffs stay where they were dropped and
         /// the flyer pulls away from them. Density scales with intensity for the same
