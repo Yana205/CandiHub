@@ -38,7 +38,12 @@ namespace PanDulce.Runtime
             created = false;
             if (parent == null) return null;
 
-            var existing = parent.Find(name);
+            // Direct child first, then anywhere in the subtree: the designer may group
+            // authored children under folder nodes (Yana wrapped the boost buttons in a
+            // "buttons" folder 2026-08-10), and a foldered child is still the same child.
+            // Without the deep fallback the bind loses it, NREs, and every procedural
+            // sprite the view owns is left magenta with a dead material.
+            var existing = parent.Find(name) ?? FindDeep(parent, name);
             if (existing != null) return existing.gameObject;
             if (BindOnly) return null;
 
@@ -46,6 +51,18 @@ namespace PanDulce.Runtime
             go.transform.SetParent(parent, false);
             created = true;
             return go;
+        }
+
+        static Transform FindDeep(Transform root, string name)
+        {
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var c = root.GetChild(i);
+                if (c.name == name) return c;
+                var hit = FindDeep(c, name);
+                if (hit != null) return hit;
+            }
+            return null;
         }
 
         static T Ensure<T>(GameObject go) where T : Component

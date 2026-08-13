@@ -23,6 +23,10 @@ namespace PanDulce.Runtime
             ViewFactory.Plate(t, "Card", plateArt, 55f, 300f, 320f, 240f, 20,
                               plateArt != null ? Color.white : Palette.Hex("#fffaf0"), "Overlay", 61);
             ViewFactory.Label(t, "Title", "Sold out!", 55f, 350f, 320f, 34f, Palette.Crust, "Overlay", 62);
+            // WHY the run ended, in the danger line's own red — it closes the loop the
+            // flashing line opened, so next run the flash reads as "this is coming".
+            ViewFactory.Label(t, "Reason", "The box got too full!", 55f, 378f, 320f, 13f,
+                              Palette.Danger, "Overlay", 62);
             scoreLabel = ViewFactory.Label(t, "Score", "0", 55f, 410f, 320f, 44f,
                                            Palette.Hex("#c9502f"), "Overlay", 62);
             bestLabel = ViewFactory.Label(t, "Best", "best 0", 55f, 452f, 320f, 14f,

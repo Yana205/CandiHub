@@ -165,6 +165,54 @@ namespace PanDulce.Tests
         }
 
         [Test]
+        public void InstantFirstMerge_PopsOnTouch_ThenGatesReturn()
+        {
+            var cfg = Calm();
+            cfg.firstMergeInstant = true;
+            cfg.mergeOverlapPct = 0.05f;
+            cfg.mergeTouchSec = 5f;        // gates far beyond this test's horizon...
+            cfg.idleMergeSec = 5f;
+            var sim = Sim(cfg);
+
+            // Parked at EXACT contact — never pressed, never struck. The classic gates
+            // would hold this pair apart for 5s; the first-merge lane pops it on touch.
+            Body a = sim.MakeBody(180f, 200f, 0, 1f);
+            Body c = sim.MakeBody(300f, 200f, 0, 1f);
+            c.x = a.x + TierTable.Er(a, cfg) + TierTable.Er(c, cfg);
+            Settle(sim, MergeSim.StartMergeGraceSec + 0.2f);
+
+            Assert.That(sim.Bodies.Count, Is.EqualTo(1),
+                        "the run's first mochi touch must merge instantly");
+            Assert.That(sim.Bodies[0].tier, Is.EqualTo(1));
+
+            // A second touching pair: the free lane is spent, the gates are back.
+            Body d2 = sim.MakeBody(120f, 300f, 0, 1f);
+            Body e2 = sim.MakeBody(320f, 300f, 0, 1f);
+            e2.x = d2.x + TierTable.Er(d2, cfg) + TierTable.Er(e2, cfg);
+            Settle(sim, 1f);
+
+            Assert.That(sim.Bodies.Count, Is.EqualTo(3),
+                        "only the FIRST merge rides the free lane — gates rule after it");
+        }
+
+        [Test]
+        public void InstantFirstMerge_OffByDefault()
+        {
+            var cfg = Calm();               // firstMergeInstant defaults to false
+            cfg.mergeOverlapPct = 0.05f;
+            cfg.mergeTouchSec = 5f;
+            var sim = Sim(cfg);
+
+            Body a = sim.MakeBody(180f, 200f, 0, 1f);
+            Body c = sim.MakeBody(300f, 200f, 0, 1f);
+            c.x = a.x + TierTable.Er(a, cfg) + TierTable.Er(c, cfg);
+            Settle(sim, MergeSim.StartMergeGraceSec + 0.5f);
+
+            Assert.That(sim.Bodies.Count, Is.EqualTo(2),
+                        "with the knob off a bare config must keep the classic gates");
+        }
+
+        [Test]
         public void TouchTimeAlone_StillMerges()
         {
             var cfg = Calm();

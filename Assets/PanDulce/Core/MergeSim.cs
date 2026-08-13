@@ -50,6 +50,10 @@ namespace PanDulce.Core
         float canDropAt;
         float mergeLockUntil;
 
+        /// <summary>True until the run's first merge fires — the window in which
+        /// cfg.FirstMergeInstant lets two touching mochis skip every rhythm gate.</summary>
+        bool firstMergePending = true;
+
         /// <summary>The starting desserts settle for this long before any merge can fire.</summary>
         public const float StartMergeGraceSec = 1f;
 
@@ -316,6 +320,22 @@ namespace PanDulce.Core
                         if (rsx * rsx + rsy * rsy > StrikeSpeed * StrikeSpeed)
                         { a.struck = true; c.struck = true; }
 
+                        // Instant first success (Yana, 2026-08-11): with the knob on, the
+                        // run's FIRST merge takes a free lane — two mochis that truly touch
+                        // pop right there, no squeeze, no touch timer, no combo delay. Only
+                        // tier 0 and only while no merge has fired, so the rhythm gates
+                        // still own everything after the opening beat. The start grace
+                        // stays: the starting pile settles before it may self-merge.
+                        if (cfg.FirstMergeInstant && firstMergePending && a.tier == 0 &&
+                            Now >= mergeLockUntil &&
+                            d < min + MergeContactEps &&
+                            a.spawnT > 0.55f && c.spawnT > 0.55f)
+                        {
+                            a.dead = true; c.dead = true;
+                            mergeBuffer.Add((a, c));
+                            continue;
+                        }
+
                         float needSec = a.struck && c.struck ? touchSec : idleSec;
 
                         // merge gate — past the start grace, BOTH grown past 0.55, older
@@ -498,6 +518,7 @@ namespace PanDulce.Core
 
             ComboN = (Now - lastMergeT < cfg.ComboWindow) ? ComboN + 1 : 1;
             lastMergeT = Now;
+            firstMergePending = false;
             // Clears the dessert it belongs to, so the label stays legible at any size.
             float r2 = TierTable.EffectiveRadius(t2, cfg);
             if (ComboN >= 2) AddFloat(x, y - r2 - 8f, $"Combo {ComboN}!");
@@ -763,6 +784,7 @@ namespace PanDulce.Core
             canDropAt = 0f;
             ShakeUntil = 0f;
             mergeLockUntil = StartMergeGraceSec;
+            firstMergePending = true;
 
             // How much of the chain is known from the first frame is a tuning knob now —
             // everything past it starts as a silhouette: not spawnable, not orderable.

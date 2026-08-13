@@ -5,7 +5,8 @@ namespace PanDulce.Runtime
     /// <summary>The pastry's arc from the cloth to the bear, ending at stage (215,260).</summary>
     public sealed class ServeFlightView : GeneratedView
     {
-        static readonly Vector2 Target = new Vector2(215f, 260f);
+        /// <summary>Where the flight lands, in stage px — the handover burst pops here too.</summary>
+        public static readonly Vector2 Target = new Vector2(215f, 260f);
 
         SpriteRenderer sprite;
         Vector2 from;

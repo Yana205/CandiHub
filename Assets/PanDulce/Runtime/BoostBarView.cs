@@ -493,10 +493,36 @@ namespace PanDulce.Runtime
                             -c.y / StageCoords.PX - h * 0.5f, w, h);
         }
 
-        /// <summary>Stage-px rect of the shake button face.</summary>
-        public Rect ButtonRect => FaceStageRect(button, 12f, 226f);
+        /// <summary>
+        /// FaceStageRect with the animated root snapped to its rest pose for the read.
+        ///
+        /// The press squash shrinks and sinks the SAME transform the hit rect is read
+        /// from, which fed the finger's own press back into the hit test: land near an
+        /// edge, the face squashes out from under you, the poll flips to not-pressed,
+        /// the face springs back under you, and the button buzzes for as long as you
+        /// hold — and the release then missed the rect the tap visibly pressed. The
+        /// deny wiggle and ready pulse moved it the same way. Input always tests the
+        /// resting geometry; only the drawing animates.
+        /// </summary>
+        Rect RestStageRect(Transform root, Vector3 home, Vector3 scaleHome,
+                           SpriteRenderer face, float fallbackX, float fallbackW)
+        {
+            if (root == null) return FaceStageRect(face, fallbackX, fallbackW);
+            Vector3 livePos = root.localPosition, liveScale = root.localScale;
+            root.localPosition = home;
+            root.localScale = scaleHome;
+            Rect r = FaceStageRect(face, fallbackX, fallbackW);
+            root.localPosition = livePos;
+            root.localScale = liveScale;
+            return r;
+        }
 
-        /// <summary>Stage-px rect of the clearance button face.</summary>
-        public Rect ClearanceRect => FaceStageRect(clearFace, 250f, 168f);
+        /// <summary>Stage-px rect of the shake button face, at rest.</summary>
+        public Rect ButtonRect
+            => RestStageRect(buttonRoot, buttonHome, buttonScaleHome, button, 12f, 226f);
+
+        /// <summary>Stage-px rect of the clearance button face, at rest.</summary>
+        public Rect ClearanceRect
+            => RestStageRect(clearRoot, clearHome, clearScaleHome, clearFace, 250f, 168f);
     }
 }

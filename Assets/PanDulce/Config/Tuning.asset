@@ -17,15 +17,15 @@ MonoBehaviour:
     bounciness: 0.08
     sizeScale: 1.5899999
     rotationAmount: 0.2
-    mergeGrowTime: 1.6
-    comboDelay: 2
-    customerEverySec: 8
+    mergeGrowTime: 1.1
+    comboDelay: 0.9
+    customerEverySec: 5
     startDelaySec: 0
     startCalmSec: 0
     startCalmScale: 0.39999998
     startDiscovered: 1
     discoverMerges: 1
-    entranceTime: 1.3
+    entranceTime: 1
     endOfDay: 0
     boostsOn: 1
     shakePower: 1
@@ -34,33 +34,34 @@ MonoBehaviour:
     clothColorIndex: 0
     substeps: 3
     floorSag: 0
-    floorY: 212.80002
-    wallLeft: 38.31383
-    wallRight: 365.6233
+    floorY: 218.29999
+    wallLeft: 35.013832
+    wallRight: 362.3233
     centerPull: 0
     groundFriction: 9
     comboWindow: 1.4
     mergePopVy: -70
     squishAmount: 1
     particleScale: 1
-    dropCooldown: 1.2
+    dropCooldown: 0.8
     dropVy: 60
-    flySec: 0.9
-    happyMs: 1400
+    flySec: 0.75
+    happyMs: 1000
     startingBodies: 1
     shakeDuration: 0.6
     mergeOverlapPct: 0
-    mergeTouchSec: 0.25
-    idleMergeSec: 3
-    kinPull: 0
-    spawnBias: 2
+    mergeTouchSec: 0.08
+    idleMergeSec: 1.1
+    kinPull: 2
+    firstMergeInstant: 1
+    spawnBias: 1.6
     bigDealDelaySec: 12
     dealTopMargin: 1
     coinBase: 5
     coinPerTier: 3
     clearanceCost: 30
     topOut: 1
-    topOutLine: 82
+    topOutLine: 10
     topOutGrace: 2.2
     showDangerLine: 1
     timeScale: 1

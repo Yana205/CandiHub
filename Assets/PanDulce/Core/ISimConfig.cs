@@ -76,6 +76,11 @@ namespace PanDulce.Core
         /// when they are within about a diameter. 0 = off (classic).</summary>
         float KinPull { get; }
 
+        /// <summary>The run's FIRST merge skips every rhythm gate: the moment two mochis
+        /// truly touch they pop — a guaranteed opening success that teaches the loop in
+        /// one beat. Only tier 0, only until one merge has fired. false = classic.</summary>
+        bool FirstMergeInstant { get; }
+
         // --- The deal (2026-08-09): what the "next" hand favours ---
 
         /// <summary>Exponent on the deal weights. 1 = the mock's linear 4:3:2:1 (classic);

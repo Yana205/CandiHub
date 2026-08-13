@@ -103,6 +103,11 @@ namespace PanDulce.Editor
                    "0 = instant. A short hold makes the pile readable — you can see a merge " +
                    "coming and still change your mind.",
                    d.mergeTouchSec, 0f, 1.5f, v => d.mergeTouchSec = v);
+            Toggle(cfg, "Instant first merge",
+                   "The run's FIRST merge skips every gate: the moment two mochis truly " +
+                   "touch they pop — a guaranteed opening success. After that one beat the " +
+                   "squeeze, touch and idle rules own the pile again.",
+                   d.firstMergeInstant, v => d.firstMergeInstant = v);
             Slider(cfg, "Idle merge time",
                    "Two desserts that drifted together AT REST merge only after this long " +
                    "side by side — the pile's own quiet progress, slowed. Throws, knocks " +

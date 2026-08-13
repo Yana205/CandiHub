@@ -64,6 +64,7 @@ namespace PanDulce.Core
         public float mergeTouchSec = 0f;
         public float idleMergeSec = 0f;
         public float kinPull = 0f;
+        public bool firstMergeInstant = false;
 
         // The deal (2026-08-09) — mock defaults; the shipped 20–30s-run values (bias 2,
         // 12s big-deal wait) live in Tuning.asset.
@@ -137,6 +138,7 @@ namespace PanDulce.Core
         public float MergeTouchSec => mergeTouchSec;
         public float IdleMergeSec => idleMergeSec;
         public float KinPull => kinPull;
+        public bool FirstMergeInstant => firstMergeInstant;
         public float SpawnBias => spawnBias;
         public float BigDealDelaySec => bigDealDelaySec;
         public int DealTopMargin => dealTopMargin;
